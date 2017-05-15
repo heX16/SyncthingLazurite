@@ -1,0 +1,47 @@
+object Core: TCore
+  OnCreate = DataModuleCreate
+  OldCreateOrder = False
+  Height = 254
+  HorizontalOffset = 273
+  VerticalOffset = 176
+  Width = 345
+  object ProcessSyncthing: TProcessUTF8
+    PipeBufferSize = 16384
+    Active = False
+    Executable = '/C'
+    Options = [poUsePipes]
+    Priority = ppNormal
+    StartupOptions = []
+    ShowWindow = swoHIDE
+    WindowColumns = 0
+    WindowHeight = 0
+    WindowLeft = 0
+    WindowRows = 0
+    WindowTop = 0
+    WindowWidth = 0
+    FillAttribute = 0
+    Left = 56
+    Top = 16
+  end
+  object TimerReadStdOutput: TTimer
+    OnTimer = TimerReadStdOutputTimer
+    Left = 56
+    Top = 72
+  end
+  object ProcessNotify: TProcessUTF8
+    Active = False
+    Options = [poNoConsole]
+    Priority = ppNormal
+    StartupOptions = []
+    ShowWindow = swoHIDE
+    WindowColumns = 0
+    WindowHeight = 0
+    WindowLeft = 0
+    WindowRows = 0
+    WindowTop = 0
+    WindowWidth = 0
+    FillAttribute = 0
+    Left = 195
+    Top = 16
+  end
+end
