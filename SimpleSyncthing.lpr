@@ -1,4 +1,4 @@
-program SyncthingEasyUI;
+program SimpleSyncthing;
 
 //{$apptype console}
 {$mode objfpc}{$H+}

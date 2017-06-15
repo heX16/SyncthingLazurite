@@ -39,6 +39,8 @@ uses
 
 type
 
+  TAddConsoleLine = procedure (Line: UTF8String) of object;
+
   { TCore }
 
   TCore = class(TDataModule)
@@ -48,7 +50,7 @@ type
     procedure DataModuleCreate(Sender: TObject);
     procedure TimerReadStdOutputTimer(Sender: TObject);
   private
-    OutputChank: string;
+    OutputChankStr: UTF8String;
   public
     APIKey: string;
     SyncthigPath: UTF8String;
@@ -66,7 +68,8 @@ type
     procedure Start;
     procedure Stop;
 
-    procedure AddStringToConsole(Str: String);
+    procedure ReadStdOutput(Proc: TProcessUTF8; AddProc: TAddConsoleLine; var TextChank: UTF8String);
+    procedure AddStringToConsole(Str: UTF8String);
     function GetHTTPText(const RESTPath: string; const Response: TStrings; POST: boolean = false): Boolean;
     function SendJSON(const RESTPath: string; const DataForSend: TStrings = nil): Boolean;
   end;
@@ -149,6 +152,41 @@ begin
   //ProcessSyncthing.Terminate(0);
 end;
 
+procedure TCore.ReadStdOutput(Proc: TProcessUTF8; AddProc: TAddConsoleLine;
+  var TextChank: UTF8String);
+var
+  line, TmpStr: RawByteString;
+  p, BytesRead: LongInt;
+const
+  LE = LineEnding; //todo: check in linux
+begin
+  try
+    if Assigned(Proc.Output) then
+    begin
+      //todo: (ProcessSyncthing.Running) ...
+      BytesRead:=Proc.Output.NumBytesAvailable;
+      if (BytesRead > 0) then
+      begin
+        SetLength(TmpStr, BytesRead);
+        Proc.Output.ReadBuffer(TmpStr[1], BytesRead);
+        p := Pos(LE, TmpStr);
+        line := OutputChankStr;
+        while p <> 0 do
+        begin
+          line := line + Copy(TmpStr, 1, p-1);
+          TmpStr := Copy(TmpStr, p+Length(LE), Length(TmpStr) - p);
+          //line:=UTF8Encode(line);
+          AddProc(line);
+          p := Pos(LE, TmpStr);
+        end;
+        OutputChankStr := TmpStr;
+      end;
+    end;
+  except
+    //ShowMessage('FAIL!');
+  end;
+end;
+
 procedure TCore.TimerReadStdOutputTimer(Sender: TObject);
 var
   line, TmpStr: RawByteString;
@@ -156,6 +194,8 @@ var
 const
   LE = LineEnding; //todo: check in linux
 begin
+  ReadStdOutput(ProcessSyncthing, @AddStringToConsole, OutputChankStr);
+{
   try
     if Assigned(Core.ProcessSyncthing.Output) then
     begin
@@ -166,7 +206,7 @@ begin
         SetLength(TmpStr, BytesRead);
         ProcessSyncthing.Output.ReadBuffer(TmpStr[1], BytesRead);
         p := Pos(LE, TmpStr);
-        line := Core.OutputChank;
+        line := OutputChankStr;
         while p <> 0 do
         begin
           line := line + Copy(TmpStr, 1, p-1);
@@ -176,12 +216,13 @@ begin
           line := '';
           p := Pos(LE, TmpStr);
         end;
-        OutputChank := TmpStr;
+        OutputChankStr := TmpStr;
       end;
     end;
   except
     //ShowMessage('FAIL!');
   end;
+  }
 end;
 
 procedure TCore.DataModuleCreate(Sender: TObject);
@@ -198,7 +239,7 @@ begin
   SyncthigHome:='h:\Dat\syncthing\';
 end;
 
-procedure TCore.AddStringToConsole(Str: String);
+procedure TCore.AddStringToConsole(Str: UTF8String);
 begin
   frmMain.edConsole.Lines.Add(Str);
 end;

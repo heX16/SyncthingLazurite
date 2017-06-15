@@ -6,7 +6,7 @@
     <General>
       <SessionStorage Value="InProjectDir"/>
       <MainUnit Value="0"/>
-      <Title Value="SyncthingEasyUI"/>
+      <Title Value="SimpleSyncthing"/>
       <Scaled Value="True"/>
       <ResourceType Value="res"/>
       <UseXPManifest Value="True"/>
@@ -22,7 +22,7 @@
           <Version Value="11"/>
           <PathDelim Value="\"/>
           <Target>
-            <Filename Value="SyncthingEasyUI"/>
+            <Filename Value="SimpleSyncthing"/>
           </Target>
           <SearchPaths>
             <IncludeFiles Value="$(ProjOutDir)"/>
@@ -71,7 +71,7 @@
     </RequiredPackages>
     <Units Count="3">
       <Unit0>
-        <Filename Value="SyncthingEasyUI.lpr"/>
+        <Filename Value="SimpleSyncthing.lpr"/>
         <IsPartOfProject Value="True"/>
       </Unit0>
       <Unit1>
@@ -86,6 +86,7 @@
         <Filename Value="umodulecore.pas"/>
         <IsPartOfProject Value="True"/>
         <ComponentName Value="Core"/>
+        <HasResources Value="True"/>
         <ResourceBaseClass Value="DataModule"/>
         <UnitName Value="uModuleCore"/>
       </Unit2>
@@ -95,7 +96,7 @@
     <Version Value="11"/>
     <PathDelim Value="\"/>
     <Target>
-      <Filename Value="SyncthingEasyUI"/>
+      <Filename Value="SimpleSyncthing"/>
     </Target>
     <SearchPaths>
       <IncludeFiles Value="$(ProjOutDir)"/>
