@@ -8,18 +8,18 @@ uses
   Classes, SysUtils, FileUtil,
   //SynHighlighterJScript,
   //SynEdit,
-  uModuleCore,
-  fpjson,
-  Forms, Controls, Graphics, Dialogs, StdCtrls, ExtCtrls, Menus, ComCtrls;
+  uModuleCore, fpjson, Forms, Controls, Graphics, Dialogs, StdCtrls, ExtCtrls,
+  Menus, ComCtrls, Buttons;
 
 type
 
   { TfrmMain }
 
   TfrmMain = class(TForm)
-    Button1: TButton;
+    btnGetAPI: TButton;
     btnStart: TButton;
     btnStop: TButton;
+    cbGetAPI: TComboBox;
     edConsole: TMemo;
     edJSONView: TMemo;
     imgJSON: TImageList;
@@ -27,10 +27,11 @@ type
     miExit: TMenuItem;
     Panel1: TPanel;
     menuTrayIcon: TPopupMenu;
+    shStatusCircle: TShape;
     Splitter1: TSplitter;
     TrayIcon: TTrayIcon;
     treeJsonData: TTreeView;
-    procedure Button1Click(Sender: TObject);
+    procedure btnGetAPIClick(Sender: TObject);
     procedure btnStartClick(Sender: TObject);
     procedure btnStopClick(Sender: TObject);
     procedure FormWindowStateChange(Sender: TObject);
@@ -62,7 +63,7 @@ uses
 
 { TfrmMain }
 
-procedure TfrmMain.Button1Click(Sender: TObject);
+procedure TfrmMain.btnGetAPIClick(Sender: TObject);
 var
   Response: TStringList;
   JN: TJSONParser;
@@ -71,7 +72,7 @@ begin
   Response := TStringList.Create;
 
   try
-    if Core.GetHTTPText('rest/system/config', Response) then
+    if Core.GetHTTPText('rest/'+cbGetAPI.Text, Response) then
     begin
       //edJSONView.Text:=Response.Text;
       JN := TJSONParser.Create(Response.Text, [joUTF8]);
@@ -126,15 +127,6 @@ procedure TfrmMain.ShowJSONData(TV: TTreeView; AParent: TTreeNode;
   Data: TJSONData; Compact: boolean; SortObjectMembers: boolean);
 
 const
-  SCaption = 'JSON Viewer';
-  SEmpty = 'Empty document';
-  //SArray = '[%d]';
-  //SObject = '[%d]';
-  SArray   = 'Array (%d elements)';
-  SObject  = 'Object (%d members)';
-  SNull = 'null';
-
-const
   ImageTypeMap: array[TJSONtype] of integer =
     //      jtUnknown, jtNumber, jtString, jtBoolean, jtNull, jtArray, jtObject
     (-1, 8, 9, 7, 6, 5, 4);
@@ -143,7 +135,6 @@ var
   N, N2: TTreeNode;
   I: integer;
   D: TJSONData;
-  C: string;
   S: TStringList;
 
 begin
@@ -158,11 +149,6 @@ begin
     jtArray,
     jtObject:
     begin
-      If (Data.JSONType=jtArray) then
-        C:=SArray
-      else
-        C:=SObject;
-      C:=Format(C,[Data.Count]);
       S := TStringList.Create;
       try
         // collect json items to string list
@@ -183,6 +169,7 @@ begin
           D := TJSONData(S.Objects[i]);
           N2.ImageIndex := ImageTypeMap[D.JSONType];
           N2.SelectedIndex := ImageTypeMap[D.JSONType];
+          // recursion! ->
           ShowJSONData(TV, N2, D, Compact, SortObjectMembers);
         end
       finally
@@ -190,23 +177,15 @@ begin
       end;
     end;
     jtNull:
-      C := SNull;
+      N.Text := N.Text + ': ' + 'Null';
     else
-      C := Data.AsString;
+      N.Text := N.Text + ': ' + Data.AsString;
       //if (Data.JSONType=jtString) then C:='"'+C+'"';
   end;
 
-  if Assigned(N) then
-  begin
-    //if jtArray, jtObject
-    if N.Text = '' then
-      N.Text := C
-    else
-      N.Text := N.Text + ': ' + C;
-    N.ImageIndex := ImageTypeMap[Data.JSONType];
-    N.SelectedIndex := ImageTypeMap[Data.JSONType];
-    N.Data := Data;
-  end;
+  N.ImageIndex := ImageTypeMap[Data.JSONType];
+  N.SelectedIndex := ImageTypeMap[Data.JSONType];
+  N.Data := Data;
 end;
 
 procedure TfrmMain.ShowJSONDocument(TV: TTreeView; DataSource: TJSONData;

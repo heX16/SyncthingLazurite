@@ -30,6 +30,51 @@ begin
   //hide the console window
   ShowWindow(GetConsoleWindow(), SW_HIDE);
 end;
+
+-------------
+
+
+System Endpoints
+    GET /rest/system/config
+    GET /rest/system/config/insync
+    GET /rest/system/connections
+    GET /rest/system/debug
+    GET /rest/system/discovery
+    GET /rest/system/error
+    GET /rest/system/log
+    GET /rest/system/ping
+    GET /rest/system/status
+    GET /rest/system/upgrade
+    GET /rest/system/version
+
+    POST /rest/system/ping
+    POST /rest/system/reset
+    POST /rest/system/restart
+    POST /rest/system/shutdown
+    POST /rest/system/upgrade
+
+Database Endpoints
+    GET /rest/db/browse
+    GET /rest/db/completion
+    GET /rest/db/file
+    GET /rest/db/ignores
+    GET /rest/db/need
+    GET /rest/db/status
+
+Event Endpoints
+    GET /rest/events
+    GET /rest/events/disk
+
+Statistics Endpoints
+    GET /rest/stats/device
+    GET /rest/stats/folder
+
+Misc Services Endpoints
+    GET /rest/svc/deviceid
+    GET /rest/svc/lang
+    GET /rest/svc/random/string
+    GET /rest/svc/report
+
 *)
 
 interface
@@ -46,8 +91,10 @@ type
   TCore = class(TDataModule)
     ProcessSyncthing: TProcessUTF8;
     ProcessNotify: TProcessUTF8;
+    timerPing: TTimer;
     TimerReadStdOutput: TTimer;
     procedure DataModuleCreate(Sender: TObject);
+    procedure timerPingTimer(Sender: TObject);
     procedure TimerReadStdOutputTimer(Sender: TObject);
   private
     OutputChankStr: UTF8String;
@@ -70,7 +117,7 @@ type
 
     procedure ReadStdOutput(Proc: TProcessUTF8; AddProc: TAddConsoleLine; var TextChank: UTF8String);
     procedure AddStringToConsole(Str: UTF8String);
-    function GetHTTPText(const RESTPath: string; const Response: TStrings; POST: boolean = false): Boolean;
+    function GetHTTPText(const RESTPath: string; Response: TStrings): Boolean;
     function SendJSON(const RESTPath: string; const DataForSend: TStrings = nil): Boolean;
   end;
 
@@ -83,13 +130,14 @@ uses
   uFormMain,
   httpsend, {Synacode,}
   synautil,
+  Graphics,
   fpjson, jsonparser, jsonscanner;
 
 {$R *.lfm}
 
 { TCore }
 
-function TCore.GetHTTPText(const RESTPath: string; const Response: TStrings; POST: boolean = false): Boolean;
+function TCore.GetHTTPText(const RESTPath: string; Response: TStrings): Boolean;
 var
   HTTP: THTTPSend;
   URL: string;
@@ -113,6 +161,7 @@ var
   URL: string;
   s: UTF8String;
 begin
+  Result := false;
   URL := SyncthigServer + RESTPath;
   HTTP := THTTPSend.Create;
   HTTP.Headers.Add('X-API-Key: '+APIKey);
@@ -170,7 +219,7 @@ begin
         SetLength(TmpStr, BytesRead);
         Proc.Output.ReadBuffer(TmpStr[1], BytesRead);
         p := Pos(LE, TmpStr);
-        line := OutputChankStr;
+        line := TextChank;
         while p <> 0 do
         begin
           line := line + Copy(TmpStr, 1, p-1);
@@ -179,7 +228,7 @@ begin
           AddProc(line);
           p := Pos(LE, TmpStr);
         end;
-        OutputChankStr := TmpStr;
+        TextChank := TmpStr;
       end;
     end;
   except
@@ -188,46 +237,34 @@ begin
 end;
 
 procedure TCore.TimerReadStdOutputTimer(Sender: TObject);
-var
-  line, TmpStr: RawByteString;
-  p, BytesRead: LongInt;
-const
-  LE = LineEnding; //todo: check in linux
 begin
   ReadStdOutput(ProcessSyncthing, @AddStringToConsole, OutputChankStr);
-{
-  try
-    if Assigned(Core.ProcessSyncthing.Output) then
-    begin
-      //todo: (ProcessSyncthing.Running) ...
-      BytesRead:=ProcessSyncthing.Output.NumBytesAvailable;
-      if (BytesRead > 0) then
-      begin
-        SetLength(TmpStr, BytesRead);
-        ProcessSyncthing.Output.ReadBuffer(TmpStr[1], BytesRead);
-        p := Pos(LE, TmpStr);
-        line := OutputChankStr;
-        while p <> 0 do
-        begin
-          line := line + Copy(TmpStr, 1, p-1);
-          TmpStr := Copy(TmpStr, p+Length(LE), Length(TmpStr) - p);
-          //line:=UTF8Encode(line);
-          AddStringToConsole(line);
-          line := '';
-          p := Pos(LE, TmpStr);
-        end;
-        OutputChankStr := TmpStr;
-      end;
-    end;
-  except
-    //ShowMessage('FAIL!');
-  end;
-  }
 end;
 
 procedure TCore.DataModuleCreate(Sender: TObject);
 begin
   Core.Init();
+end;
+
+procedure TCore.timerPingTimer(Sender: TObject);
+var
+  strs: TStrings;
+  ok: boolean;
+begin
+  ok := false;
+  try
+    strs := TStringList.Create;
+    ok := GetHTTPText('rest/system/ping', strs);
+    //todo: check ping result
+  finally
+    strs.Free;
+  end;
+  if ok then
+  begin
+    //todo: check ping result
+    frmMain.shStatusCircle.Brush.Color:=clGreen;
+  end else
+    frmMain.shStatusCircle.Brush.Color:=clRed;
 end;
 
 procedure TCore.Init;
@@ -241,6 +278,8 @@ end;
 
 procedure TCore.AddStringToConsole(Str: UTF8String);
 begin
+  if frmMain.edConsole.Lines.Count > 100 then
+    frmMain.edConsole.Lines.Delete(0);
   frmMain.edConsole.Lines.Add(Str);
 end;
 

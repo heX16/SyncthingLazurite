@@ -44,4 +44,9 @@ object Core: TCore
     Left = 195
     Top = 16
   end
+  object timerPing: TTimer
+    OnTimer = timerPingTimer
+    Left = 56
+    Top = 128
+  end
 end
