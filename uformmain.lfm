@@ -1,86 +1,41 @@
 object frmMain: TfrmMain
-  Left = 478
+  Left = 278
   Height = 578
   Top = 136
-  Width = 460
+  Width = 430
   Caption = 'frmMain'
   ClientHeight = 578
-  ClientWidth = 460
+  ClientWidth = 430
   DesignTimePPI = 120
   OnWindowStateChange = FormWindowStateChange
   Position = poDefault
   LCLVersion = '1.9.0.0'
   object Panel1: TPanel
     Left = 0
-    Height = 82
+    Height = 50
     Top = 0
-    Width = 460
+    Width = 430
     Align = alTop
-    ClientHeight = 82
-    ClientWidth = 460
+    ClientHeight = 50
+    ClientWidth = 430
     TabOrder = 0
-    object btnGetAPI: TButton
-      Left = 264
-      Height = 25
-      Top = 48
-      Width = 75
-      Caption = 'btnGetAPI'
-      OnClick = btnGetAPIClick
-      TabOrder = 0
-    end
     object btnStart: TButton
       Left = 48
       Height = 32
       Top = 7
       Width = 160
-      Caption = 'btnStart'
+      Action = Core.actStart
       OnClick = btnStartClick
-      TabOrder = 1
+      TabOrder = 0
     end
     object btnStop: TButton
       Left = 216
       Height = 33
       Top = 7
       Width = 163
-      Caption = 'btnStop'
+      Action = Core.actStop
       OnClick = btnStopClick
-      TabOrder = 2
-    end
-    object cbGetAPI: TComboBox
-      Left = 8
-      Height = 25
-      Top = 48
-      Width = 248
-      ItemHeight = 17
-      Items.Strings = (
-        'system/config'
-        'system/config/insync'
-        'system/connections'
-        'system/debug'
-        'system/discovery'
-        'system/error'
-        'system/log'
-        'system/ping'
-        'system/status'
-        'system/upgrade'
-        'system/version'
-        'db/browse'
-        'db/completion'
-        'db/file'
-        'db/ignores'
-        'db/need'
-        'db/status'
-        'events'
-        'events/disk'
-        'stats/device'
-        'stats/folder'
-        'svc/deviceid'
-        'svc/lang'
-        'svc/random/string'
-        'svc/report    '
-      )
-      Style = csDropDownList
-      TabOrder = 3
+      TabOrder = 1
     end
     object shStatusCircle: TShape
       Left = 8
@@ -95,7 +50,7 @@ object frmMain: TfrmMain
     Left = 0
     Height = 140
     Top = 438
-    Width = 460
+    Width = 430
     Align = alBottom
     Color = clBlack
     Font.CharSet = RUSSIAN_CHARSET
@@ -115,28 +70,75 @@ object frmMain: TfrmMain
     Left = 0
     Height = 5
     Top = 433
-    Width = 460
+    Width = 430
     Align = alBottom
     ResizeAnchor = akBottom
   end
   object edJSONView: TMemo
-    Left = 264
-    Height = 351
-    Top = 82
-    Width = 196
+    Left = 352
+    Height = 383
+    Top = 50
+    Width = 78
     Align = alRight
     ScrollBars = ssAutoBoth
     TabOrder = 3
     WordWrap = False
   end
   object treeJsonData: TTreeView
-    Left = 0
-    Height = 351
-    Top = 82
-    Width = 264
+    Left = 133
+    Height = 383
+    Top = 50
+    Width = 214
     Align = alClient
     Images = imgJSON
     TabOrder = 4
+  end
+  object listGetAPI: TListBox
+    Left = 0
+    Height = 383
+    Top = 50
+    Width = 128
+    Align = alLeft
+    Items.Strings = (
+      'system/config'
+      'system/config/insync'
+      'system/connections'
+      'system/debug'
+      'system/discovery'
+      'system/error'
+      'system/log'
+      'system/ping'
+      'system/status'
+      'system/upgrade'
+      'system/version'
+      'db/browse'
+      'events'
+      'events/disk'
+      'stats/device'
+      'stats/folder'
+      'svc/deviceid'
+      'svc/lang'
+      'svc/random/string'
+      'svc/report'
+    )
+    ItemHeight = 17
+    OnDblClick = btnGetAPIClick
+    Options = [lboDrawFocusRect]
+    TabOrder = 5
+  end
+  object Splitter2: TSplitter
+    Left = 347
+    Height = 383
+    Top = 50
+    Width = 5
+    Align = alRight
+    ResizeAnchor = akRight
+  end
+  object Splitter3: TSplitter
+    Left = 128
+    Height = 383
+    Top = 50
+    Width = 5
   end
   object TrayIcon: TTrayIcon
     PopUpMenu = menuTrayIcon

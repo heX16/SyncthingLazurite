@@ -80,7 +80,7 @@ Misc Services Endpoints
 interface
 
 uses
-  Classes, SysUtils, FileUtil, UTF8Process, ExtCtrls;
+  Classes, SysUtils, FileUtil, UTF8Process, ExtCtrls, ActnList, UniqueInstance;
 
 type
 
@@ -89,10 +89,20 @@ type
   { TCore }
 
   TCore = class(TDataModule)
+    actTerminate: TAction;
+    actRestart: TAction;
+    actStop: TAction;
+    actStart: TAction;
+    ActionList: TActionList;
     ProcessSyncthing: TProcessUTF8;
     ProcessNotify: TProcessUTF8;
     timerPing: TTimer;
     TimerReadStdOutput: TTimer;
+    UniqueInstance1: TUniqueInstance;
+    procedure actRestartExecute(Sender: TObject);
+    procedure actStartExecute(Sender: TObject);
+    procedure actStopExecute(Sender: TObject);
+    procedure actTerminateExecute(Sender: TObject);
     procedure DataModuleCreate(Sender: TObject);
     procedure timerPingTimer(Sender: TObject);
     procedure TimerReadStdOutputTimer(Sender: TObject);
@@ -131,6 +141,7 @@ uses
   httpsend, {Synacode,}
   synautil,
   Graphics,
+  LConvEncoding,
   fpjson, jsonparser, jsonscanner;
 
 {$R *.lfm}
@@ -201,11 +212,12 @@ begin
   //ProcessSyncthing.Terminate(0);
 end;
 
-procedure TCore.ReadStdOutput(Proc: TProcessUTF8; AddProc: TAddConsoleLine;
-  var TextChank: UTF8String);
+procedure TCore.ReadStdOutput(Proc: TProcessUTF8;
+  AddProc: TAddConsoleLine; var TextChank: UTF8String);
 var
   line, TmpStr: RawByteString;
   p, BytesRead: LongInt;
+  conv_ok: boolean;
 const
   LE = LineEnding; //todo: check in linux
 begin
@@ -218,14 +230,20 @@ begin
       begin
         SetLength(TmpStr, BytesRead);
         Proc.Output.ReadBuffer(TmpStr[1], BytesRead);
+        TmpStr := TextChank + TmpStr;
+        line := '';
         p := Pos(LE, TmpStr);
-        line := TextChank;
         while p <> 0 do
         begin
-          line := line + Copy(TmpStr, 1, p-1);
+          // get line
+          line := Copy(TmpStr, 1, p-1);
+          // cut line from text
           TmpStr := Copy(TmpStr, p+Length(LE), Length(TmpStr) - p);
-          //line:=UTF8Encode(line);
+          // normalize codepage from console (uses LConvEncoding)
+          line := ConvertEncodingToUTF8(line, GetConsoleTextEncoding(), conv_ok);
+          // send line
           AddProc(line);
+          // find again
           p := Pos(LE, TmpStr);
         end;
         TextChank := TmpStr;
@@ -244,6 +262,28 @@ end;
 procedure TCore.DataModuleCreate(Sender: TObject);
 begin
   Core.Init();
+end;
+
+procedure TCore.actRestartExecute(Sender: TObject);
+begin
+  actStop.Execute();
+  actStart.Execute();
+end;
+
+procedure TCore.actStartExecute(Sender: TObject);
+begin
+  Start();
+end;
+
+procedure TCore.actStopExecute(Sender: TObject);
+begin
+  Stop();
+end;
+
+procedure TCore.actTerminateExecute(Sender: TObject);
+begin
+  ProcessNotify.Terminate(0);
+  ProcessSyncthing.Terminate(0);
 end;
 
 procedure TCore.timerPingTimer(Sender: TObject);

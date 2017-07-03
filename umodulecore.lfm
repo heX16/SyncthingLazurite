@@ -2,8 +2,8 @@ object Core: TCore
   OnCreate = DataModuleCreate
   OldCreateOrder = False
   Height = 254
-  HorizontalOffset = 273
-  VerticalOffset = 176
+  HorizontalOffset = 302
+  VerticalOffset = 254
   Width = 345
   object ProcessSyncthing: TProcessUTF8
     PipeBufferSize = 16384
@@ -47,6 +47,30 @@ object Core: TCore
   object timerPing: TTimer
     OnTimer = timerPingTimer
     Left = 56
+    Top = 128
+  end
+  object ActionList: TActionList
+    Left = 195
+    Top = 72
+    object actStart: TAction
+      Caption = 'Start'
+      OnExecute = actStartExecute
+    end
+    object actStop: TAction
+      Caption = 'Stop'
+      OnExecute = actStopExecute
+    end
+    object actRestart: TAction
+      Caption = 'Restart'
+      OnExecute = actRestartExecute
+    end
+    object actTerminate: TAction
+      Caption = 'Terminate'
+      OnExecute = actTerminateExecute
+    end
+  end
+  object UniqueInstance1: TUniqueInstance
+    Left = 195
     Top = 128
   end
 end

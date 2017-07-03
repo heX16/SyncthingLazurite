@@ -16,19 +16,20 @@ type
   { TfrmMain }
 
   TfrmMain = class(TForm)
-    btnGetAPI: TButton;
     btnStart: TButton;
     btnStop: TButton;
-    cbGetAPI: TComboBox;
     edConsole: TMemo;
     edJSONView: TMemo;
     imgJSON: TImageList;
+    listGetAPI: TListBox;
     miShow: TMenuItem;
     miExit: TMenuItem;
     Panel1: TPanel;
     menuTrayIcon: TPopupMenu;
     shStatusCircle: TShape;
     Splitter1: TSplitter;
+    Splitter2: TSplitter;
+    Splitter3: TSplitter;
     TrayIcon: TTrayIcon;
     treeJsonData: TTreeView;
     procedure btnGetAPIClick(Sender: TObject);
@@ -72,19 +73,31 @@ begin
   Response := TStringList.Create;
 
   try
-    if Core.GetHTTPText('rest/'+cbGetAPI.Text, Response) then
+    if Core.GetHTTPText('rest/'+listGetAPI.Items[listGetAPI.ItemIndex], Response) then
     begin
+      JData:=nil;
+      JN:=nil;
+      edJSONView.Text := Response.Text;
       //edJSONView.Text:=Response.Text;
       JN := TJSONParser.Create(Response.Text, [joUTF8]);
-      JData := JN.Parse();
-      edJSONView.Text := JData.FormatJSON();
-      ShowJSONDocument(treeJsonData, JData, True);
-      //Response.SaveToFile('c:\response.txt');
+      try
+        JData := JN.Parse();
+      except
+        on EJSONParser do JData := nil;
+      end;
+      if JData <> nil then
+      begin
+        edJSONView.Text := JData.FormatJSON();
+        ShowJSONDocument(treeJsonData, JData, True);
+        treeJsonData.FullExpand();
+      end;
     end;
   finally
-    JData.Free;
+    if JData<>nil then
+      JData.Free;
+    if JN<>nil then
+      JN.Free;
     Response.Free;
-    JN.Free;
   end;
 end;
 
