@@ -89,13 +89,14 @@ type
   { TCore }
 
   TCore = class(TDataModule)
+    actRunSupportProc: TAction;
     actTerminate: TAction;
     actRestart: TAction;
     actStop: TAction;
     actStart: TAction;
     ActionList: TActionList;
     ProcessSyncthing: TProcessUTF8;
-    ProcessNotify: TProcessUTF8;
+    ProcessSupport: TProcessUTF8;
     timerPing: TTimer;
     TimerReadStdOutput: TTimer;
     UniqueInstance1: TUniqueInstance;
@@ -119,7 +120,7 @@ type
     procedure Init;
     function FindSyncthigPath: UTF8String;
     procedure FillSyncthingExecPath;
-    procedure FillNotifyExecPath;
+    procedure FillSupportExecPath;
     function ReadAPIKey: string;
 
     procedure Start;
@@ -127,6 +128,7 @@ type
 
     procedure ReadStdOutput(Proc: TProcessUTF8; AddProc: TAddConsoleLine; var TextChank: UTF8String);
     procedure AddStringToConsole(Str: UTF8String);
+
     function GetHTTPText(const RESTPath: string; Response: TStrings): Boolean;
     function SendJSON(const RESTPath: string; const DataForSend: TStrings = nil): Boolean;
   end;
@@ -200,15 +202,18 @@ begin
   begin
     FillSyncthingExecPath();
     ProcessSyncthing.Execute();
-    FillNotifyExecPath();
-    ProcessNotify.Execute();
+    if actRunSupportProc.Checked then
+    begin
+      FillSupportExecPath();
+      ProcessSupport.Execute();
+    end;
   end;
 end;
 
 procedure TCore.Stop;
 begin
   SendJSON('rest/system/shutdown');
-  ProcessNotify.Terminate(0);
+  ProcessSupport.Terminate(0);
   //ProcessSyncthing.Terminate(0);
 end;
 
@@ -282,7 +287,7 @@ end;
 
 procedure TCore.actTerminateExecute(Sender: TObject);
 begin
-  ProcessNotify.Terminate(0);
+  ProcessSupport.Terminate(0);
   ProcessSyncthing.Terminate(0);
 end;
 
@@ -356,11 +361,11 @@ begin
   {$ENDIF}
 end;
 
-procedure TCore.FillNotifyExecPath;
+procedure TCore.FillSupportExecPath;
 begin
-  //todo: WIP: FillNotifyExecPath
-  ProcessNotify.Executable := 'D:\NetDrive\AppsPortableHex\Programs\_Net\syncthing\syncthing-inotify.exe';
-  ProcessNotify.Parameters.Text := '-home=' + SyncthigHome;
+  //todo: WIP: FillSupportExecPath
+  ProcessSupport.Executable := 'D:\NetDrive\AppsPortableHex\Programs\_Net\syncthing\syncthing-inotify.exe';
+  ProcessSupport.Parameters.Text := '-home=' + SyncthigHome;
 end;
 
 end.

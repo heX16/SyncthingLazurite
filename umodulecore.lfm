@@ -1,10 +1,11 @@
 object Core: TCore
   OnCreate = DataModuleCreate
   OldCreateOrder = False
-  Height = 254
-  HorizontalOffset = 302
-  VerticalOffset = 254
-  Width = 345
+  Height = 318
+  HorizontalOffset = 378
+  VerticalOffset = 318
+  Width = 431
+  PPI = 120
   object ProcessSyncthing: TProcessUTF8
     PipeBufferSize = 16384
     Active = False
@@ -20,15 +21,15 @@ object Core: TCore
     WindowTop = 0
     WindowWidth = 0
     FillAttribute = 0
-    Left = 56
-    Top = 16
+    Left = 70
+    Top = 20
   end
   object TimerReadStdOutput: TTimer
     OnTimer = TimerReadStdOutputTimer
-    Left = 56
-    Top = 72
+    Left = 70
+    Top = 90
   end
-  object ProcessNotify: TProcessUTF8
+  object ProcessSupport: TProcessUTF8
     Active = False
     Options = [poNoConsole]
     Priority = ppNormal
@@ -41,17 +42,17 @@ object Core: TCore
     WindowTop = 0
     WindowWidth = 0
     FillAttribute = 0
-    Left = 195
-    Top = 16
+    Left = 244
+    Top = 20
   end
   object timerPing: TTimer
     OnTimer = timerPingTimer
-    Left = 56
-    Top = 128
+    Left = 70
+    Top = 160
   end
   object ActionList: TActionList
-    Left = 195
-    Top = 72
+    Left = 244
+    Top = 90
     object actStart: TAction
       Caption = 'Start'
       OnExecute = actStartExecute
@@ -68,9 +69,12 @@ object Core: TCore
       Caption = 'Terminate'
       OnExecute = actTerminateExecute
     end
+    object actRunSupportProc: TAction
+      Caption = 'Run Support Proc'
+    end
   end
   object UniqueInstance1: TUniqueInstance
-    Left = 195
-    Top = 128
+    Left = 244
+    Top = 160
   end
 end
