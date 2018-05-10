@@ -21,13 +21,13 @@ object Core: TCore
     WindowTop = 0
     WindowWidth = 0
     FillAttribute = 0
-    Left = 70
-    Top = 20
+    left = 70
+    top = 20
   end
   object TimerReadStdOutput: TTimer
     OnTimer = TimerReadStdOutputTimer
-    Left = 70
-    Top = 90
+    left = 70
+    top = 90
   end
   object ProcessSupport: TProcessUTF8
     Active = False
@@ -42,39 +42,50 @@ object Core: TCore
     WindowTop = 0
     WindowWidth = 0
     FillAttribute = 0
-    Left = 244
-    Top = 20
+    left = 244
+    top = 20
   end
   object timerPing: TTimer
     OnTimer = timerPingTimer
-    Left = 70
-    Top = 160
+    left = 70
+    top = 160
   end
   object ActionList: TActionList
-    Left = 244
-    Top = 90
+    left = 244
+    top = 90
     object actStart: TAction
+      Category = 'Core'
       Caption = 'Start'
       OnExecute = actStartExecute
     end
     object actStop: TAction
+      Category = 'Core'
       Caption = 'Stop'
       OnExecute = actStopExecute
     end
     object actRestart: TAction
+      Category = 'Core'
       Caption = 'Restart'
       OnExecute = actRestartExecute
     end
     object actTerminate: TAction
+      Category = 'Core'
       Caption = 'Terminate'
       OnExecute = actTerminateExecute
     end
     object actRunSupportProc: TAction
+      Category = 'Core'
       Caption = 'Run Support Proc'
+      OnExecute = actRunSupportProcExecute
+    end
+    object actExit: TAction
+      Category = 'GUI'
+      Caption = 'actExit'
+      OnExecute = actExitExecute
     end
   end
   object UniqueInstance1: TUniqueInstance
-    Left = 244
-    Top = 160
+    left = 244
+    top = 160
   end
 end

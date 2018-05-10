@@ -80,7 +80,8 @@ Misc Services Endpoints
 interface
 
 uses
-  Classes, SysUtils, FileUtil, UTF8Process, ExtCtrls, ActnList, UniqueInstance;
+  Classes, SysUtils, FileUtil, UTF8Process, ExtCtrls, ActnList, StdActns, Forms,
+  UniqueInstance;
 
 type
 
@@ -89,6 +90,7 @@ type
   { TCore }
 
   TCore = class(TDataModule)
+    actExit: TAction;
     actRunSupportProc: TAction;
     actTerminate: TAction;
     actRestart: TAction;
@@ -100,7 +102,9 @@ type
     timerPing: TTimer;
     TimerReadStdOutput: TTimer;
     UniqueInstance1: TUniqueInstance;
+    procedure actExitExecute(Sender: TObject);
     procedure actRestartExecute(Sender: TObject);
+    procedure actRunSupportProcExecute(Sender: TObject);
     procedure actStartExecute(Sender: TObject);
     procedure actStopExecute(Sender: TObject);
     procedure actTerminateExecute(Sender: TObject);
@@ -273,6 +277,17 @@ procedure TCore.actRestartExecute(Sender: TObject);
 begin
   actStop.Execute();
   actStart.Execute();
+end;
+
+procedure TCore.actExitExecute(Sender: TObject);
+begin
+  actStop.Execute();
+  Application.Terminate;
+end;
+
+procedure TCore.actRunSupportProcExecute(Sender: TObject);
+begin
+  // empty - it is just options
 end;
 
 procedure TCore.actStartExecute(Sender: TObject);

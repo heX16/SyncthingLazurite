@@ -9,7 +9,7 @@ object frmMain: TfrmMain
   DesignTimePPI = 120
   OnWindowStateChange = FormWindowStateChange
   Position = poDefault
-  LCLVersion = '1.9.0.0'
+  LCLVersion = '1.8.0.6'
   object Panel1: TPanel
     Left = 0
     Height = 50
@@ -123,7 +123,6 @@ object frmMain: TfrmMain
     )
     ItemHeight = 17
     OnDblClick = btnGetAPIClick
-    Options = [lboDrawFocusRect]
     TabOrder = 5
   end
   object Splitter2: TSplitter
@@ -677,24 +676,24 @@ object frmMain: TfrmMain
     }
     Visible = True
     OnDblClick = TrayIconDblClick
-    Left = 24
-    Top = 64
+    left = 24
+    top = 64
   end
   object menuTrayIcon: TPopupMenu
-    Left = 24
-    Top = 128
+    left = 24
+    top = 128
     object miShow: TMenuItem
       Caption = 'MenuItem1'
       OnClick = miShowClick
     end
     object miExit: TMenuItem
-      Caption = 'MenuItem2'
+      Action = Core.actExit
       OnClick = miExitClick
     end
   end
   object imgJSON: TImageList
-    Left = 88
-    Top = 64
+    left = 88
+    top = 64
     Bitmap = {
       4C69100000001000000010000000FFFFFF00FFFFFF00FFFFFF00FFFFFF00FFFF
       FF00FFFFFF00FFFFFF00FFFFFF00FFFFFF00FFFFFF00FFFFFF00FFFFFF00FFFF
