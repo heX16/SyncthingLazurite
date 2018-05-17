@@ -351,7 +351,7 @@ end;
 
 procedure TCore.TimerPingTimer(Sender: TObject);
 begin
-  if not httpPingInProc then
+  if not httpPingInProc and not Terminated then
     aiohttp.Get(SyncthigServer+'rest/system/ping', @httpPing, '', @httpPingInProc);
 end;
 
@@ -365,7 +365,7 @@ begin
   SyncthigHome:=GetSyncthigHome();
   APIKey:=GetAPIKey();
 
-  //todo: TimerPing.Enabled:=true;
+  TimerPing.Enabled:=true;
 end;
 
 procedure TCore.Done;

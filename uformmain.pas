@@ -79,12 +79,10 @@ var
   JData: TJSONData;
   strm: TMemoryStream;
 begin
-  writeln(Query.ReadyState, Core.APIKey);
   if Query.ReadyState=httpDone then
   begin
     StrResponse := TStringList.Create();
     try
-      writeln(Query.Status);
       strm := Query.Response;
       if strm.Size>0 then
       begin
