@@ -1,5 +1,4 @@
 object Core: TCore
-  OnCreate = DataModuleCreate
   OldCreateOrder = False
   Height = 318
   HorizontalOffset = 378
@@ -27,7 +26,7 @@ object Core: TCore
   object TimerReadStdOutput: TTimer
     OnTimer = TimerReadStdOutputTimer
     left = 70
-    top = 90
+    top = 80
   end
   object ProcessSupport: TProcessUTF8
     Active = False
@@ -45,14 +44,14 @@ object Core: TCore
     left = 244
     top = 20
   end
-  object timerPing: TTimer
-    OnTimer = timerPingTimer
+  object TimerPing: TTimer
+    OnTimer = TimerPingTimer
     left = 70
-    top = 160
+    top = 144
   end
   object ActionList: TActionList
     left = 244
-    top = 90
+    top = 80
     object actStart: TAction
       Category = 'Core'
       Caption = 'Start'
@@ -83,9 +82,20 @@ object Core: TCore
       Caption = 'actExit'
       OnExecute = actExitExecute
     end
+    object actInit: TAction
+      Category = 'Core'
+      Caption = 'actInit'
+      OnExecute = actInitExecute
+    end
   end
   object UniqueInstance1: TUniqueInstance
     left = 244
-    top = 160
+    top = 144
+  end
+  object TimerInit: TTimer
+    Interval = 1
+    OnTimer = TimerInitTimer
+    left = 70
+    top = 208
   end
 end

@@ -18,6 +18,7 @@ type
   TfrmMain = class(TForm)
     btnStart: TButton;
     btnStop: TButton;
+    btnOptions: TButton;
     edConsole: TMemo;
     edJSONView: TMemo;
     imgJSON: TImageList;
@@ -33,6 +34,7 @@ type
     TrayIcon: TTrayIcon;
     treeJsonData: TTreeView;
     procedure btnGetAPIClick(Sender: TObject);
+    procedure btnOptionsClick(Sender: TObject);
     procedure btnStartClick(Sender: TObject);
     procedure btnStopClick(Sender: TObject);
     procedure FormWindowStateChange(Sender: TObject);
@@ -57,6 +59,7 @@ implementation
 
 uses
   //fpjson,
+  uFormOptions,
   jsonparser, jsonscanner;
 
 {$R *.lfm}
@@ -70,7 +73,7 @@ var
   JN: TJSONParser;
   JData: TJSONData;
 begin
-  Response := TStringList.Create;
+  Response := TStringList.Create();
 
   try
     if Core.GetHTTPText('rest/'+listGetAPI.Items[listGetAPI.ItemIndex], Response) then
@@ -94,11 +97,16 @@ begin
     end;
   finally
     if JData<>nil then
-      JData.Free;
+      JData.Free();
     if JN<>nil then
-      JN.Free;
-    Response.Free;
+      JN.Free();
+    Response.Free();
   end;
+end;
+
+procedure TfrmMain.btnOptionsClick(Sender: TObject);
+begin
+  frmOptions.ShowModal();
 end;
 
 procedure TfrmMain.btnStartClick(Sender: TObject);

@@ -15,6 +15,13 @@
       </XPManifest>
       <Icon Value="0"/>
     </General>
+    <VersionInfo>
+      <UseVersionInfo Value="True"/>
+      <AutoIncrementBuild Value="True"/>
+      <MinorVersionNr Value="1"/>
+      <BuildNr Value="1"/>
+      <StringTable ProductVersion="0.0.0.0"/>
+    </VersionInfo>
     <BuildModes Count="2">
       <Item1 Name="Default" Default="True"/>
       <Item2 Name="Release">
@@ -55,24 +62,27 @@
         <FormatVersion Value="1"/>
       </local>
     </RunParams>
-    <RequiredPackages Count="5">
+    <RequiredPackages Count="6">
       <Item1>
-        <PackageName Value="uniqueinstance_package"/>
+        <PackageName Value="FCL"/>
       </Item1>
       <Item2>
-        <PackageName Value="LazUtils"/>
+        <PackageName Value="uniqueinstance_package"/>
       </Item2>
       <Item3>
-        <PackageName Value="SynEdit"/>
+        <PackageName Value="LazUtils"/>
       </Item3>
       <Item4>
-        <PackageName Value="laz_synapse"/>
+        <PackageName Value="SynEdit"/>
       </Item4>
       <Item5>
-        <PackageName Value="LCL"/>
+        <PackageName Value="laz_synapse"/>
       </Item5>
+      <Item6>
+        <PackageName Value="LCL"/>
+      </Item6>
     </RequiredPackages>
-    <Units Count="4">
+    <Units Count="5">
       <Unit0>
         <Filename Value="SimpleSyncthing.lpr"/>
         <IsPartOfProject Value="True"/>
@@ -97,6 +107,14 @@
         <Filename Value="uthreadhttp.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit3>
+      <Unit4>
+        <Filename Value="uformoptions.pas"/>
+        <IsPartOfProject Value="True"/>
+        <ComponentName Value="frmOptions"/>
+        <HasResources Value="True"/>
+        <ResourceBaseClass Value="Form"/>
+        <UnitName Value="uFormOptions"/>
+      </Unit4>
     </Units>
   </ProjectOptions>
   <CompilerOptions>

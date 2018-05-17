@@ -1,0 +1,120 @@
+object frmOptions: TfrmOptions
+  Left = 500
+  Height = 293
+  Top = 386
+  Width = 426
+  Caption = 'frmOptions'
+  ClientHeight = 293
+  ClientWidth = 426
+  DesignTimePPI = 120
+  Position = poDefault
+  SessionProperties = 'edPathToConfig.Text;edPathToExec.Text;edAPIKey.Text'
+  LCLVersion = '1.8.0.6'
+  object BitBtn1: TBitBtn
+    Left = 8
+    Height = 38
+    Top = 249
+    Width = 166
+    Anchors = [akLeft, akBottom]
+    Default = True
+    DefaultCaption = True
+    Kind = bkOK
+    ModalResult = 1
+    TabOrder = 0
+  end
+  object edPathToConfig: TLabeledEdit
+    Left = 8
+    Height = 25
+    Top = 24
+    Width = 381
+    Anchors = [akTop, akLeft, akRight]
+    EditLabel.AnchorSideLeft.Control = edPathToConfig
+    EditLabel.AnchorSideRight.Control = edPathToConfig
+    EditLabel.AnchorSideRight.Side = asrBottom
+    EditLabel.AnchorSideBottom.Control = edPathToConfig
+    EditLabel.Left = 8
+    EditLabel.Height = 17
+    EditLabel.Top = 4
+    EditLabel.Width = 381
+    EditLabel.Caption = 'edPathToConfig'
+    EditLabel.ParentColor = False
+    TabOrder = 1
+    Text = './'
+  end
+  object btnSelectDirConfig: TButton
+    Left = 388
+    Height = 25
+    Top = 24
+    Width = 24
+    Anchors = [akTop, akRight]
+    Caption = '...'
+    Enabled = False
+    TabOrder = 2
+  end
+  object edPathToExec: TLabeledEdit
+    Left = 8
+    Height = 25
+    Top = 72
+    Width = 381
+    Anchors = [akTop, akLeft, akRight]
+    EditLabel.AnchorSideLeft.Control = edPathToExec
+    EditLabel.AnchorSideRight.Control = edPathToExec
+    EditLabel.AnchorSideRight.Side = asrBottom
+    EditLabel.AnchorSideBottom.Control = edPathToExec
+    EditLabel.Left = 8
+    EditLabel.Height = 17
+    EditLabel.Top = 52
+    EditLabel.Width = 381
+    EditLabel.Caption = 'edPathToExec'
+    EditLabel.ParentColor = False
+    TabOrder = 3
+    Text = './'
+  end
+  object btnSelectFileExec: TButton
+    Left = 388
+    Height = 25
+    Top = 72
+    Width = 24
+    Anchors = [akTop, akRight]
+    Caption = '...'
+    Enabled = False
+    TabOrder = 4
+  end
+  object edAPIKey: TLabeledEdit
+    Left = 8
+    Height = 25
+    Top = 120
+    Width = 301
+    Anchors = [akTop, akLeft, akRight]
+    EditLabel.AnchorSideLeft.Control = edAPIKey
+    EditLabel.AnchorSideRight.Control = edAPIKey
+    EditLabel.AnchorSideRight.Side = asrBottom
+    EditLabel.AnchorSideBottom.Control = edAPIKey
+    EditLabel.Left = 8
+    EditLabel.Height = 17
+    EditLabel.Top = 100
+    EditLabel.Width = 301
+    EditLabel.Caption = 'edAPIKey'
+    EditLabel.ParentColor = False
+    TabOrder = 5
+    Text = 'MJzE2GL2vOvaFydjM05ocRM64SZ0DR1-'
+  end
+  object chAuto: TCheckBox
+    Left = 312
+    Height = 21
+    Top = 120
+    Width = 100
+    Anchors = [akTop, akRight]
+    AutoSize = False
+    Caption = 'chAuto'
+    Enabled = False
+    TabOrder = 6
+  end
+  object XMLPropStorageConfig: TXMLPropStorage
+    StoredValues = <>
+    FileName = 'SimpleSyncthingConfig.xml'
+    RootNodePath = 'SimpleSyncthing'
+    left = 192
+    top = 232
+  end
+end

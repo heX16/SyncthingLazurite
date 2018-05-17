@@ -89,8 +89,10 @@ type
 
   { TCore }
 
+  //todo: extract real core code to 'model'(or 'control') and 'utils'
   TCore = class(TDataModule)
     actExit: TAction;
+    actInit: TAction;
     actRunSupportProc: TAction;
     actTerminate: TAction;
     actRestart: TAction;
@@ -99,33 +101,39 @@ type
     ActionList: TActionList;
     ProcessSyncthing: TProcessUTF8;
     ProcessSupport: TProcessUTF8;
-    timerPing: TTimer;
+    TimerInit: TTimer;
+    TimerPing: TTimer;
     TimerReadStdOutput: TTimer;
     UniqueInstance1: TUniqueInstance;
+    procedure actInitExecute(Sender: TObject);
     procedure actExitExecute(Sender: TObject);
     procedure actRestartExecute(Sender: TObject);
     procedure actRunSupportProcExecute(Sender: TObject);
     procedure actStartExecute(Sender: TObject);
     procedure actStopExecute(Sender: TObject);
     procedure actTerminateExecute(Sender: TObject);
-    procedure DataModuleCreate(Sender: TObject);
-    procedure timerPingTimer(Sender: TObject);
+    procedure TimerInitTimer(Sender: TObject);
+    procedure TimerPingTimer(Sender: TObject);
     procedure TimerReadStdOutputTimer(Sender: TObject);
   private
     OutputChankStr: UTF8String;
   public
     APIKey: string;
-    SyncthigPath: UTF8String;
+    SyncthigExecPath: UTF8String;
+
+    // data dir. / config dir.
     SyncthigHome: UTF8String;
+
     SyncthigParam: UTF8String;
     SyncthigServer: UTF8String;
 
 
     procedure Init;
-    function FindSyncthigPath: UTF8String;
+    function GetSyncthigExecPath: UTF8String; virtual;
+    function GetSyncthigHome: UTF8String; virtual;
+    function GetAPIKey: string; virtual;
     procedure FillSyncthingExecPath;
     procedure FillSupportExecPath;
-    function ReadAPIKey: string;
 
     procedure Start;
     procedure Stop;
@@ -143,6 +151,7 @@ var
 implementation
 
 uses
+  uFormOptions,
   uFormMain,
   httpsend, {Synacode,}
   synautil,
@@ -194,10 +203,10 @@ begin
   end;
 end;
 
-function TCore.ReadAPIKey: string;
+function TCore.GetAPIKey: string;
 begin
+  //todo: WIP: GetAPIKey
   Result := 'MJzE2GL2vOvaFydjM05ocRM64SZ0DR1-';
-  //todo: WIP: ReadAPIKey
 end;
 
 procedure TCore.Start;
@@ -268,9 +277,13 @@ begin
   ReadStdOutput(ProcessSyncthing, @AddStringToConsole, OutputChankStr);
 end;
 
-procedure TCore.DataModuleCreate(Sender: TObject);
+procedure TCore.TimerInitTimer(Sender: TObject);
 begin
-  Core.Init();
+  if TimerInit.Enabled then
+  begin
+    TimerInit.Enabled:=false;
+    actInit.Execute();
+  end;
 end;
 
 procedure TCore.actRestartExecute(Sender: TObject);
@@ -283,6 +296,11 @@ procedure TCore.actExitExecute(Sender: TObject);
 begin
   actStop.Execute();
   Application.Terminate;
+end;
+
+procedure TCore.actInitExecute(Sender: TObject);
+begin
+  Core.Init();
 end;
 
 procedure TCore.actRunSupportProcExecute(Sender: TObject);
@@ -306,7 +324,7 @@ begin
   ProcessSyncthing.Terminate(0);
 end;
 
-procedure TCore.timerPingTimer(Sender: TObject);
+procedure TCore.TimerPingTimer(Sender: TObject);
 var
   strs: TStrings;
   ok: boolean;
@@ -331,9 +349,9 @@ procedure TCore.Init;
 begin
   //todo: WIP: INIT
   SyncthigServer:='http://127.0.0.1:8384/';
-  SyncthigPath:=FindSyncthigPath();
-  APIKey:=ReadAPIKey();
-  SyncthigHome:='h:\Dat\syncthing\';
+  SyncthigExecPath:=GetSyncthigExecPath();
+  SyncthigHome:=GetSyncthigHome();
+  APIKey:=GetAPIKey();
 end;
 
 procedure TCore.AddStringToConsole(Str: UTF8String);
@@ -343,26 +361,32 @@ begin
   frmMain.edConsole.Lines.Add(Str);
 end;
 
-function TCore.FindSyncthigPath: UTF8String;
+function TCore.GetSyncthigExecPath: UTF8String;
 begin
-  //todo: WIP: FindSyncthigPath
-  result := 'D:\NetDrive\AppsPortableHex\Programs\_Net\syncthing\syncthing.exe';
+  //OLD: result := 'D:\NetDrive\AppsPortableHex\Programs\_Net\syncthing\syncthing.exe';
+  result := frmOptions.edPathToExec.Text;
+end;
+
+function TCore.GetSyncthigHome: UTF8String;
+begin
+  //OLD: result := 'h:\Dat\syncthing\';
+  result := frmOptions.edPathToConfig.Text;
 end;
 
 procedure TCore.FillSyncthingExecPath;
 begin
-  {$IFDEF Win32}
+  {$IFDEF WINDOWS}
   {Note:
-     in windows has a bug - std output pipe is empty (for an unknown reason).
-     in other program all working good (There is an error only in Syncthing).
-     for fix this bug need redirect pipe stream over other program.
+     In windows has a bug - std output pipe is empty (for an unknown reason).
+     In other program all working good (There is an error only in Syncthing).
+     For fix this bug need redirect pipe stream over other program.
      (for redirect i am using 'find' program)
      (my enviroment: Win7 x64, Syncthing v0.14.27 for Windows (32 bit).
   }
   ProcessSyncthing.Executable :=
     GetEnvironmentVariable('WINDIR')+'\system32\cmd.exe';
   ProcessSyncthing.Parameters.Text :=
-    '/C "' + SyncthigPath + ' ' +
+    '/C "' + SyncthigExecPath + ' ' +
     //'-no-console '+
     '-no-browser '+
     '-home=' + SyncthigHome + ' ' +
