@@ -46,7 +46,6 @@ object Core: TCore
     top = 20
   end
   object TimerPing: TTimer
-    Enabled = False
     OnTimer = TimerPingTimer
     left = 70
     top = 144

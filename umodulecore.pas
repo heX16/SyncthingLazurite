@@ -156,8 +156,10 @@ type
     procedure ReadStdOutput(Proc: TProcessUTF8; AddProc: TAddConsoleLine; var TextChank: UTF8String);
     procedure AddStringToConsole(Str: UTF8String);
 
-    function GetHTTPText(const RESTPath: string; Response: TStrings): Boolean;
     function SendJSON(const RESTPath: string; const DataForSend: TStrings = nil): Boolean;
+
+    // call from other thread!
+    procedure aiohttpAddHeader(Query: THttpQueryBase);
 
     procedure httpPing(Query: THttpQuery);
   end;
@@ -179,23 +181,6 @@ uses
 {$R *.lfm}
 
 { TCore }
-
-function TCore.GetHTTPText(const RESTPath: string; Response: TStrings): Boolean;
-var
-  HTTP: THTTPSend;
-  URL: string;
-begin
-  URL := SyncthigServer + RESTPath;
-  HTTP := THTTPSend.Create;
-  HTTP.Headers.Add('X-API-Key: '+APIKey);
-  try
-    Result := HTTP.HTTPMethod('GET', URL);
-    if Result then
-      Response.LoadFromStream(HTTP.Document);
-  finally
-    HTTP.Free;
-  end;
-end;
 
 function TCore.SendJSON(const RESTPath: string; const DataForSend: TStrings
   ): Boolean;
@@ -220,12 +205,15 @@ begin
   end;
 end;
 
+procedure TCore.aiohttpAddHeader(Query: THttpQueryBase);
+begin
+  Query.SetRequestHeader('X-API-Key', self.APIKey);
+end;
+
 procedure TCore.httpPing(Query: THttpQuery);
 begin
   if not Terminated then
-    if Query.CallState=httpLoadStart then
-      Query.SetRequestHeader('X-API-Key', Core.APIKey);
-    if Query.CallState=httpLoad then
+    if Query.ReadyState=httpDone then
     begin
       //todo: check ping result
       if Query.Status <> 200 then
@@ -364,13 +352,14 @@ end;
 procedure TCore.TimerPingTimer(Sender: TObject);
 begin
   if not httpPingInProc then
-    aiohttp.Get(SyncthigServer+'rest/system/ping', @httpPing, @httpPingInProc);
+    aiohttp.Get(SyncthigServer+'rest/system/ping', @httpPing, '', @httpPingInProc);
 end;
 
 procedure TCore.Init;
 begin
   //todo: WIP: INIT
   aiohttp := TAsyncHTTP.Create(false);
+  aiohttp.OnOpened:=@aiohttpAddHeader;
   SyncthigServer:='http://127.0.0.1:8384/';
   SyncthigExecPath:=GetSyncthigExecPath();
   SyncthigHome:=GetSyncthigHome();

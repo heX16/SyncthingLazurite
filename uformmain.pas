@@ -63,6 +63,7 @@ implementation
 
 uses
   //fpjson,
+  httpsend,
   uFormOptions,
   jsonparser, jsonscanner;
 
@@ -78,10 +79,8 @@ var
   JData: TJSONData;
   strm: TMemoryStream;
 begin
-  writeln(Query.CallState, Core.APIKey);
-  if Query.CallState=httpLoadStart then
-    Query.SetRequestHeader('X-API-Key', Core.APIKey)
-  else if Query.CallState=httpLoad then
+  writeln(Query.ReadyState, Core.APIKey);
+  if Query.ReadyState=httpDone then
   begin
     StrResponse := TStringList.Create();
     try
@@ -119,10 +118,6 @@ end;
 procedure TfrmMain.btnGetAPIClick(Sender: TObject);
 var s:TStrings;
 begin
-  s:=TStringList.Create;
-  Core.GetHTTPText('rest/'+listGetAPI.Items[listGetAPI.ItemIndex], s);
-  ShowMessage(s.Text);
-
   Core.aiohttp.Get(Core.SyncthigServer+'rest/'+listGetAPI.Items[listGetAPI.ItemIndex], @httpGetAPItoTree);
 end;
 
