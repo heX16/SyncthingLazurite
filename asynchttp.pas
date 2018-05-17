@@ -25,13 +25,21 @@ type
     Connected: boolean;
     InWorkFlagPtr: PBoolean;
     procedure SetRequestHeader(name: string; value: string);
+
     constructor Create;
     destructor Destroy; override;
   end;
 
   THttpQueryEvent = procedure (Query: THttpQueryBase) of object;
 
-  THttpQueryState = (httpLoadStart, httpLoad, httpError);
+  {
+    UNSENT = 0; // начальное состояние
+    OPENED = 1; // вызван open
+    HEADERS_RECEIVED = 2; // получены заголовки
+    LOADING = 3; // загружается тело (получен очередной пакет данных)
+    DONE = 4; // запрос завершён
+  }
+  THttpQueryState = (httpLoadStart=1, httpLoad=2, httpError=13);
 
   THttpQuery = class(THttpQueryBase)
   public
@@ -48,6 +56,7 @@ type
     Load: THttpQueryEvent;
     Error: THttpQueryEvent;
     CallState: THttpQueryState;
+    procedure HttpRequestEnded(); virtual;
     procedure HttpRequest();
   end;
 
@@ -57,8 +66,12 @@ type
 
   TQueueHttpQuery = specialize TQueue<THttpQuery>;
 
+  { THttpQueryForThreadHTTP }
+
   THttpQueryForThreadHTTP = class(THttpQuery)
     Callback: THttpCallbackEvent;
+    procedure HttpRequestEnded(); override;
+    procedure SelfDestroy(Data: IntPtr);
   end;
 
   TAsyncHTTP = class(TThread)
@@ -76,12 +89,12 @@ type
 
     //procedure AsyncProcProxy(p: IntPtr);
 
-    destructor Destroy; override;
   public
     procedure Get(const URL: string; Callback: THttpCallbackEvent;
       InWorkFlagPtr: PBoolean = nil);
     procedure Terminate;
 
+    destructor Destroy; override;
   end;
 
 implementation
@@ -90,25 +103,44 @@ uses
   Forms, Controls, Graphics, Dialogs, StdCtrls,
   ExtCtrls;
 
+{ THttpQueryForThreadHTTP }
+
+procedure THttpQueryForThreadHTTP.HttpRequestEnded();
+begin
+  Application.QueueAsyncCall(@SelfDestroy, IntPtr(Self));
+end;
+
+procedure THttpQueryForThreadHTTP.SelfDestroy(Data: IntPtr);
+begin
+  // free item
+  THttpQuery(Data).Free();
+end;
+
 { THttpQuery }
 
-procedure THttpQuery.HttpRequest();
-var
-  HTTP: THTTPSend;
+procedure THttpQuery.HttpRequestEnded();
 begin
-  HTTP := THTTPSend.Create;
+
+end;
+
+procedure THttpQuery.HttpRequest();
+begin
+  Session := THTTPSend.Create;
   try
     CallState:=httpLoadStart;
     if LoadStart<>nil then
       LoadStart(self);
-    Connected := HTTP.HTTPMethod(Method, Url);
-    Status := HTTP.ResultCode;
+    Connected := Session.HTTPMethod(Method, Url);
+    Status := Session.ResultCode;
     if Connected then
     begin
       //HTTP.Sock.OnStatus:=...; - OnProgress
-      if Response=nil then
-        Response := TMemoryStream.Create();
-      Response.LoadFromStream(HTTP.Document);
+      //if Response=nil then Response := TMemoryStream.Create();
+      if Session.Document.Size > 0 then
+      begin
+        Response.LoadFromStream(Session.Document);
+        Response.Position:=0;
+      end;
       CallState:=httpLoad;
       if Load<>nil then
         Load(self);
@@ -119,9 +151,10 @@ begin
         Error(self);
     end;
   finally
-    HTTP.Free;
+    FreeAndNil(Session);
     if InWorkFlagPtr<>nil then
       InWorkFlagPtr^:=false;
+    HttpRequestEnded();
   end;
 end;
 
@@ -135,6 +168,7 @@ end;
 constructor THttpQueryBase.Create;
 begin
   //
+  Response := TMemoryStream.Create();
 end;
 
 destructor THttpQueryBase.Destroy;
@@ -183,8 +217,8 @@ begin
         CritQueryList.Leave();
         // network stun!
         q.HttpRequest();
-        // free item
-        FreeAndNil(q);
+        //note: About 'q'. Can't run 'free' here - async callback will happen later.
+        //note: About 'q'. Item not needed destroy - he used 'SelfDestroy' procedure.
       end else
         CritQueryList.Leave();
       EventWaitWork.WaitFor(INFINITE);
@@ -213,6 +247,7 @@ begin
     if InWorkFlagPtr<>nil then
       InWorkFlagPtr^:=true;
     q := THttpQueryForThreadHTTP.Create();
+    q.Method:='GET';
     q.Url:=URL;
     if InWorkFlagPtr<>nil then
       q.InWorkFlagPtr:=InWorkFlagPtr;

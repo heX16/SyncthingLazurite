@@ -1,6 +1,6 @@
 program SimpleSyncthing;
 
-//{$apptype console}
+{$apptype console}
 {$mode objfpc}{$H+}
 
 uses

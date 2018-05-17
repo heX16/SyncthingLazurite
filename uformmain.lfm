@@ -85,10 +85,10 @@ object frmMain: TfrmMain
     ResizeAnchor = akBottom
   end
   object edJSONView: TMemo
-    Left = 393
+    Left = 289
     Height = 383
     Top = 50
-    Width = 78
+    Width = 182
     Align = alRight
     ScrollBars = ssAutoBoth
     TabOrder = 3
@@ -98,7 +98,7 @@ object frmMain: TfrmMain
     Left = 133
     Height = 383
     Top = 50
-    Width = 255
+    Width = 151
     Align = alClient
     Images = imgJSON
     TabOrder = 4
@@ -136,7 +136,7 @@ object frmMain: TfrmMain
     TabOrder = 5
   end
   object Splitter2: TSplitter
-    Left = 388
+    Left = 284
     Height = 383
     Top = 50
     Width = 5

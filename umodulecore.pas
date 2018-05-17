@@ -223,16 +223,22 @@ end;
 procedure TCore.httpPing(Query: THttpQuery);
 begin
   if not Terminated then
+    if Query.CallState=httpLoadStart then
+      Query.SetRequestHeader('X-API-Key', Core.APIKey);
     if Query.CallState=httpLoad then
+    begin
       //todo: check ping result
-      frmMain.shStatusCircle.Brush.Color:=clGreen else
+      if Query.Status <> 200 then
+        frmMain.shStatusCircle.Brush.Color:=clPurple else
+        frmMain.shStatusCircle.Brush.Color:=clGreen
+    end else
       frmMain.shStatusCircle.Brush.Color:=clRed;
 end;
 
 function TCore.GetAPIKey: string;
 begin
   //todo: WIP: GetAPIKey
-  Result := 'MJzE2GL2vOvaFydjM05ocRM64SZ0DR1-';
+  Result := frmOptions.edAPIKey.Text;
 end;
 
 procedure TCore.Start;
@@ -369,7 +375,8 @@ begin
   SyncthigExecPath:=GetSyncthigExecPath();
   SyncthigHome:=GetSyncthigHome();
   APIKey:=GetAPIKey();
-  TimerPing.Enabled:=true;
+
+  //todo: TimerPing.Enabled:=true;
 end;
 
 procedure TCore.Done;

@@ -1,5 +1,7 @@
 unit uFormMain;
 
+//todo: if API key is not valid - analize this error
+
 {$mode objfpc}{$H+}
 
 interface
@@ -8,6 +10,7 @@ uses
   Classes, SysUtils, FileUtil,
   //SynHighlighterJScript,
   //SynEdit,
+  AsyncHttp,
   uModuleCore, fpjson, Forms, Controls, Graphics, Dialogs, StdCtrls, ExtCtrls,
   Menus, ComCtrls, Buttons;
 
@@ -44,6 +47,7 @@ type
     procedure TrayIconDblClick(Sender: TObject);
   private
 
+    procedure httpGetAPItoTree(Query: THttpQuery);
   public
     procedure ShowJSONDocument(TV: TTreeView; DataSource: TJSONData;
       Compact: boolean = False; SortObjectMembers: boolean = False);
@@ -67,41 +71,59 @@ uses
 
 { TfrmMain }
 
-procedure TfrmMain.btnGetAPIClick(Sender: TObject);
+procedure TfrmMain.httpGetAPItoTree(Query: THttpQuery);
 var
-  Response: TStringList;
+  StrResponse: TStringList;
   JN: TJSONParser;
   JData: TJSONData;
+  strm: TMemoryStream;
 begin
-  Response := TStringList.Create();
-
-  try
-    if Core.GetHTTPText('rest/'+listGetAPI.Items[listGetAPI.ItemIndex], Response) then
-    begin
-      JData:=nil;
-      JN:=nil;
-      edJSONView.Text := Response.Text;
-      //edJSONView.Text:=Response.Text;
-      JN := TJSONParser.Create(Response.Text, [joUTF8]);
-      try
-        JData := JN.Parse();
-      except
-        on EJSONParser do JData := nil;
-      end;
-      if JData <> nil then
+  writeln(Query.CallState, Core.APIKey);
+  if Query.CallState=httpLoadStart then
+    Query.SetRequestHeader('X-API-Key', Core.APIKey)
+  else if Query.CallState=httpLoad then
+  begin
+    StrResponse := TStringList.Create();
+    try
+      writeln(Query.Status);
+      strm := Query.Response;
+      if strm.Size>0 then
       begin
-        edJSONView.Text := JData.FormatJSON();
-        ShowJSONDocument(treeJsonData, JData, True);
-        treeJsonData.FullExpand();
+        StrResponse.LoadFromStream(Query.Response);
+        JData:=nil;
+        JN:=nil;
+        edJSONView.Text := StrResponse.Text;
+        JN := TJSONParser.Create(StrResponse.Text, [joUTF8]);
+        try
+          JData := JN.Parse();
+        except
+          on EJSONParser do JData := nil;
+        end;
+        if JData <> nil then
+        begin
+          edJSONView.Text := JData.FormatJSON();
+          ShowJSONDocument(treeJsonData, JData, True);
+          treeJsonData.FullExpand();
+        end;
       end;
+    finally
+      if JData<>nil then
+        JData.Free();
+      if JN<>nil then
+        JN.Free();
+      StrResponse.Free();
     end;
-  finally
-    if JData<>nil then
-      JData.Free();
-    if JN<>nil then
-      JN.Free();
-    Response.Free();
   end;
+end;
+
+procedure TfrmMain.btnGetAPIClick(Sender: TObject);
+var s:TStrings;
+begin
+  s:=TStringList.Create;
+  Core.GetHTTPText('rest/'+listGetAPI.Items[listGetAPI.ItemIndex], s);
+  ShowMessage(s.Text);
+
+  Core.aiohttp.Get(Core.SyncthigServer+'rest/'+listGetAPI.Items[listGetAPI.ItemIndex], @httpGetAPItoTree);
 end;
 
 procedure TfrmMain.btnOptionsClick(Sender: TObject);
