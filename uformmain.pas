@@ -37,6 +37,7 @@ type
     procedure btnOptionsClick(Sender: TObject);
     procedure btnStartClick(Sender: TObject);
     procedure btnStopClick(Sender: TObject);
+    procedure FormClose(Sender: TObject; var CloseAction: TCloseAction);
     procedure FormWindowStateChange(Sender: TObject);
     procedure miExitClick(Sender: TObject);
     procedure miShowClick(Sender: TObject);
@@ -44,7 +45,6 @@ type
   private
 
   public
-
     procedure ShowJSONDocument(TV: TTreeView; DataSource: TJSONData;
       Compact: boolean = False; SortObjectMembers: boolean = False);
     procedure ShowJSONData(TV: TTreeView; AParent: TTreeNode;
@@ -117,6 +117,11 @@ end;
 procedure TfrmMain.btnStopClick(Sender: TObject);
 begin
   Core.Stop();
+end;
+
+procedure TfrmMain.FormClose(Sender: TObject; var CloseAction: TCloseAction);
+begin
+  Core.Done();
 end;
 
 procedure TfrmMain.FormWindowStateChange(Sender: TObject);

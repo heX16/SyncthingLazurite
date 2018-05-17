@@ -31,6 +31,8 @@ type
 
   THttpQueryEvent = procedure (Query: THttpQueryBase) of object;
 
+  THttpQueryState = (httpLoadStart, httpLoad, httpError);
+
   THttpQuery = class(THttpQueryBase)
   public
     {
@@ -45,23 +47,21 @@ type
     LoadStart: THttpQueryEvent;
     Load: THttpQueryEvent;
     Error: THttpQueryEvent;
+    CallState: THttpQueryState;
     procedure HttpRequest();
   end;
 
-  { TThreadHTTP }
+  { TAsyncHTTP }
 
   THttpCallbackEvent = procedure (Query: THttpQuery) of object;
 
   TQueueHttpQuery = specialize TQueue<THttpQuery>;
 
-  THttpQueryState = (httpLoadStart, httpLoad, httpError);
-
   THttpQueryForThreadHTTP = class(THttpQuery)
-    CallState: THttpQueryState;
     Callback: THttpCallbackEvent;
   end;
 
-  TThreadHTTP = class(TThread)
+  TAsyncHTTP = class(TThread)
   protected
     QueryList: TQueueHttpQuery;
     CritQueryList: TCriticalSection;
@@ -73,9 +73,13 @@ type
 
     // All 'protected' call in this thread. All 'public' procedure call from other threads.
     procedure Execute; override;
+
+    //procedure AsyncProcProxy(p: IntPtr);
+
+    destructor Destroy; override;
   public
     procedure Get(const URL: string; Callback: THttpCallbackEvent;
-      InWorkFlagPtr: PBoolean);
+      InWorkFlagPtr: PBoolean = nil);
     procedure Terminate;
 
   end;
@@ -94,6 +98,7 @@ var
 begin
   HTTP := THTTPSend.Create;
   try
+    CallState:=httpLoadStart;
     if LoadStart<>nil then
       LoadStart(self);
     Connected := HTTP.HTTPMethod(Method, Url);
@@ -104,13 +109,19 @@ begin
       if Response=nil then
         Response := TMemoryStream.Create();
       Response.LoadFromStream(HTTP.Document);
+      CallState:=httpLoad;
       if Load<>nil then
         Load(self);
     end else
+    begin
+      CallState:=httpError;
       if Error<>nil then
         Error(self);
+    end;
   finally
     HTTP.Free;
+    if InWorkFlagPtr<>nil then
+      InWorkFlagPtr^:=false;
   end;
 end;
 
@@ -133,31 +144,28 @@ begin
   inherited Destroy;
 end;
 
-{ TThreadHTTP }
+{ TAsyncHTTP }
 
-procedure TThreadHTTP.OnLoad(Query: THttpQueryBase);
+procedure TAsyncHTTP.OnLoad(Query: THttpQueryBase);
 var q: THttpQueryForThreadHTTP absolute Query;
 begin
   //q := THttpQueryForThreadHTTP(Query); // use 'absolute' keyword.
-  q.CallState:=httpLoad;
   Application.QueueAsyncCall(TDataEvent(q.Callback), IntPtr(q));
 end;
 
-procedure TThreadHTTP.OnLoadStart(Query: THttpQueryBase);
+procedure TAsyncHTTP.OnLoadStart(Query: THttpQueryBase);
 var q: THttpQueryForThreadHTTP absolute Query;
 begin
-  q.CallState:=httpLoadStart;
   Application.QueueAsyncCall(TDataEvent(q.Callback), IntPtr(q));
 end;
 
-procedure TThreadHTTP.OnError(Query: THttpQueryBase);
+procedure TAsyncHTTP.OnError(Query: THttpQueryBase);
 var q: THttpQueryForThreadHTTP absolute Query;
 begin
-  q.CallState:=httpError;
   Application.QueueAsyncCall(TDataEvent(q.Callback), IntPtr(q));
 end;
 
-procedure TThreadHTTP.Execute;
+procedure TAsyncHTTP.Execute;
 var
   q: THttpQuery;
 begin
@@ -175,38 +183,52 @@ begin
         CritQueryList.Leave();
         // network stun!
         q.HttpRequest();
+        // free item
         FreeAndNil(q);
       end else
         CritQueryList.Leave();
       EventWaitWork.WaitFor(INFINITE);
     end;
   finally
+    //todo: clear QueryList!
     FreeAndNil(CritQueryList);
     FreeAndNil(QueryList);
     FreeAndNil(EventWaitWork);
   end;
 end;
 
-procedure TThreadHTTP.Get(const URL: string; Callback: THttpCallbackEvent;
+destructor TAsyncHTTP.Destroy;
+begin
+  if not Terminated then
+    Terminate();
+  inherited Destroy;
+end;
+
+procedure TAsyncHTTP.Get(const URL: string; Callback: THttpCallbackEvent;
   InWorkFlagPtr: PBoolean);
 var q: THttpQueryForThreadHTTP;
 begin
-  q := THttpQueryForThreadHTTP.Create();
-  q.Url:=URL;
-  if InWorkFlagPtr<>nil then
-    q.InWorkFlagPtr:=InWorkFlagPtr;
-  q.Load:=@OnLoad;
-  q.Error:=@OnError;
-  q.LoadStart:=@OnLoadStart;
-  q.Callback:=Callback;
+  if not Terminated then
+  begin
+    if InWorkFlagPtr<>nil then
+      InWorkFlagPtr^:=true;
+    q := THttpQueryForThreadHTTP.Create();
+    q.Url:=URL;
+    if InWorkFlagPtr<>nil then
+      q.InWorkFlagPtr:=InWorkFlagPtr;
+    q.Load:=@OnLoad;
+    q.Error:=@OnError;
+    q.LoadStart:=@OnLoadStart;
+    q.Callback:=Callback;
 
-  CritQueryList.Enter();
-  QueryList.Push(q);
-  CritQueryList.Leave();
-  EventWaitWork.SetEvent();
+    CritQueryList.Enter();
+    QueryList.Push(q);
+    CritQueryList.Leave();
+    EventWaitWork.SetEvent();
+  end;
 end;
 
-procedure TThreadHTTP.Terminate;
+procedure TAsyncHTTP.Terminate;
 begin
   inherited;
   // wake up and get out!

@@ -3,6 +3,14 @@ unit uModuleCore;
 {$mode objfpc}{$H+}
 
 (*
+procedure TfrmMain.httpTest(Query: THttpQuery);
+begin
+  //example: aiohttp.Get('http://ya.ru', @httpTest);
+  if Query.CallState = httpLoad then
+    ShowMessage(IntToStr(Query.Status));
+end;
+
+
 http://wiki.freepascal.org/Executing_External_Programs
 http://wiki.freepascal.org/Executing_External_Programs/ru
 
@@ -80,7 +88,8 @@ Misc Services Endpoints
 interface
 
 uses
-  Classes, SysUtils, FileUtil, UTF8Process, ExtCtrls, ActnList, StdActns, Forms,
+  AsyncHttp,
+  Classes, SysUtils, FileUtil, UTF8Process, ExtCtrls, ActnList, Forms,
   UniqueInstance;
 
 type
@@ -112,12 +121,16 @@ type
     procedure actStartExecute(Sender: TObject);
     procedure actStopExecute(Sender: TObject);
     procedure actTerminateExecute(Sender: TObject);
+    procedure DataModuleDestroy(Sender: TObject);
     procedure TimerInitTimer(Sender: TObject);
     procedure TimerPingTimer(Sender: TObject);
     procedure TimerReadStdOutputTimer(Sender: TObject);
   private
     OutputChankStr: UTF8String;
   public
+    Terminated: boolean;
+    aiohttp: TAsyncHTTP;
+
     APIKey: string;
     SyncthigExecPath: UTF8String;
 
@@ -127,8 +140,10 @@ type
     SyncthigParam: UTF8String;
     SyncthigServer: UTF8String;
 
+    httpPingInProc: boolean;
 
     procedure Init;
+    procedure Done;
     function GetSyncthigExecPath: UTF8String; virtual;
     function GetSyncthigHome: UTF8String; virtual;
     function GetAPIKey: string; virtual;
@@ -143,6 +158,8 @@ type
 
     function GetHTTPText(const RESTPath: string; Response: TStrings): Boolean;
     function SendJSON(const RESTPath: string; const DataForSend: TStrings = nil): Boolean;
+
+    procedure httpPing(Query: THttpQuery);
   end;
 
 var
@@ -201,6 +218,15 @@ begin
   finally
     HTTP.Free;
   end;
+end;
+
+procedure TCore.httpPing(Query: THttpQuery);
+begin
+  if not Terminated then
+    if Query.CallState=httpLoad then
+      //todo: check ping result
+      frmMain.shStatusCircle.Brush.Color:=clGreen else
+      frmMain.shStatusCircle.Brush.Color:=clRed;
 end;
 
 function TCore.GetAPIKey: string;
@@ -324,34 +350,33 @@ begin
   ProcessSyncthing.Terminate(0);
 end;
 
-procedure TCore.TimerPingTimer(Sender: TObject);
-var
-  strs: TStrings;
-  ok: boolean;
+procedure TCore.DataModuleDestroy(Sender: TObject);
 begin
-  ok := false;
-  try
-    strs := TStringList.Create;
-    ok := GetHTTPText('rest/system/ping', strs);
-    //todo: check ping result
-  finally
-    strs.Free;
-  end;
-  if ok then
-  begin
-    //todo: check ping result
-    frmMain.shStatusCircle.Brush.Color:=clGreen;
-  end else
-    frmMain.shStatusCircle.Brush.Color:=clRed;
+  Done();
+end;
+
+procedure TCore.TimerPingTimer(Sender: TObject);
+begin
+  if not httpPingInProc then
+    aiohttp.Get(SyncthigServer+'rest/system/ping', @httpPing, @httpPingInProc);
 end;
 
 procedure TCore.Init;
 begin
   //todo: WIP: INIT
+  aiohttp := TAsyncHTTP.Create(false);
   SyncthigServer:='http://127.0.0.1:8384/';
   SyncthigExecPath:=GetSyncthigExecPath();
   SyncthigHome:=GetSyncthigHome();
   APIKey:=GetAPIKey();
+  TimerPing.Enabled:=true;
+end;
+
+procedure TCore.Done;
+begin
+  Terminated := true;
+  TimerPing.Enabled:=false;
+  FreeAndNil(aiohttp);
 end;
 
 procedure TCore.AddStringToConsole(Str: UTF8String);
