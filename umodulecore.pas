@@ -88,7 +88,10 @@ Misc Services Endpoints
 interface
 
 uses
+  Dialogs, //todo: TEMP
   AsyncHttp,
+  XMLRead, DOM,
+  LazFileUtils, LazUTF8,
   Classes, SysUtils, FileUtil, UTF8Process, ExtCtrls, ActnList, Forms,
   UniqueInstance;
 
@@ -189,6 +192,7 @@ var
   URL: string;
   s: UTF8String;
 begin
+  //todo: REMOVE OLD METHOD - migrate to asyncHttp
   Result := false;
   URL := SyncthigServer + RESTPath;
   HTTP := THTTPSend.Create;
@@ -223,10 +227,64 @@ begin
       frmMain.shStatusCircle.Brush.Color:=clRed;
 end;
 
-function TCore.GetAPIKey: string;
+//todo: TEMP!!!!!!!!!
+function DoFill(Node:TDOMNode): widestring;
+var
+  i: integer;
 begin
+  Result := '';
+  //if not Assigned(Node) then exit;
+  for i:=0 to Node.ChildNodes.Count - 1 do
+  begin
+    Result := Result + Node.ChildNodes[i].NodeName + ', ';
+    Result := Result + ' (' + DoFill(Node.ChildNodes[i]) + '), ';
+  end;
+end;
+
+function GetXml(var Node:TDOMNode; Name: WideString): boolean;
+var N:TDOMNode;
+begin
+  Result := false;
+  if Node <> nil then
+  begin
+    N := Node.FindNode(Name);
+    if N <> nil then
+    begin
+      Node:=N;
+      Result:=true;
+    end;
+  end;
+end;
+
+function TCore.GetAPIKey: string;
+var
+  //key: string;
+  filename: UTF8String;
+  FDoc: TXMLDocument;
+  NPtr: TDOMNode;
+begin
+  try
+    FDoc := nil;
+    filename := GetSyncthigHome() + '\config.xml';
+    if FileExistsUTF8(filename) then
+      ReadXMLFile(FDoc, UTF8ToSys(filename));
+
+    NPtr := FDoc;
+    if GetXml(NPtr, 'configuration') then
+      if GetXml(NPtr, 'gui') then
+        if GetXml(NPtr, 'apikey') then
+          if GetXml(NPtr, '#text') then
+          begin
+            Result := NPtr.NodeValue;
+          end;
+  finally
+    if Assigned(FDoc) then
+      FreeAndNil(FDoc);
+  end;
+
   //todo: WIP: GetAPIKey
-  Result := frmOptions.edAPIKey.Text;
+  if Result = '' then
+    Result := frmOptions.edAPIKey.Text;
 end;
 
 procedure TCore.Start;

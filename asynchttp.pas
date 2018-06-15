@@ -96,7 +96,13 @@ type
 
     // call from other threads.
     // callback call in 'main' thread (not this thread!).
+    procedure HttpMethod(Method: string; const URL: string; Callback: THttpCallbackEvent; AddHeaders: string = '';
+      InWorkFlagPtr: PBoolean = nil);
+
     procedure Get(const URL: string; Callback: THttpCallbackEvent; AddHeaders: string = '';
+      InWorkFlagPtr: PBoolean = nil);
+
+    procedure Post(const URL: string; Callback: THttpCallbackEvent; AddHeaders: string = '';
       InWorkFlagPtr: PBoolean = nil);
     // call from other threads.
     procedure Terminate;
@@ -213,6 +219,32 @@ begin
   Application.QueueAsyncCall(TDataEvent(q.Callback), IntPtr(q));
 end;
 
+procedure TAsyncHTTP.HttpMethod(Method: string; const URL: string;
+  Callback: THttpCallbackEvent; AddHeaders: string; InWorkFlagPtr: PBoolean);
+var q: THttpQueryForThreadHTTP;
+begin
+  if not Terminated then
+  begin
+    if InWorkFlagPtr<>nil then
+      InWorkFlagPtr^:=true;
+    q := THttpQueryForThreadHTTP.Create();
+    q.Method:=Method;
+    q.Url:=URL;
+    q.Headers:=AddHeaders;
+    if InWorkFlagPtr<>nil then
+      q.InWorkFlagPtr:=InWorkFlagPtr;
+    q.Done:=@DoLoadDone;
+    q.Error:=@DoError;
+    q.Opened:=@DoOpened;
+    q.Callback:=Callback;
+
+    CritQueryList.Enter();
+    QueryList.Push(q);
+    CritQueryList.Leave();
+    EventWaitWork.SetEvent();
+  end;
+end;
+
 procedure TAsyncHTTP.Execute;
 var
   q: THttpQuery;
@@ -254,28 +286,14 @@ end;
 
 procedure TAsyncHTTP.Get(const URL: string; Callback: THttpCallbackEvent;
   AddHeaders: string; InWorkFlagPtr: PBoolean);
-var q: THttpQueryForThreadHTTP;
 begin
-  if not Terminated then
-  begin
-    if InWorkFlagPtr<>nil then
-      InWorkFlagPtr^:=true;
-    q := THttpQueryForThreadHTTP.Create();
-    q.Method:='GET';
-    q.Url:=URL;
-    q.Headers:=AddHeaders;
-    if InWorkFlagPtr<>nil then
-      q.InWorkFlagPtr:=InWorkFlagPtr;
-    q.Done:=@DoLoadDone;
-    q.Error:=@DoError;
-    q.Opened:=@DoOpened;
-    q.Callback:=Callback;
+  HttpMethod('GET', Url, Callback, AddHeaders, InWorkFlagPtr);
+end;
 
-    CritQueryList.Enter();
-    QueryList.Push(q);
-    CritQueryList.Leave();
-    EventWaitWork.SetEvent();
-  end;
+procedure TAsyncHTTP.Post(const URL: string; Callback: THttpCallbackEvent;
+  AddHeaders: string; InWorkFlagPtr: PBoolean);
+begin
+  HttpMethod('POST', Url, Callback, AddHeaders, InWorkFlagPtr);
 end;
 
 procedure TAsyncHTTP.Terminate;
