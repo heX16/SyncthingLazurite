@@ -303,7 +303,10 @@ end;
 
 procedure TCore.Stop;
 begin
+  //todo: WIP!!!! - чет не заработал POST метод...
+  //todo: OLD:
   SendJSON('rest/system/shutdown');
+  //aiohttp.Post('rest/system/shutdown', '', nil);
   ProcessSupport.Terminate(0);
   //ProcessSyncthing.Terminate(0);
 end;

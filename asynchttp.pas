@@ -19,6 +19,8 @@ type
     Method: string;
     Url: string;
     Headers: string;
+    // data for 'post' method
+    Data: string;
     //user, password
     Status: integer;
     // readed data
@@ -74,7 +76,7 @@ type
   THttpQueryForThreadHTTP = class(THttpQuery)
     Callback: THttpCallbackEvent;
     procedure HttpRequestEnded(); override;
-    procedure SelfDestroy(Data: IntPtr);
+    procedure SelfDestroy(DataPtr: IntPtr);
   end;
 
   TAsyncHTTP = class(TThread)
@@ -97,13 +99,15 @@ type
     // call from other threads.
     // callback call in 'main' thread (not this thread!).
     procedure HttpMethod(Method: string; const URL: string; Callback: THttpCallbackEvent; AddHeaders: string = '';
-      InWorkFlagPtr: PBoolean = nil);
+      const Data: string = ''; InWorkFlagPtr: PBoolean = nil);
 
     procedure Get(const URL: string; Callback: THttpCallbackEvent; AddHeaders: string = '';
       InWorkFlagPtr: PBoolean = nil);
 
-    procedure Post(const URL: string; Callback: THttpCallbackEvent; AddHeaders: string = '';
+    procedure Post(const URL: string; const Data: string;
+      Callback: THttpCallbackEvent; AddHeaders: string = '';
       InWorkFlagPtr: PBoolean = nil);
+
     // call from other threads.
     procedure Terminate;
 
@@ -113,7 +117,7 @@ type
 implementation
 
 uses
-  Forms, Controls, Graphics, Dialogs, StdCtrls,
+  Forms, Controls, Graphics, Dialogs, StdCtrls, synautil,
   ExtCtrls;
 
 { THttpQueryForThreadHTTP }
@@ -123,7 +127,7 @@ begin
   Application.QueueAsyncCall(@SelfDestroy, IntPtr(Self));
 end;
 
-procedure THttpQueryForThreadHTTP.SelfDestroy(Data: IntPtr);
+procedure THttpQueryForThreadHTTP.SelfDestroy(DataPtr: IntPtr);
 begin
   //todo: всеравно ловлю AV - в сложных/неудачных случаях
   //  нужно финальный вызов callback делать через "прокси" процедуру,
@@ -131,7 +135,7 @@ begin
   //  потомучто просто скидывать вызов в "стек асинхронных вызовов" это неправильно,
   //  формально говоря никто не обящает сохранения последовательности выполнения.
   // free item
-  THttpQuery(Data).Free();
+  THttpQuery(DataPtr).Free();
 end;
 
 { THttpQuery }
@@ -150,6 +154,10 @@ begin
     if Headers<>'' then
       Session.Headers.AddText(Headers);
     Headers:='';
+    if Data<>'' then
+      WriteStrToStream(Session.Document, Data);
+    Data := '';
+
     Connected := Session.HTTPMethod(Method, Url);
     Status := Session.ResultCode;
     if Connected then
@@ -210,17 +218,20 @@ procedure TAsyncHTTP.DoLoadDone(Query: THttpQueryBase);
 var q: THttpQueryForThreadHTTP absolute Query;
 begin
   //q := THttpQueryForThreadHTTP(Query); // use 'absolute' keyword.
-  Application.QueueAsyncCall(TDataEvent(q.Callback), IntPtr(q));
+  if q.Callback <> nil then
+    Application.QueueAsyncCall(TDataEvent(q.Callback), IntPtr(q));
 end;
 
 procedure TAsyncHTTP.DoError(Query: THttpQueryBase);
 var q: THttpQueryForThreadHTTP absolute Query;
 begin
-  Application.QueueAsyncCall(TDataEvent(q.Callback), IntPtr(q));
+  if q.Callback <> nil then
+    Application.QueueAsyncCall(TDataEvent(q.Callback), IntPtr(q));
 end;
 
 procedure TAsyncHTTP.HttpMethod(Method: string; const URL: string;
-  Callback: THttpCallbackEvent; AddHeaders: string; InWorkFlagPtr: PBoolean);
+  Callback: THttpCallbackEvent; AddHeaders: string; const Data: string;
+  InWorkFlagPtr: PBoolean);
 var q: THttpQueryForThreadHTTP;
 begin
   if not Terminated then
@@ -230,6 +241,7 @@ begin
     q := THttpQueryForThreadHTTP.Create();
     q.Method:=Method;
     q.Url:=URL;
+    q.Data:=Data;
     q.Headers:=AddHeaders;
     if InWorkFlagPtr<>nil then
       q.InWorkFlagPtr:=InWorkFlagPtr;
@@ -255,22 +267,33 @@ begin
   try
     while not Terminated do
     begin
-      CritQueryList.Enter();
+      CritQueryList.Enter(); // <<
+
       if QueryList.Size() > 0 then
       begin
         q := QueryList.Front();
         QueryList.Pop();
-        CritQueryList.Leave();
+        CritQueryList.Leave(); // >>
         // network stun!
         q.HttpRequest();
         //note: About 'q'. Can't run 'free' here - async callback will happen later.
         //note: About 'q'. Item not needed destroy - he used 'SelfDestroy' procedure.
       end else
-        CritQueryList.Leave();
+        CritQueryList.Leave(); // >>
+
       EventWaitWork.WaitFor(INFINITE);
     end;
   finally
-    //todo: clear QueryList!
+    // clear QueryList
+    CritQueryList.Enter(); // <<
+    while QueryList.Size() > 0 do
+    begin
+      q := QueryList.Front();
+      QueryList.Pop();
+      FreeAndNil(q);
+    end;
+    CritQueryList.Leave(); // >>
+
     FreeAndNil(CritQueryList);
     FreeAndNil(QueryList);
     FreeAndNil(EventWaitWork);
@@ -287,13 +310,13 @@ end;
 procedure TAsyncHTTP.Get(const URL: string; Callback: THttpCallbackEvent;
   AddHeaders: string; InWorkFlagPtr: PBoolean);
 begin
-  HttpMethod('GET', Url, Callback, AddHeaders, InWorkFlagPtr);
+  HttpMethod('GET', Url, Callback, AddHeaders, '', InWorkFlagPtr);
 end;
 
-procedure TAsyncHTTP.Post(const URL: string; Callback: THttpCallbackEvent;
+procedure TAsyncHTTP.Post(const URL: string; const Data: string; Callback: THttpCallbackEvent;
   AddHeaders: string; InWorkFlagPtr: PBoolean);
 begin
-  HttpMethod('POST', Url, Callback, AddHeaders, InWorkFlagPtr);
+  HttpMethod('POST', Url, Callback, AddHeaders, Data, InWorkFlagPtr);
 end;
 
 procedure TAsyncHTTP.Terminate;
