@@ -84,7 +84,7 @@
         <PackageName Value="LCL"/>
       </Item6>
     </RequiredPackages>
-    <Units Count="6">
+    <Units Count="7">
       <Unit0>
         <Filename Value="SimpleSyncthing.lpr"/>
         <IsPartOfProject Value="True"/>
@@ -122,9 +122,16 @@
         <Filename Value="umodulemain.pas"/>
         <IsPartOfProject Value="True"/>
         <ComponentName Value="ModuleMain"/>
+        <HasResources Value="True"/>
         <ResourceBaseClass Value="DataModule"/>
         <UnitName Value="uModuleMain"/>
       </Unit5>
+      <Unit6>
+        <Filename Value="uformjsonview.pas"/>
+        <IsPartOfProject Value="True"/>
+        <ComponentName Value="frmJSONView"/>
+        <ResourceBaseClass Value="Form"/>
+      </Unit6>
     </Units>
   </ProjectOptions>
   <CompilerOptions>

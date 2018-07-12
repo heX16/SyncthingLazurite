@@ -1,0 +1,78 @@
+object frmJSONView: TfrmJSONView
+  Left = 327
+  Height = 523
+  Top = 138
+  Width = 513
+  Caption = 'frmJSONView'
+  ClientHeight = 523
+  ClientWidth = 513
+  DesignTimePPI = 120
+  LCLVersion = '1.8.0.6'
+  Visible = True
+  object listGetAPI: TListBox
+    Left = 0
+    Height = 523
+    Top = 0
+    Width = 128
+    Align = alLeft
+    Items.Strings = (
+      'system/config'
+      'system/config/insync'
+      'system/connections'
+      'system/debug'
+      'system/discovery'
+      'system/error'
+      'system/log'
+      'system/ping'
+      'system/status'
+      'system/upgrade'
+      'system/version'
+      'db/browse'
+      'events'
+      'events/disk'
+      'stats/device'
+      'stats/folder'
+      'svc/deviceid'
+      'svc/lang'
+      'svc/random/string'
+      'svc/report'
+    )
+    ItemHeight = 17
+    OnClick = listGetAPIClick
+    OnDblClick = listGetAPIClick
+    TabOrder = 0
+  end
+  object Splitter3: TSplitter
+    Left = 128
+    Height = 523
+    Top = 0
+    Width = 5
+  end
+  object treeJsonData: TTreeView
+    Left = 133
+    Height = 523
+    Top = 0
+    Width = 193
+    Align = alClient
+    Images = ModuleMain.imgJSON
+    TabOrder = 2
+  end
+  object Splitter2: TSplitter
+    Left = 326
+    Height = 523
+    Top = 0
+    Width = 5
+    Align = alRight
+    ResizeAnchor = akRight
+  end
+  object edJSONView: TMemo
+    Left = 331
+    Height = 523
+    Top = 0
+    Width = 182
+    Align = alRight
+    ScrollBars = ssAutoBoth
+    TabOrder = 4
+    WordWrap = False
+  end
+end

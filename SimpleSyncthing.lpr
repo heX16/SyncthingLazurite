@@ -9,7 +9,7 @@ uses
   {$ENDIF}{$ENDIF}
   Interfaces, // this includes the LCL widgetset
   Forms, uFormMain, laz_synapse, uniqueinstance_package, uModuleCore,
-  AsyncHttp, uFormOptions, uModuleMain
+  AsyncHttp, uFormOptions, uModuleMain, uformjsonview
   { you can add units after this };
 
 {$R *.res}
@@ -22,6 +22,7 @@ begin
   Application.CreateForm(TfrmMain, frmMain);
   Application.CreateForm(TfrmOptions, frmOptions);
   Application.CreateForm(TModuleMain, ModuleMain);
+  Application.CreateForm(TfrmJSONView, frmJSONView);
   Application.Run;
 end.
 
