@@ -19,9 +19,9 @@ begin
   RequireDerivedFormResource:=True;
   Application.Initialize;
   Application.CreateForm(TCore, Core);
+  Application.CreateForm(TModuleMain, ModuleMain);
   Application.CreateForm(TfrmMain, frmMain);
   Application.CreateForm(TfrmOptions, frmOptions);
-  Application.CreateForm(TModuleMain, ModuleMain);
   Application.CreateForm(TfrmJSONView, frmJSONView);
   Application.Run;
 end.

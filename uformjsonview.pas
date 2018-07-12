@@ -45,42 +45,15 @@ uses
 
 procedure TfrmJSONView.httpGetAPItoTree(Query: THttpQuery);
 var
-  StrResponse: TStringList;
-  JN: TJSONParser;
   JData: TJSONData;
-  strm: TMemoryStream;
 begin
-  if (Query.ReadyState=httpDone) and (Query.Status=200) then
-  begin
-    StrResponse := TStringList.Create();
-    try
-      strm := Query.Response;
-      if strm.Size>0 then
-      begin
-        StrResponse.LoadFromStream(Query.Response);
-        JData:=nil;
-        JN:=nil;
-        edJSONView.Text := StrResponse.Text;
-        JN := TJSONParser.Create(StrResponse.Text, [joUTF8]);
-        try
-          JData := JN.Parse();
-        except
-          on EJSONParser do JData := nil;
-        end;
-        if JData <> nil then
-        begin
-          edJSONView.Text := JData.FormatJSON();
-          ShowJSONDocument(treeJsonData, JData, True);
-          treeJsonData.FullExpand();
-        end;
-      end;
-    finally
-      if JData<>nil then
-        JData.Free();
-      if JN<>nil then
-        JN.Free();
-      StrResponse.Free();
-    end;
+  if HttpQueryToJson(Query, JData) then
+  try
+    edJSONView.Text := JData.FormatJSON();
+    ShowJSONDocument(treeJsonData, JData, True);
+    treeJsonData.FullExpand();
+  finally
+    JData.Free();
   end;
 end;
 

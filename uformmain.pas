@@ -80,6 +80,9 @@ end;
 
 procedure TfrmMain.FormDestroy(Sender: TObject);
 begin
+  // Module must be destroy at first
+  if Assigned(ModuleMain) then
+    FreeAndNil(ModuleMain);
   FreeAndNil(FoldersItems);
 end;
 
