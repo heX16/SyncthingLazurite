@@ -693,7 +693,7 @@ object frmMain: TfrmMain
     left = 24
     top = 128
     object miShow: TMenuItem
-      Caption = 'MenuItem1'
+      Action = Core.actPause
       OnClick = miShowClick
     end
     object miExit: TMenuItem

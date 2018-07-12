@@ -1,7 +1,7 @@
 object Core: TCore
   OnDestroy = DataModuleDestroy
   OldCreateOrder = False
-  Height = 318
+  Height = 393
   HorizontalOffset = 378
   VerticalOffset = 318
   Width = 431
@@ -69,6 +69,16 @@ object Core: TCore
       Caption = 'Restart'
       OnExecute = actRestartExecute
     end
+    object actExit: TAction
+      Category = 'GUI'
+      Caption = 'actExit'
+      OnExecute = actExitExecute
+    end
+    object actPause: TAction
+      Category = 'Core'
+      Caption = 'actPause'
+      OnExecute = actPauseExecute
+    end
     object actTerminate: TAction
       Category = 'Core'
       Caption = 'Terminate'
@@ -78,11 +88,6 @@ object Core: TCore
       Category = 'Core'
       Caption = 'Run Support Proc'
       OnExecute = actRunSupportProcExecute
-    end
-    object actExit: TAction
-      Category = 'GUI'
-      Caption = 'actExit'
-      OnExecute = actExitExecute
     end
     object actInit: TAction
       Category = 'Core'
@@ -99,5 +104,12 @@ object Core: TCore
     OnTimer = TimerInitTimer
     left = 70
     top = 208
+  end
+  object TimerPause: TTimer
+    Enabled = False
+    Interval = 30000
+    OnTimer = TimerPauseTimer
+    left = 70
+    top = 272
   end
 end

@@ -105,6 +105,7 @@ type
   TCore = class(TDataModule)
     actExit: TAction;
     actInit: TAction;
+    actPause: TAction;
     actRunSupportProc: TAction;
     actTerminate: TAction;
     actRestart: TAction;
@@ -113,12 +114,14 @@ type
     ActionList: TActionList;
     ProcessSyncthing: TProcessUTF8;
     ProcessSupport: TProcessUTF8;
+    TimerPause: TTimer;
     TimerInit: TTimer;
     TimerPing: TTimer;
     TimerReadStdOutput: TTimer;
     UniqueInstance1: TUniqueInstance;
     procedure actInitExecute(Sender: TObject);
     procedure actExitExecute(Sender: TObject);
+    procedure actPauseExecute(Sender: TObject);
     procedure actRestartExecute(Sender: TObject);
     procedure actRunSupportProcExecute(Sender: TObject);
     procedure actStartExecute(Sender: TObject);
@@ -126,6 +129,7 @@ type
     procedure actTerminateExecute(Sender: TObject);
     procedure DataModuleDestroy(Sender: TObject);
     procedure TimerInitTimer(Sender: TObject);
+    procedure TimerPauseTimer(Sender: TObject);
     procedure TimerPingTimer(Sender: TObject);
     procedure TimerReadStdOutputTimer(Sender: TObject);
   private
@@ -367,6 +371,12 @@ begin
   end;
 end;
 
+procedure TCore.TimerPauseTimer(Sender: TObject);
+begin
+  TimerPause.Enabled:=false;
+  actStart.Execute();
+end;
+
 procedure TCore.actRestartExecute(Sender: TObject);
 begin
   actStop.Execute();
@@ -377,6 +387,12 @@ procedure TCore.actExitExecute(Sender: TObject);
 begin
   actStop.Execute();
   Application.Terminate;
+end;
+
+procedure TCore.actPauseExecute(Sender: TObject);
+begin
+  actStop.Execute();
+  TimerPause.Enabled:=true;
 end;
 
 procedure TCore.actInitExecute(Sender: TObject);
