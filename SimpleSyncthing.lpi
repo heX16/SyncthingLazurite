@@ -15,11 +15,15 @@
       </XPManifest>
       <Icon Value="0"/>
     </General>
+    <i18n>
+      <EnableI18N Value="True"/>
+      <OutDir Value="languages"/>
+    </i18n>
     <VersionInfo>
       <UseVersionInfo Value="True"/>
       <AutoIncrementBuild Value="True"/>
       <MinorVersionNr Value="2"/>
-      <BuildNr Value="11"/>
+      <BuildNr Value="17"/>
       <StringTable ProductVersion="0.0.0.0"/>
     </VersionInfo>
     <BuildModes Count="2">
@@ -138,11 +142,11 @@
     <Version Value="11"/>
     <PathDelim Value="\"/>
     <Target>
-      <Filename Value="$Env(Temp)\tmp\SimpleSyncthing.exe" ApplyConventions="False"/>
+      <Filename Value="$Env(Temp)\tmp\SimpleSyncthing\SimpleSyncthing.exe" ApplyConventions="False"/>
     </Target>
     <SearchPaths>
       <IncludeFiles Value="$(ProjOutDir)"/>
-      <UnitOutputDirectory Value="$Env(Temp)\tmp\lazarus\lib\$(TargetCPU)-$(TargetOS)"/>
+      <UnitOutputDirectory Value="$Env(Temp)\tmp\lazarus\lib\SimpleSyncthing\$(TargetCPU)-$(TargetOS)"/>
     </SearchPaths>
     <Parsing>
       <SyntaxOptions>

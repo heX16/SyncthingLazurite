@@ -1,0 +1,103 @@
+msgid ""
+msgstr "Content-Type: text/plain; charset=UTF-8"
+
+#: tcore.actexit.caption
+msgid "actExit"
+msgstr ""
+
+#: tcore.actinit.caption
+msgid "actInit"
+msgstr ""
+
+#: tcore.actpause.caption
+msgid "actPause"
+msgstr ""
+
+#: tcore.actrestart.caption
+msgid "Restart"
+msgstr ""
+
+#: tcore.actrunsupportproc.caption
+msgid "Run Support Proc"
+msgstr ""
+
+#: tcore.actstart.caption
+msgid "Start"
+msgstr ""
+
+#: tcore.actstop.caption
+msgid "Stop"
+msgstr ""
+
+#: tcore.actterminate.caption
+msgid "Terminate"
+msgstr ""
+
+#: tfrmmain.caption
+msgid "frmMain"
+msgstr ""
+
+#: tfrmmain.grpdevices.caption
+msgid "grpDevices"
+msgstr ""
+
+#: tmodulemain.actshowoptions.caption
+msgid "actShowOptions"
+msgstr ""
+
+#: umodulemain.invalidaddress
+msgid "Invalid address"
+msgstr ""
+
+#: umodulemain.resadd
+msgid "add"
+msgstr ""
+
+#: umodulemain.resaddress
+msgid "address"
+msgstr ""
+
+#: umodulemain.rescalcfreedevid
+msgid "Calc free DevID"
+msgstr ""
+
+#: umodulemain.rescurrentdevice
+msgid "Current device"
+msgstr ""
+
+#: umodulemain.resdata
+msgid "data"
+msgstr ""
+
+#: umodulemain.resdevice
+msgid "device"
+msgstr ""
+
+#: umodulemain.resenterfullnamedevice
+msgid "Enter full name of device (and company if present)"
+msgstr ""
+
+#: umodulemain.resok
+msgid "ok"
+msgstr ""
+
+#: umodulemain.resregister
+msgid "register"
+msgstr ""
+
+#: umodulemain.resregshort
+msgid "reg"
+msgstr ""
+
+#: umodulemain.resresultcalcfreedevid
+msgid "Result for calc free DevID"
+msgstr ""
+
+#: umodulemain.ressend
+msgid "send"
+msgstr ""
+
+#: umodulemain.resstringmustmorethat
+msgid "String must more that 10 symbols"
+msgstr ""
+

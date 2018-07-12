@@ -23,10 +23,11 @@ type
     btnStop: TButton;
     btnOptions: TButton;
     edConsole: TMemo;
+    grpDevices: TGroupBox;
+    ListBox1: TListBox;
     Panel1: TPanel;
     shStatusCircle: TShape;
     Splitter1: TSplitter;
-    procedure btnOptionsClick(Sender: TObject);
     procedure btnStartClick(Sender: TObject);
     procedure btnStopClick(Sender: TObject);
     procedure FormClose(Sender: TObject; var CloseAction: TCloseAction);
@@ -53,11 +54,6 @@ uses
 
 
 { TfrmMain }
-
-procedure TfrmMain.btnOptionsClick(Sender: TObject);
-begin
-  frmOptions.ShowModal();
-end;
 
 procedure TfrmMain.btnStartClick(Sender: TObject);
 begin

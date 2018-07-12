@@ -1,17 +1,17 @@
 object ModuleMain: TModuleMain
   OldCreateOrder = False
-  Height = 279
-  HorizontalOffset = 327
-  VerticalOffset = 138
-  Width = 284
-  PPI = 96
+  Height = 349
+  HorizontalOffset = 409
+  VerticalOffset = 173
+  Width = 355
+  PPI = 120
   object UniqueInstance1: TUniqueInstance
-    left = 32
-    top = 16
+    left = 40
+    top = 20
   end
   object imgJSON: TImageList
-    left = 32
-    top = 80
+    left = 40
+    top = 100
     Bitmap = {
       4C69100000001000000010000000FFFFFF00FFFFFF00FFFFFF00FFFFFF00FFFF
       FF00FFFFFF00FFFFFF00FFFFFF00FFFFFF00FFFFFF00FFFFFF00FFFFFF00FFFF
@@ -531,8 +531,8 @@ object ModuleMain: TModuleMain
   object ImageTryIcons: TImageList
     Height = 32
     Width = 32
-    left = 32
-    top = 144
+    left = 40
+    top = 180
     Bitmap = {
       4C69040000002000000020000000000000000000000000000000000000000000
       000000000000010100010202000300000001000000001713041455470E579078
@@ -1586,17 +1586,25 @@ object ModuleMain: TModuleMain
     }
     Visible = True
     OnDblClick = TrayIconDblClick
-    left = 128
-    top = 16
+    left = 160
+    top = 20
   end
   object menuTrayIcon: TPopupMenu
-    left = 128
-    top = 80
+    left = 160
+    top = 100
     object miShow: TMenuItem
       Action = Core.actPause
     end
     object miExit: TMenuItem
       Action = Core.actExit
+    end
+  end
+  object ActionListGUI: TActionList
+    left = 160
+    top = 180
+    object actShowOptions: TAction
+      Caption = 'actShowOptions'
+      OnExecute = actShowOptionsExecute
     end
   end
 end

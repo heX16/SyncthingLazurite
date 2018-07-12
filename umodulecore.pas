@@ -176,6 +176,8 @@ var
 implementation
 
 uses
+  LCLTranslator, // i18n
+  uget_os_language, // i18n
   uFormOptions,
   uFormMain,
   httpsend, {Synacode,}
@@ -397,6 +399,15 @@ end;
 procedure TCore.actInitExecute(Sender: TObject);
 begin
   Core.Init();
+
+  //todo: i18n move to module main
+  {strs:=TStringList.Create;
+  GetFiles(ExtractFilePath(Application.ExeName)+'languages' + PathDelim, strs, '*.po');
+  frmMain.cbLanguage.Items.Assign(strs);
+  strs.Free;}
+  SetDefaultLang('ru');
+  //SetDefaultLang(GetOSLanguage()); // - just use DefaultTranslator module
+  //frmMain.LanguageChanged();
 end;
 
 procedure TCore.actRunSupportProcExecute(Sender: TObject);

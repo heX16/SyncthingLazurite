@@ -5,13 +5,16 @@ unit uModuleMain;
 interface
 
 uses
-  Classes, SysUtils, FileUtil, Controls, ExtCtrls, Menus, UniqueInstance;
+  Classes, SysUtils, FileUtil, Controls, ExtCtrls, Menus, ActnList,
+  UniqueInstance;
 
 type
 
   { TModuleMain }
 
   TModuleMain = class(TDataModule)
+    actShowOptions: TAction;
+    ActionListGUI: TActionList;
     ImageTryIcons: TImageList;
     imgJSON: TImageList;
     menuTrayIcon: TPopupMenu;
@@ -19,6 +22,7 @@ type
     miShow: TMenuItem;
     TrayIcon: TTrayIcon;
     UniqueInstance1: TUniqueInstance;
+    procedure actShowOptionsExecute(Sender: TObject);
     procedure TrayIconDblClick(Sender: TObject);
   private
 
@@ -35,6 +39,7 @@ implementation
 
 uses
   Forms,
+  uFormOptions,
   uFormMain;
 
 { TModuleMain }
@@ -44,6 +49,11 @@ begin
   frmMain.WindowState := wsNormal;
   frmMain.Show();
   frmMain.SetFocus();
+end;
+
+procedure TModuleMain.actShowOptionsExecute(Sender: TObject);
+begin
+  frmOptions.ShowModal();
 end;
 
 end.

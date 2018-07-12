@@ -51,8 +51,7 @@ object frmMain: TfrmMain
       Height = 33
       Top = 7
       Width = 62
-      Caption = 'btnOptions'
-      OnClick = btnOptionsClick
+      Action = ModuleMain.actShowOptions
       TabOrder = 2
     end
   end
@@ -83,5 +82,25 @@ object frmMain: TfrmMain
     Width = 471
     Align = alBottom
     ResizeAnchor = akBottom
+  end
+  object grpDevices: TGroupBox
+    Left = 0
+    Height = 383
+    Top = 50
+    Width = 160
+    Align = alLeft
+    Caption = 'grpDevices'
+    ClientHeight = 361
+    ClientWidth = 156
+    TabOrder = 3
+    object ListBox1: TListBox
+      Left = 0
+      Height = 361
+      Top = 0
+      Width = 156
+      Align = alClient
+      ItemHeight = 0
+      TabOrder = 0
+    end
   end
 end
