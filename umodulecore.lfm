@@ -95,10 +95,6 @@ object Core: TCore
       OnExecute = actInitExecute
     end
   end
-  object UniqueInstance1: TUniqueInstance
-    left = 244
-    top = 144
-  end
   object TimerInit: TTimer
     Interval = 1
     OnTimer = TimerInitTimer

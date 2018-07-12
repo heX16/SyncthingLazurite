@@ -24,17 +24,12 @@ type
     btnOptions: TButton;
     edConsole: TMemo;
     edJSONView: TMemo;
-    imgJSON: TImageList;
     listGetAPI: TListBox;
-    miShow: TMenuItem;
-    miExit: TMenuItem;
     Panel1: TPanel;
-    menuTrayIcon: TPopupMenu;
     shStatusCircle: TShape;
     Splitter1: TSplitter;
     Splitter2: TSplitter;
     Splitter3: TSplitter;
-    TrayIcon: TTrayIcon;
     treeJsonData: TTreeView;
     procedure btnGetAPIClick(Sender: TObject);
     procedure btnOptionsClick(Sender: TObject);
@@ -44,7 +39,6 @@ type
     procedure FormWindowStateChange(Sender: TObject);
     procedure miExitClick(Sender: TObject);
     procedure miShowClick(Sender: TObject);
-    procedure TrayIconDblClick(Sender: TObject);
   private
 
     procedure httpGetAPItoTree(Query: THttpQuery);
@@ -62,6 +56,7 @@ var
 implementation
 
 uses
+  uModuleMain,
   //fpjson,
   httpsend,
   uFormOptions,
@@ -142,7 +137,7 @@ end;
 procedure TfrmMain.FormWindowStateChange(Sender: TObject);
 begin
   if WindowState = wsMinimized then
-    Hide;
+    Hide();
 end;
 
 procedure TfrmMain.miExitClick(Sender: TObject);
@@ -152,17 +147,9 @@ end;
 
 procedure TfrmMain.miShowClick(Sender: TObject);
 begin
-  TrayIconDblClick(nil);
+  //todo: make action
+  ModuleMain.TrayIconDblClick(nil);
 end;
-
-procedure TfrmMain.TrayIconDblClick(Sender: TObject);
-begin
-  WindowState := wsNormal;
-  Show;
-  SetFocus;
-end;
-
-
 
 procedure TfrmMain.ShowJSONData(TV: TTreeView; AParent: TTreeNode;
   Data: TJSONData; Compact: boolean; SortObjectMembers: boolean);

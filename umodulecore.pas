@@ -118,7 +118,6 @@ type
     TimerInit: TTimer;
     TimerPing: TTimer;
     TimerReadStdOutput: TTimer;
-    UniqueInstance1: TUniqueInstance;
     procedure actInitExecute(Sender: TObject);
     procedure actExitExecute(Sender: TObject);
     procedure actPauseExecute(Sender: TObject);
