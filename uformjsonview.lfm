@@ -38,7 +38,6 @@ object frmJSONView: TfrmJSONView
       'svc/report'
     )
     ItemHeight = 17
-    OnClick = listGetAPIClick
     OnDblClick = listGetAPIClick
     TabOrder = 0
   end

@@ -33,12 +33,20 @@ msgstr ""
 msgid "Terminate"
 msgstr ""
 
+#: tfrmjsonview.caption
+msgid "frmJSONView"
+msgstr ""
+
 #: tfrmmain.caption
 msgid "frmMain"
 msgstr ""
 
 #: tfrmmain.grpdevices.caption
 msgid "grpDevices"
+msgstr ""
+
+#: tfrmmain.grpfolders.caption
+msgid "grpFolders"
 msgstr ""
 
 #: tmodulemain.actshowoptions.caption

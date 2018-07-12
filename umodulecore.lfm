@@ -2,8 +2,8 @@ object Core: TCore
   OnDestroy = DataModuleDestroy
   OldCreateOrder = False
   Height = 393
-  HorizontalOffset = 378
-  VerticalOffset = 318
+  HorizontalOffset = 793
+  VerticalOffset = 171
   Width = 431
   PPI = 120
   object ProcessSyncthing: TProcessUTF8

@@ -217,8 +217,10 @@ end;
 procedure TAsyncHTTP.DoLoadDone(Query: THttpQueryBase);
 var q: THttpQueryForThreadHTTP absolute Query;
 begin
-  //q := THttpQueryForThreadHTTP(Query); // use 'absolute' keyword.
+  //off: q := THttpQueryForThreadHTTP(Query); - use 'absolute' keyword.
+
   if q.Callback <> nil then
+    // 'put' call to main thread. Main thread must have "Form" or just call "CheckSynchronize"
     Application.QueueAsyncCall(TDataEvent(q.Callback), IntPtr(q));
 end;
 
@@ -261,10 +263,12 @@ procedure TAsyncHTTP.Execute;
 var
   q: THttpQuery;
 begin
+  // program init:
   CritQueryList := TCriticalSection.Create();
   QueryList:= TQueueHttpQuery.Create();
   EventWaitWork:= TEventObject.Create(nil, False, False, '');
   try
+    // main loop
     while not Terminated do
     begin
       CritQueryList.Enter(); // <<
@@ -284,6 +288,8 @@ begin
       EventWaitWork.WaitFor(INFINITE);
     end;
   finally
+    // program end:
+
     // clear QueryList
     CritQueryList.Enter(); // <<
     while QueryList.Size() > 0 do
@@ -321,7 +327,7 @@ end;
 
 procedure TAsyncHTTP.Terminate;
 begin
-  inherited;
+  inherited; //note: <- FTerminated := True;
   // wake up and get out!
   EventWaitWork.SetEvent();
 end;

@@ -88,12 +88,12 @@ Misc Services Endpoints
 interface
 
 uses
-  Dialogs, //todo: TEMP
+  //Dialogs, //todo: TEMP
   AsyncHttp,
+  fpjson,
   XMLRead, DOM,
   LazFileUtils, LazUTF8,
-  Classes, SysUtils, FileUtil, UTF8Process, ExtCtrls, ActnList, Forms,
-  UniqueInstance;
+  Classes, SysUtils, UTF8Process, ExtCtrls, ActnList, Forms;
 
 type
 
@@ -134,6 +134,7 @@ type
   private
     OutputChankStr: UTF8String;
   public
+    Online: boolean;
     Terminated: boolean;
     aiohttp: TAsyncHTTP;
 
@@ -173,20 +174,55 @@ type
 var
   Core: TCore;
 
+function HttpQueryToJson(Query: THttpQuery; out Json: TJSONData): boolean;
+
 implementation
 
 uses
   LCLTranslator, // i18n
-  uget_os_language, // i18n
   uFormOptions,
   uFormMain,
   httpsend, {Synacode,}
   synautil,
   Graphics,
   LConvEncoding,
-  fpjson, jsonparser, jsonscanner;
+  jsonparser,
+  jsonscanner;
 
 {$R *.lfm}
+
+function HttpQueryToJson(Query: THttpQuery; out Json: TJSONData): boolean;
+var
+  JN: TJSONParser;
+  JData: TJSONData;
+begin
+  Result := false;
+  Json := nil;
+  if (Query.ReadyState=httpDone) and (Query.Status=200) then
+  begin
+    try
+      if Query.Response.Size>0 then
+      begin
+        JData:=nil;
+        JN := nil;
+        JN := TJSONParser.Create(Query.Response, [joUTF8]);
+        try
+          JData := JN.Parse();
+        except
+          on EJSONParser do JData := nil;
+        end;
+        if JData <> nil then
+        begin
+          Json := JData;
+          Result := true;
+        end;
+      end;
+    finally
+      if JN<>nil then
+        JN.Free();
+    end;
+  end;
+end;
 
 { TCore }
 
@@ -226,10 +262,19 @@ begin
     begin
       //todo: check ping result
       if Query.Status <> 200 then
-        frmMain.shStatusCircle.Brush.Color:=clPurple else
+      begin
+        Online := false;
+        frmMain.shStatusCircle.Brush.Color:=clPurple;
+      end else
+      begin
+        Online := true;
         frmMain.shStatusCircle.Brush.Color:=clGreen
+      end;
     end else
+    begin
+      Online := false;
       frmMain.shStatusCircle.Brush.Color:=clRed;
+    end;
 end;
 
 //todo: TEMP!!!!!!!!!
@@ -445,6 +490,7 @@ end;
 procedure TCore.Init;
 begin
   //todo: WIP: INIT
+  Online := false;
   aiohttp := TAsyncHTTP.Create(false);
   aiohttp.OnOpened:=@aiohttpAddHeader;
   SyncthigServer:='http://127.0.0.1:8384/';

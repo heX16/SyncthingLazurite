@@ -7,12 +7,12 @@ unit uFormMain;
 interface
 
 uses
-  Classes, SysUtils, FileUtil,
+  Classes,
+  SysUtils,
   //SynHighlighterJScript,
   //SynEdit,
-  AsyncHttp,
-  uModuleCore, fpjson, Forms, Controls, Graphics, Dialogs, StdCtrls, ExtCtrls,
-  Menus, ComCtrls, Buttons;
+  uModuleCore, VirtualTrees, Forms, Controls,
+  StdCtrls, ExtCtrls;
 
 type
 
@@ -23,19 +23,26 @@ type
     btnStop: TButton;
     btnOptions: TButton;
     edConsole: TMemo;
+    grpFolders: TGroupBox;
     grpDevices: TGroupBox;
-    ListBox1: TListBox;
+    lbDevices: TListBox;
     Panel1: TPanel;
     shStatusCircle: TShape;
     Splitter1: TSplitter;
+    treeFolders: TVirtualStringTree;
     procedure btnStartClick(Sender: TObject);
     procedure btnStopClick(Sender: TObject);
     procedure FormClose(Sender: TObject; var CloseAction: TCloseAction);
+    procedure FormCreate(Sender: TObject);
+    procedure FormDestroy(Sender: TObject);
     procedure FormWindowStateChange(Sender: TObject);
     procedure miExitClick(Sender: TObject);
     procedure miShowClick(Sender: TObject);
+    procedure treeFoldersGetText(Sender: TBaseVirtualTree; Node: PVirtualNode;
+      Column: TColumnIndex; TextType: TVSTTextType; var CellText: String);
   private
   public
+    FoldersItems: TStrings;
   end;
 
 var
@@ -44,11 +51,7 @@ var
 implementation
 
 uses
-  uModuleMain,
-  //fpjson,
-  httpsend,
-  uFormOptions,
-  jsonparser, jsonscanner;
+  uModuleMain;
 
 {$R *.lfm}
 
@@ -70,6 +73,16 @@ begin
   Core.Done();
 end;
 
+procedure TfrmMain.FormCreate(Sender: TObject);
+begin
+  FoldersItems := TStringList.Create();
+end;
+
+procedure TfrmMain.FormDestroy(Sender: TObject);
+begin
+  FreeAndNil(FoldersItems);
+end;
+
 procedure TfrmMain.FormWindowStateChange(Sender: TObject);
 begin
   if WindowState = wsMinimized then
@@ -85,6 +98,13 @@ procedure TfrmMain.miShowClick(Sender: TObject);
 begin
   //todo: make action
   ModuleMain.TrayIconDblClick(nil);
+end;
+
+procedure TfrmMain.treeFoldersGetText(Sender: TBaseVirtualTree;
+  Node: PVirtualNode; Column: TColumnIndex; TextType: TVSTTextType;
+  var CellText: String);
+begin
+  CellText := FoldersItems[Node^.Index];
 end;
 
 end.

@@ -1,14 +1,13 @@
-unit uformjsonview;
+unit uFormJsonView;
 
 {$mode objfpc}{$H+}
 
 interface
 
 uses
-  uModuleMain,
   uModuleCore,
   AsyncHttp, fpjson,
-  Classes, SysUtils, FileUtil, Forms, Controls, Graphics, Dialogs, StdCtrls,
+  Classes, SysUtils, Forms, Controls, StdCtrls,
   ExtCtrls, ComCtrls;
 
 type
@@ -40,7 +39,7 @@ implementation
 
 uses
   //uModuleCore,
-  httpsend, jsonparser, jsonscanner;
+  jsonparser, jsonscanner;
 
 {$R *.lfm}
 
@@ -51,7 +50,7 @@ var
   JData: TJSONData;
   strm: TMemoryStream;
 begin
-  if Query.ReadyState=httpDone then
+  if (Query.ReadyState=httpDone) and (Query.Status=200) then
   begin
     StrResponse := TStringList.Create();
     try
@@ -152,7 +151,8 @@ end;
 
 procedure TfrmJSONView.listGetAPIClick(Sender: TObject);
 begin
-  Core.aiohttp.Get(Core.SyncthigServer+'rest/'+listGetAPI.Items[listGetAPI.ItemIndex], @httpGetAPItoTree);
+  if listGetAPI.ItemIndex>=0 then
+    Core.aiohttp.Get(Core.SyncthigServer+'rest/'+listGetAPI.Items[listGetAPI.ItemIndex], @httpGetAPItoTree);
 end;
 
 procedure TfrmJSONView.ShowJSONDocument(TV: TTreeView; DataSource: TJSONData;

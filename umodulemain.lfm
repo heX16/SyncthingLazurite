@@ -1607,4 +1607,9 @@ object ModuleMain: TModuleMain
       OnExecute = actShowOptionsExecute
     end
   end
+  object TimerUpdate: TTimer
+    OnTimer = TimerUpdateTimer
+    left = 40
+    top = 256
+  end
 end

@@ -33,6 +33,10 @@ msgstr "Стоп"
 msgid "Terminate"
 msgstr ""
 
+#: tfrmjsonview.caption
+msgid "frmJSONView"
+msgstr ""
+
 #: tfrmmain.caption
 msgid "frmMain"
 msgstr ""
@@ -40,6 +44,10 @@ msgstr ""
 #: tfrmmain.grpdevices.caption
 msgid "grpDevices"
 msgstr "Устройства"
+
+#: tfrmmain.grpfolders.caption
+msgid "grpFolders"
+msgstr ""
 
 #: tmodulemain.actshowoptions.caption
 msgid "actShowOptions"
