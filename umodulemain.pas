@@ -45,9 +45,11 @@ implementation
 {$R *.lfm}
 
 uses
+  DateUtils,
   fpjson,
   uModuleCore,
   Forms,
+  RegExpr,
   uFormOptions,
   uFormMain;
 
@@ -64,20 +66,30 @@ procedure TModuleMain.httpUpdateDevice(Query: THttpQuery);
 var
   JData: TJSONData;
   ij: TJSONEnum;
+  s, onl: ansistring;
+  dt: TDateTime;
+  re: TRegExpr;
 begin
-  (* example:
-    {
-      "HJBNI74-LB5I7ND-IDXKOJH-CMM5KM3-AR4BMVB-XOXIJAB-FSYCOFN-3EBH7AS" : {
-        "lastSeen" : "1970-01-01T03:00:00+03:00"
-      },
-      ...
-  *)
   if HttpQueryToJson(Query, JData) then
   try
-    frmMain.lbDevices.Clear();
+    frmMain.DevicesItems.Clear();
     for ij in JData do
-      frmMain.lbDevices.AddItem(ij.Key, nil);
+    begin
+      onl:='';
+      re := TRegExpr.Create('(\d+)-(\d+)-(\d+)T(\d+):(\d+):(\d+).*');
+      if ij.Value.FindPath('lastSeen')<>nil then
+      begin
+        s := ij.Value.GetPath('lastSeen').Value;
+        if JsonStrToDateTime(s, dt) then
+          if IncSecond(dt, 120) > Now() then
+            onl := '[ONLINE] ';
+      end;
+      frmMain.DevicesItems.Add(onl + ij.Key);
+    end;
+    frmMain.treeDevices.RootNodeCount:=JData.Count;
+    frmMain.treeDevices.Invalidate(); //todo: <-optimize
   finally
+    re.Free();
     JData.Free();
   end;
 end;
@@ -91,9 +103,7 @@ begin
   try
     frmMain.FoldersItems.Clear();
     for ij in JData do
-    begin
       frmMain.FoldersItems.Add(ij.Key);
-    end;
     frmMain.treeFolders.RootNodeCount:=JData.Count;
   finally
     JData.Free();

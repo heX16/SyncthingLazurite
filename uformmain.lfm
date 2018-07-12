@@ -95,14 +95,18 @@ object frmMain: TfrmMain
     ClientHeight = 361
     ClientWidth = 156
     TabOrder = 3
-    object lbDevices: TListBox
+    object treeDevices: TVirtualStringTree
       Left = 0
       Height = 361
       Top = 0
       Width = 156
       Align = alClient
-      ItemHeight = 0
+      DefaultText = 'Node'
+      Header.AutoSizeIndex = 0
+      Header.Columns = <>
+      Header.MainColumn = -1
       TabOrder = 0
+      OnGetText = treeDevicesGetText
     end
   end
   object grpFolders: TGroupBox

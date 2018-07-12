@@ -25,11 +25,11 @@ type
     edConsole: TMemo;
     grpFolders: TGroupBox;
     grpDevices: TGroupBox;
-    lbDevices: TListBox;
     Panel1: TPanel;
     shStatusCircle: TShape;
     Splitter1: TSplitter;
     treeFolders: TVirtualStringTree;
+    treeDevices: TVirtualStringTree;
     procedure btnStartClick(Sender: TObject);
     procedure btnStopClick(Sender: TObject);
     procedure FormClose(Sender: TObject; var CloseAction: TCloseAction);
@@ -38,10 +38,13 @@ type
     procedure FormWindowStateChange(Sender: TObject);
     procedure miExitClick(Sender: TObject);
     procedure miShowClick(Sender: TObject);
+    procedure treeDevicesGetText(Sender: TBaseVirtualTree; Node: PVirtualNode;
+      Column: TColumnIndex; TextType: TVSTTextType; var CellText: String);
     procedure treeFoldersGetText(Sender: TBaseVirtualTree; Node: PVirtualNode;
       Column: TColumnIndex; TextType: TVSTTextType; var CellText: String);
   private
   public
+    DevicesItems: TStrings;
     FoldersItems: TStrings;
   end;
 
@@ -76,6 +79,7 @@ end;
 procedure TfrmMain.FormCreate(Sender: TObject);
 begin
   FoldersItems := TStringList.Create();
+  DevicesItems := TStringList.Create();
 end;
 
 procedure TfrmMain.FormDestroy(Sender: TObject);
@@ -84,6 +88,7 @@ begin
   if Assigned(ModuleMain) then
     FreeAndNil(ModuleMain);
   FreeAndNil(FoldersItems);
+  FreeAndNil(DevicesItems);
 end;
 
 procedure TfrmMain.FormWindowStateChange(Sender: TObject);
@@ -101,6 +106,13 @@ procedure TfrmMain.miShowClick(Sender: TObject);
 begin
   //todo: make action
   ModuleMain.TrayIconDblClick(nil);
+end;
+
+procedure TfrmMain.treeDevicesGetText(Sender: TBaseVirtualTree;
+  Node: PVirtualNode; Column: TColumnIndex; TextType: TVSTTextType;
+  var CellText: String);
+begin
+  CellText := DevicesItems[Node^.Index];
 end;
 
 procedure TfrmMain.treeFoldersGetText(Sender: TBaseVirtualTree;

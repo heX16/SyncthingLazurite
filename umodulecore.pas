@@ -75,6 +75,11 @@ Event Endpoints
 
 Statistics Endpoints
     GET /rest/stats/device
+      {
+        "HJBNI74-LB5I7ND-IDXKOJH-CMM5KM3-AR4BMVB-XOXIJAB-FSYCOFN-3EBH7AS" : {
+          "lastSeen" : "1970-01-01T03:00:00+03:00"
+        },
+        ...
     GET /rest/stats/folder
 
 Misc Services Endpoints
@@ -82,6 +87,62 @@ Misc Services Endpoints
     GET /rest/svc/lang
     GET /rest/svc/random/string
     GET /rest/svc/report
+
+
+
+
+
+
+
+    -----------------------------
+
+    detect “Up to Date”:
+    https://forum.syncthing.net/t/syncthing-is-the-best-help-me-detect-up-to-date-with-rest/10968/5
+
+    /rest/db/completion?folder=src&device=[specific_device_id]
+
+    If I do that, I get:
+
+    {
+      "completion": 99.14897162188355,
+      "globalBytes": 78764706,
+      "needBytes": 670310,
+      "needDeletes": 0
+    }
+
+    This means I have to iterate over every directory and every device to see problems!
+
+    In particular,
+
+    /rest/db/status?folder=src
+
+    shows:
+
+    {
+      "globalBytes": 78764706,
+      "globalDeleted": 3188,
+      "globalDirectories": 977,
+      "globalFiles": 4999,
+      "globalSymlinks": 12,
+      "ignorePatterns": false,
+      "inSyncBytes": 78764706,
+      "inSyncFiles": 4999,
+      "invalid": "",
+      "localBytes": 78764706,
+      "localDeleted": 3147,
+      "localDirectories": 977,
+      "localFiles": 4999,
+      "localSymlinks": 12,
+      "needBytes": 0,
+      "needDeletes": 0,
+      "needDirectories": 0,
+      "needFiles": 0,
+      "needSymlinks": 0,
+      "sequence": 44122,
+      "state": "idle",
+      "stateChanged": "2017-11-17T18:55:14.3305827-08:00",
+      "version": 44122
+    }
 
 *)
 
@@ -176,6 +237,8 @@ var
 
 function HttpQueryToJson(Query: THttpQuery; out Json: TJSONData): boolean;
 
+function JsonStrToDateTime(Str: AnsiString; out dt: TDateTime): boolean;
+
 implementation
 
 uses
@@ -186,10 +249,37 @@ uses
   synautil,
   Graphics,
   LConvEncoding,
+  RegExpr, // ParseJsonDateTime
+  dateutils, // ParseJsonDateTime
   jsonparser,
   jsonscanner;
 
 {$R *.lfm}
+
+function JsonStrToDateTime(Str: AnsiString; out dt: TDateTime): boolean;
+var re: TRegExpr;
+begin
+  //todo: move to global singlton
+  re := TRegExpr.Create('(\d+)-(\d+)-(\d+)T(\d+):(\d+):(\d+).*');
+  Result := false;
+  try
+    if re.Exec(Str) then
+    begin
+      Result := TryEncodeDateTime(
+        StrToInt(re.Match[1]),
+        StrToInt(re.Match[2]),
+        StrToInt(re.Match[3]),
+        StrToInt(re.Match[4]),
+        StrToInt(re.Match[5]),
+        StrToInt(re.Match[6]),
+        0,
+        dt
+        );
+    end;
+  finally
+    re.Free();
+  end;
+end;
 
 function HttpQueryToJson(Query: THttpQuery; out Json: TJSONData): boolean;
 var
