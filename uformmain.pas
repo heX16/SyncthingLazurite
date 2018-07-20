@@ -23,11 +23,15 @@ type
     btnStop: TButton;
     btnOptions: TButton;
     edConsole: TMemo;
+    grpEvents: TGroupBox;
     grpFolders: TGroupBox;
     grpDevices: TGroupBox;
+    listEvents: TListBox;
     Panel1: TPanel;
     shStatusCircle: TShape;
     Splitter1: TSplitter;
+    Splitter2: TSplitter;
+    Splitter3: TSplitter;
     treeFolders: TVirtualStringTree;
     treeDevices: TVirtualStringTree;
     procedure btnStartClick(Sender: TObject);

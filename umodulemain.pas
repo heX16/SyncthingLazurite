@@ -5,6 +5,7 @@ unit uModuleMain;
 interface
 
 uses
+  RegExpr,
   AsyncHttp,
   Classes, SysUtils, FileUtil, Controls, ExtCtrls, Menus, ActnList,
   UniqueInstance;
@@ -14,10 +15,23 @@ type
   { TModuleMain }
 
   TModuleMain = class(TDataModule)
+    actShowRestView: TAction;
     actShowOptions: TAction;
     ActionListGUI: TActionList;
     ImageTryIcons: TImageList;
     imgJSON: TImageList;
+    MainMenu1: TMainMenu;
+    MenuItem1: TMenuItem;
+    MenuItem10: TMenuItem;
+    MenuItem2: TMenuItem;
+    MenuItem3: TMenuItem;
+    MenuItem4: TMenuItem;
+    MenuItem5: TMenuItem;
+    MenuItem6: TMenuItem;
+    MenuItem7: TMenuItem;
+    MenuItem8: TMenuItem;
+    MenuItem9: TMenuItem;
+    mnServer: TMenuItem;
     menuTrayIcon: TPopupMenu;
     miExit: TMenuItem;
     miShow: TMenuItem;
@@ -25,6 +39,7 @@ type
     TrayIcon: TTrayIcon;
     UniqueInstance1: TUniqueInstance;
     procedure actShowOptionsExecute(Sender: TObject);
+    procedure actShowRestViewExecute(Sender: TObject);
     procedure TimerUpdateTimer(Sender: TObject);
     procedure TrayIconDblClick(Sender: TObject);
   private
@@ -49,7 +64,7 @@ uses
   fpjson,
   uModuleCore,
   Forms,
-  RegExpr,
+  uFormJsonView,
   uFormOptions,
   uFormMain;
 
@@ -67,16 +82,17 @@ var
   JData: TJSONData;
   ij: TJSONEnum;
   s, onl: ansistring;
+  n: UTF8String;
   dt: TDateTime;
-  re: TRegExpr;
+var d: TDevInfo;
 begin
+  //todo: change logic - first update MapDevInfo and after update DevicesItems
   if HttpQueryToJson(Query, JData) then
   try
     frmMain.DevicesItems.Clear();
     for ij in JData do
     begin
       onl:='';
-      re := TRegExpr.Create('(\d+)-(\d+)-(\d+)T(\d+):(\d+):(\d+).*');
       if ij.Value.FindPath('lastSeen')<>nil then
       begin
         s := ij.Value.GetPath('lastSeen').Value;
@@ -84,12 +100,18 @@ begin
           if IncSecond(dt, 120) > Now() then
             onl := '[ONLINE] ';
       end;
-      frmMain.DevicesItems.Add(onl + ij.Key);
+      // find normal name
+      if Core.MapDevInfo.GetValue(ij.Key, d) then
+      begin
+        n := d.Name;
+        //todo: update data
+      end else
+        n := ij.Key;
+      frmMain.DevicesItems.Add(onl + n);
     end;
     frmMain.treeDevices.RootNodeCount:=JData.Count;
     frmMain.treeDevices.Invalidate(); //todo: <-optimize
   finally
-    re.Free();
     JData.Free();
   end;
 end;
@@ -115,13 +137,18 @@ begin
   frmOptions.ShowModal();
 end;
 
+procedure TModuleMain.actShowRestViewExecute(Sender: TObject);
+begin
+  frmJSONView.Show();
+  frmJSONView.SetFocus();
+end;
+
 procedure TModuleMain.TimerUpdateTimer(Sender: TObject);
 begin
-  if not httpUpdateDeviceInProc and Core.Online then
-  begin
+  if not httpUpdateDeviceInProc and Core.IsOnline then
     Core.aiohttp.Get(Core.SyncthigServer+'rest/stats/device', @httpUpdateDevice, '', @httpUpdateDeviceInProc);
+  if not httpUpdateFolderInProc and Core.IsOnline then
     Core.aiohttp.Get(Core.SyncthigServer+'rest/stats/folder', @httpUpdateFolder, '', @httpUpdateFolderInProc);
-  end;
 end;
 
 end.

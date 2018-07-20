@@ -45,13 +45,25 @@ msgstr ""
 msgid "grpDevices"
 msgstr "Устройства"
 
+#: tfrmmain.grpevents.caption
+msgid "grpEvents"
+msgstr ""
+
 #: tfrmmain.grpfolders.caption
 msgid "grpFolders"
-msgstr ""
+msgstr "Папки"
 
 #: tmodulemain.actshowoptions.caption
 msgid "actShowOptions"
 msgstr "Опции"
+
+#: tmodulemain.actshowrestview.caption
+msgid "actShowRestView"
+msgstr "Rest просмотр"
+
+#: tmodulemain.mnserver.caption
+msgid "mnServer"
+msgstr "Сервер"
 
 #: umodulemain.invalidaddress
 msgid "Invalid address"

@@ -8,7 +8,6 @@ object frmJSONView: TfrmJSONView
   ClientWidth = 513
   DesignTimePPI = 120
   LCLVersion = '1.8.0.6'
-  Visible = True
   object listGetAPI: TListBox
     Left = 0
     Height = 523

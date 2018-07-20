@@ -2,159 +2,34 @@ unit uModuleCore;
 
 {$mode objfpc}{$H+}
 
-(*
-procedure TfrmMain.httpTest(Query: THttpQuery);
-begin
-  //example: aiohttp.Get('http://ya.ru', @httpTest);
-  if Query.CallState = httpLoad then
-    ShowMessage(IntToStr(Query.Status));
-end;
-
-
-http://wiki.freepascal.org/Executing_External_Programs
-http://wiki.freepascal.org/Executing_External_Programs/ru
-
-%WINDIR%\system32
-%comspec% (C:/windows/system32/cmd.exe)
-
-WORK: /C "D:\NetDrive\AppsPortableHex\Programs\_Net\syncthing\syncthing.exe | find /v " FAKE_FILTER_STRING_FOR_FIND_COMMAND_AS_MIRROR_REDIRECT " "
-
-C:\Windows\System32\cmd.exe
-/C "D:\NetDrive\AppsPortableHex\Programs\_Net\syncthing\syncthing.exe"
-/C "D:\NetDrive\AppsPortableHex\Programs\_Net\syncthing\syncthing_hex_disk.bat"
-
--------------
-
-function GetConsoleWindow: HWND; stdcall; external kernel32;
-
-procedure ShowSelfConsoleWindow;
-begin
-  //show the console window
-  ShowWindow(GetConsoleWindow(), SW_SHOW);
-end;
-
-procedure HideSelfConsoleWindow;
-begin
-  //hide the console window
-  ShowWindow(GetConsoleWindow(), SW_HIDE);
-end;
-
--------------
-
-
-System Endpoints
-    GET /rest/system/config
-    GET /rest/system/config/insync
-    GET /rest/system/connections
-    GET /rest/system/debug
-    GET /rest/system/discovery
-    GET /rest/system/error
-    GET /rest/system/log
-    GET /rest/system/ping
-    GET /rest/system/status
-    GET /rest/system/upgrade
-    GET /rest/system/version
-
-    POST /rest/system/ping
-    POST /rest/system/reset
-    POST /rest/system/restart
-    POST /rest/system/shutdown
-    POST /rest/system/upgrade
-
-Database Endpoints
-    GET /rest/db/browse
-    GET /rest/db/completion
-    GET /rest/db/file
-    GET /rest/db/ignores
-    GET /rest/db/need
-    GET /rest/db/status
-
-Event Endpoints
-    GET /rest/events
-    GET /rest/events/disk
-
-Statistics Endpoints
-    GET /rest/stats/device
-      {
-        "HJBNI74-LB5I7ND-IDXKOJH-CMM5KM3-AR4BMVB-XOXIJAB-FSYCOFN-3EBH7AS" : {
-          "lastSeen" : "1970-01-01T03:00:00+03:00"
-        },
-        ...
-    GET /rest/stats/folder
-
-Misc Services Endpoints
-    GET /rest/svc/deviceid
-    GET /rest/svc/lang
-    GET /rest/svc/random/string
-    GET /rest/svc/report
-
-
-
-
-
-
-
-    -----------------------------
-
-    detect “Up to Date”:
-    https://forum.syncthing.net/t/syncthing-is-the-best-help-me-detect-up-to-date-with-rest/10968/5
-
-    /rest/db/completion?folder=src&device=[specific_device_id]
-
-    If I do that, I get:
-
-    {
-      "completion": 99.14897162188355,
-      "globalBytes": 78764706,
-      "needBytes": 670310,
-      "needDeletes": 0
-    }
-
-    This means I have to iterate over every directory and every device to see problems!
-
-    In particular,
-
-    /rest/db/status?folder=src
-
-    shows:
-
-    {
-      "globalBytes": 78764706,
-      "globalDeleted": 3188,
-      "globalDirectories": 977,
-      "globalFiles": 4999,
-      "globalSymlinks": 12,
-      "ignorePatterns": false,
-      "inSyncBytes": 78764706,
-      "inSyncFiles": 4999,
-      "invalid": "",
-      "localBytes": 78764706,
-      "localDeleted": 3147,
-      "localDirectories": 977,
-      "localFiles": 4999,
-      "localSymlinks": 12,
-      "needBytes": 0,
-      "needDeletes": 0,
-      "needDirectories": 0,
-      "needFiles": 0,
-      "needSymlinks": 0,
-      "sequence": 44122,
-      "state": "idle",
-      "stateChanged": "2017-11-17T18:55:14.3305827-08:00",
-      "version": 44122
-    }
-
-*)
-
 interface
 
 uses
-  //Dialogs, //todo: TEMP
   AsyncHttp,
   fpjson,
   XMLRead, DOM,
+  ghashmap,
+  HashMapStr,
   LazFileUtils, LazUTF8,
   Classes, SysUtils, UTF8Process, ExtCtrls, ActnList, Forms;
+
+
+type
+  { TDevInfo }
+  TDevId = string;
+
+  TDevInfo = object
+    Name: string;
+    Id: string;
+    Paused: boolean;
+    Online: boolean;
+    LastSeen: TDateTime;
+
+    procedure Init();
+    procedure Done();
+  end;
+
+  TMapDevInfo = specialize THashMap<TDevId, TDevInfo, THashFuncString>;
 
 type
 
@@ -190,12 +65,12 @@ type
     procedure DataModuleDestroy(Sender: TObject);
     procedure TimerInitTimer(Sender: TObject);
     procedure TimerPauseTimer(Sender: TObject);
-    procedure TimerPingTimer(Sender: TObject);
+    procedure TimerUpdateTimer(Sender: TObject);
     procedure TimerReadStdOutputTimer(Sender: TObject);
   private
     OutputChankStr: UTF8String;
   public
-    Online: boolean;
+    IsOnline: boolean;
     Terminated: boolean;
     aiohttp: TAsyncHTTP;
 
@@ -210,16 +85,25 @@ type
 
     httpPingInProc: boolean;
 
-    procedure Init;
-    procedure Done;
+    httpEventsInProc: boolean;
+    EventsLastId: int64;
+
+    MapDevInfo: TMapDevInfo;
+
+    procedure Init(); virtual;
+    procedure Done(); virtual;
+    procedure Online(); virtual;
+    procedure Offline(); virtual;
+
     function GetSyncthigExecPath: UTF8String; virtual;
     function GetSyncthigHome: UTF8String; virtual;
     function GetAPIKey: string; virtual;
+    procedure LoadDeviceNames(Json: TJSONData);
     procedure FillSyncthingExecPath;
     procedure FillSupportExecPath;
 
-    procedure Start;
-    procedure Stop;
+    procedure Start();
+    procedure Stop();
 
     procedure ReadStdOutput(Proc: TProcessUTF8; AddProc: TAddConsoleLine; var TextChank: UTF8String);
     procedure AddStringToConsole(Str: UTF8String);
@@ -228,6 +112,13 @@ type
 
     // call from other thread!
     procedure aiohttpAddHeader(Query: THttpQueryBase);
+
+    procedure httpReadConfig(Query: THttpQuery);
+
+    // https://docs.syncthing.net/rest/events-get.html
+    // https://docs.syncthing.net/dev/events.html#event-types
+    // LocalChangeDetected,RemoteChangeDetected
+    procedure httpEvents(Query: THttpQuery);
 
     procedure httpPing(Query: THttpQuery);
   end;
@@ -242,6 +133,7 @@ function JsonStrToDateTime(Str: AnsiString; out dt: TDateTime): boolean;
 implementation
 
 uses
+  CRC,
   LCLTranslator, // i18n
   uFormOptions,
   uFormMain,
@@ -261,6 +153,7 @@ var re: TRegExpr;
 begin
   //todo: move to global singlton
   re := TRegExpr.Create('(\d+)-(\d+)-(\d+)T(\d+):(\d+):(\d+).*');
+
   Result := false;
   try
     if re.Exec(Str) then
@@ -314,6 +207,20 @@ begin
   end;
 end;
 
+{ TDevInfo }
+
+procedure TDevInfo.Init();
+begin
+  Name:='';
+  Id:='';
+end;
+
+procedure TDevInfo.Done();
+begin
+  Name:='';
+  Id:='';
+end;
+
 { TCore }
 
 function TCore.SendJSON(const RESTPath: string; const DataForSend: TStrings
@@ -345,6 +252,39 @@ begin
   Query.SetRequestHeader('X-API-Key', self.APIKey);
 end;
 
+procedure TCore.httpReadConfig(Query: THttpQuery);
+var j: TJSONData;
+begin
+  if HttpQueryToJson(Query, j) then
+  try
+    LoadDeviceNames(j);
+  finally
+    FreeAndNil(j);
+  end;
+end;
+
+procedure TCore.httpEvents(Query: THttpQuery);
+var
+  JData: TJSONData;
+  j: TJSONObject;
+  e: TJSONEnum;
+begin
+  if HttpQueryToJson(Query, JData) then
+  try
+    for e in JData do
+    begin
+      //todo: httpEvents WIP!!!
+      j := e.Value as TJSONObject;
+      //j.Get('globalID', '');
+      //j.Get('type', '');
+    end;
+    //ParseEvents...
+    //...EventsLastId:=...
+  finally
+    FreeAndNil(j);
+  end;
+end;
+
 procedure TCore.httpPing(Query: THttpQuery);
 begin
   if not Terminated then
@@ -353,16 +293,22 @@ begin
       //todo: check ping result
       if Query.Status <> 200 then
       begin
-        Online := false;
-        frmMain.shStatusCircle.Brush.Color:=clPurple;
+        if IsOnline then
+        begin
+          IsOnline := false;
+          Offline();
+        end;
       end else
       begin
-        Online := true;
-        frmMain.shStatusCircle.Brush.Color:=clGreen
+        if not IsOnline then
+        begin
+          IsOnline := true;
+          Online();
+        end;
       end;
     end else
     begin
-      Online := false;
+      IsOnline := false;
       frmMain.shStatusCircle.Brush.Color:=clRed;
     end;
 end;
@@ -422,12 +368,35 @@ begin
       FreeAndNil(FDoc);
   end;
 
-  //todo: WIP: GetAPIKey
   if Result = '' then
     Result := frmOptions.edAPIKey.Text;
 end;
 
-procedure TCore.Start;
+procedure TCore.LoadDeviceNames(Json: TJSONData);
+var
+  JData: TJSONData;
+  ij: TJSONEnum;
+  j: TJSONObject;
+  d: TDevInfo;
+begin
+  JData := Json.FindPath('devices');
+  if JData <> nil then
+    for ij in JData do
+    begin
+      if ij.Value.InheritsFrom(TJSONObject) then
+      begin
+        j := ij.Value as TJSONObject;
+        //d.Init();
+        d.Id:=j.Get('deviceID', 'ERROR');
+        d.Name:=j.Get('name', 'ERROR');
+        d.Paused:=j.Get('paused', False);
+
+        MapDevInfo.insert(d.Id, d);
+      end;
+    end;
+end;
+
+procedure TCore.Start();
 begin
   if not ProcessSyncthing.Running then
   begin
@@ -441,7 +410,7 @@ begin
   end;
 end;
 
-procedure TCore.Stop;
+procedure TCore.Stop();
 begin
   //todo: WIP!!!! - чет не заработал POST метод...
   //todo: OLD:
@@ -571,16 +540,23 @@ begin
   Done();
 end;
 
-procedure TCore.TimerPingTimer(Sender: TObject);
+procedure TCore.TimerUpdateTimer(Sender: TObject);
 begin
   if not httpPingInProc and not Terminated then
     aiohttp.Get(SyncthigServer+'rest/system/ping', @httpPing, '', @httpPingInProc);
+
+  if not httpEventsInProc and not Terminated then
+    aiohttp.Get(SyncthigServer+'rest/events', @httpEvents, '', @httpEventsInProc);
 end;
 
-procedure TCore.Init;
+procedure TCore.Init();
+var d:TDevInfo;
 begin
   //todo: WIP: INIT
-  Online := false;
+  MapDevInfo := TMapDevInfo.Create();
+  MapDevInfo.insert('test', d);//todo:<-DEL!!!!!!!!!!!!!!!
+
+  IsOnline := false;
   aiohttp := TAsyncHTTP.Create(false);
   aiohttp.OnOpened:=@aiohttpAddHeader;
   SyncthigServer:='http://127.0.0.1:8384/';
@@ -591,11 +567,23 @@ begin
   TimerPing.Enabled:=true;
 end;
 
-procedure TCore.Done;
+procedure TCore.Done();
 begin
   Terminated := true;
   TimerPing.Enabled:=false;
   FreeAndNil(aiohttp);
+  FreeAndNil(MapDevInfo);
+end;
+
+procedure TCore.Online();
+begin
+  frmMain.shStatusCircle.Brush.Color:=clGreen;
+  self.aiohttp.Get(Core.SyncthigServer+'rest/system/config', @httpReadConfig);
+end;
+
+procedure TCore.Offline();
+begin
+  frmMain.shStatusCircle.Brush.Color:=clPurple;
 end;
 
 procedure TCore.AddStringToConsole(Str: UTF8String);

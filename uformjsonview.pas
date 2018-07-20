@@ -38,7 +38,6 @@ var
 implementation
 
 uses
-  //uModuleCore,
   jsonparser, jsonscanner;
 
 {$R *.lfm}

@@ -1606,10 +1606,51 @@ object ModuleMain: TModuleMain
       Caption = 'actShowOptions'
       OnExecute = actShowOptionsExecute
     end
+    object actShowRestView: TAction
+      Caption = 'actShowRestView'
+      OnExecute = actShowRestViewExecute
+    end
   end
   object TimerUpdate: TTimer
     OnTimer = TimerUpdateTimer
     left = 40
     top = 256
+  end
+  object MainMenu1: TMainMenu
+    left = 160
+    top = 256
+    object mnServer: TMenuItem
+      Caption = 'mnServer'
+      object MenuItem3: TMenuItem
+        Action = Core.actStart
+      end
+      object MenuItem4: TMenuItem
+        Action = Core.actPause
+      end
+      object MenuItem2: TMenuItem
+        Action = Core.actRestart
+      end
+      object MenuItem1: TMenuItem
+        Action = Core.actStop
+      end
+      object MenuItem6: TMenuItem
+        Caption = '-'
+      end
+      object MenuItem5: TMenuItem
+        Action = Core.actExit
+      end
+    end
+    object MenuItem8: TMenuItem
+      Action = Core.actStart
+    end
+    object MenuItem9: TMenuItem
+      Action = Core.actStop
+    end
+    object MenuItem7: TMenuItem
+      Action = actShowOptions
+    end
+    object MenuItem10: TMenuItem
+      Action = actShowRestView
+    end
   end
 end

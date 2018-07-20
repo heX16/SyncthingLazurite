@@ -45,12 +45,24 @@ msgstr ""
 msgid "grpDevices"
 msgstr ""
 
+#: tfrmmain.grpevents.caption
+msgid "grpEvents"
+msgstr ""
+
 #: tfrmmain.grpfolders.caption
 msgid "grpFolders"
 msgstr ""
 
 #: tmodulemain.actshowoptions.caption
 msgid "actShowOptions"
+msgstr ""
+
+#: tmodulemain.actshowrestview.caption
+msgid "actShowRestView"
+msgstr ""
+
+#: tmodulemain.mnserver.caption
+msgid "mnServer"
 msgstr ""
 
 #: umodulemain.invalidaddress

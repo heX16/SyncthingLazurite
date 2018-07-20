@@ -2,25 +2,26 @@ object frmMain: TfrmMain
   Left = 347
   Height = 578
   Top = 324
-  Width = 471
+  Width = 551
   Caption = 'frmMain'
-  ClientHeight = 578
-  ClientWidth = 471
+  ClientHeight = 554
+  ClientWidth = 551
   DesignTimePPI = 120
+  Menu = ModuleMain.MainMenu1
   OnClose = FormClose
   OnCreate = FormCreate
   OnDestroy = FormDestroy
   OnWindowStateChange = FormWindowStateChange
-  Position = poDefault
+  Position = poDefaultPosOnly
   LCLVersion = '1.8.0.6'
   object Panel1: TPanel
     Left = 0
     Height = 50
     Top = 0
-    Width = 471
+    Width = 551
     Align = alTop
     ClientHeight = 50
-    ClientWidth = 471
+    ClientWidth = 551
     TabOrder = 0
     object btnStart: TButton
       Left = 48
@@ -60,8 +61,8 @@ object frmMain: TfrmMain
   object edConsole: TMemo
     Left = 0
     Height = 140
-    Top = 438
-    Width = 471
+    Top = 414
+    Width = 551
     Align = alBottom
     Color = clBlack
     Font.CharSet = RUSSIAN_CHARSET
@@ -80,26 +81,26 @@ object frmMain: TfrmMain
     Cursor = crVSplit
     Left = 0
     Height = 5
-    Top = 433
-    Width = 471
+    Top = 409
+    Width = 551
     Align = alBottom
     ResizeAnchor = akBottom
   end
   object grpDevices: TGroupBox
     Left = 0
-    Height = 383
+    Height = 359
     Top = 50
-    Width = 160
+    Width = 162
     Align = alLeft
     Caption = 'grpDevices'
-    ClientHeight = 361
-    ClientWidth = 156
+    ClientHeight = 337
+    ClientWidth = 158
     TabOrder = 3
     object treeDevices: TVirtualStringTree
       Left = 0
-      Height = 361
+      Height = 337
       Top = 0
-      Width = 156
+      Width = 158
       Align = alClient
       DefaultText = 'Node'
       Header.AutoSizeIndex = 0
@@ -110,20 +111,20 @@ object frmMain: TfrmMain
     end
   end
   object grpFolders: TGroupBox
-    Left = 160
-    Height = 383
+    Left = 168
+    Height = 359
     Top = 50
-    Width = 152
+    Width = 204
     Align = alLeft
     Caption = 'grpFolders'
-    ClientHeight = 361
-    ClientWidth = 148
+    ClientHeight = 337
+    ClientWidth = 200
     TabOrder = 4
     object treeFolders: TVirtualStringTree
       Left = 0
-      Height = 361
+      Height = 337
       Top = 0
-      Width = 148
+      Width = 200
       Align = alClient
       DefaultText = 'Node'
       Header.AutoSizeIndex = 0
@@ -132,5 +133,37 @@ object frmMain: TfrmMain
       TabOrder = 0
       OnGetText = treeFoldersGetText
     end
+  end
+  object Splitter2: TSplitter
+    Left = 162
+    Height = 359
+    Top = 50
+    Width = 6
+  end
+  object grpEvents: TGroupBox
+    Left = 378
+    Height = 359
+    Top = 50
+    Width = 173
+    Align = alClient
+    Caption = 'grpEvents'
+    ClientHeight = 337
+    ClientWidth = 169
+    TabOrder = 6
+    object listEvents: TListBox
+      Left = 0
+      Height = 337
+      Top = 0
+      Width = 169
+      Align = alClient
+      ItemHeight = 0
+      TabOrder = 0
+    end
+  end
+  object Splitter3: TSplitter
+    Left = 372
+    Height = 359
+    Top = 50
+    Width = 6
   end
 end
