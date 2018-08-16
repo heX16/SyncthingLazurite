@@ -18,6 +18,7 @@ type
   { TDevInfo }
   TDevId = string;
 
+  // device info 'record'
   TDevInfo = object
     Name: string;
     Id: string;
@@ -267,7 +268,9 @@ procedure TCore.httpEvents(Query: THttpQuery);
 var
   JData: TJSONData;
   j: TJSONObject;
+  j2: TJSONData;
   e: TJSONEnum;
+  s: UTF8String;
 begin
   if HttpQueryToJson(Query, JData) then
   try
@@ -275,13 +278,18 @@ begin
     begin
       //todo: httpEvents WIP!!!
       j := e.Value as TJSONObject;
-      //j.Get('globalID', '');
-      //j.Get('type', '');
+      EventsLastId := j.Get('globalID', 0);
+      s := IntToStr(EventsLastId) +' '+ j.Get('type', '');
+      j2 := j.FindPath('data.folder');
+      if j2<>nil then
+        s := s + ' folder: "' + j2.AsString + '"' else
+        s := s + ' // ' + j.AsJSON;
+      frmMain.listEvents.AddItem(s, nil);
     end;
     //ParseEvents...
     //...EventsLastId:=...
   finally
-    FreeAndNil(j);
+    FreeAndNil(JData);
   end;
 end;
 
@@ -546,7 +554,13 @@ begin
     aiohttp.Get(SyncthigServer+'rest/system/ping', @httpPing, '', @httpPingInProc);
 
   if not httpEventsInProc and not Terminated then
-    aiohttp.Get(SyncthigServer+'rest/events', @httpEvents, '', @httpEventsInProc);
+    aiohttp.Get(SyncthigServer+'rest/events'+'?'+
+      'since='+IntToStr(self.EventsLastId)+'&'+
+      'limit='+IntToStr(10)+'&'+
+      'timeout='+IntToStr(0),//+'&'+
+//      'events=LocalChangeDetected,RemoteChangeDetected',
+      @httpEvents, '', @httpEventsInProc);
+
 end;
 
 procedure TCore.Init();

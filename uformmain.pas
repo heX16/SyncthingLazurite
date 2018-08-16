@@ -12,7 +12,7 @@ uses
   //SynHighlighterJScript,
   //SynEdit,
   uModuleCore, VirtualTrees, Forms, Controls,
-  StdCtrls, ExtCtrls;
+  StdCtrls, ExtCtrls, Graphics;
 
 type
 
@@ -42,6 +42,9 @@ type
     procedure FormWindowStateChange(Sender: TObject);
     procedure miExitClick(Sender: TObject);
     procedure miShowClick(Sender: TObject);
+    procedure treeDevicesGetImageIndex(Sender: TBaseVirtualTree;
+      Node: PVirtualNode; Kind: TVTImageKind; Column: TColumnIndex;
+      var Ghosted: Boolean; var ImageIndex: Integer);
     procedure treeDevicesGetText(Sender: TBaseVirtualTree; Node: PVirtualNode;
       Column: TColumnIndex; TextType: TVSTTextType; var CellText: String);
     procedure treeFoldersGetText(Sender: TBaseVirtualTree; Node: PVirtualNode;
@@ -112,11 +115,26 @@ begin
   ModuleMain.TrayIconDblClick(nil);
 end;
 
+procedure TfrmMain.treeDevicesGetImageIndex(Sender: TBaseVirtualTree;
+  Node: PVirtualNode; Kind: TVTImageKind; Column: TColumnIndex;
+  var Ghosted: Boolean; var ImageIndex: Integer);
+var
+  d: TDevInfo;
+begin
+  ImageIndex:=0;
+  if Core.MapDevInfo.GetValue(DevicesItems[Node^.Index], d) then
+    if d.Online then
+      ImageIndex:=1;
+end;
+
 procedure TfrmMain.treeDevicesGetText(Sender: TBaseVirtualTree;
   Node: PVirtualNode; Column: TColumnIndex; TextType: TVSTTextType;
   var CellText: String);
+var
+  d: TDevInfo;
 begin
-  CellText := DevicesItems[Node^.Index];
+  if Core.MapDevInfo.GetValue(DevicesItems[Node^.Index], d) then
+    CellText := d.Name;
 end;
 
 procedure TfrmMain.treeFoldersGetText(Sender: TBaseVirtualTree;

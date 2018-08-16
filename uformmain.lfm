@@ -106,8 +106,10 @@ object frmMain: TfrmMain
       Header.AutoSizeIndex = 0
       Header.Columns = <>
       Header.MainColumn = -1
+      Images = ModuleMain.imgTreeViewIcon
       TabOrder = 0
       OnGetText = treeDevicesGetText
+      OnGetImageIndex = treeDevicesGetImageIndex
     end
   end
   object grpFolders: TGroupBox

@@ -1,4 +1,5 @@
 unit AsyncHttp;
+//todo: non lock read from multiple open socket
 
 {$mode objfpc}{$H+}
 
@@ -329,7 +330,8 @@ procedure TAsyncHTTP.Terminate;
 begin
   inherited; //note: <- FTerminated := True;
   // wake up and get out!
-  EventWaitWork.SetEvent();
+  if EventWaitWork <> nil then
+    EventWaitWork.SetEvent();
 end;
 
 end.
