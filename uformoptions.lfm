@@ -8,7 +8,7 @@ object frmOptions: TfrmOptions
   ClientWidth = 426
   DesignTimePPI = 120
   Position = poDefault
-  SessionProperties = 'edPathToConfig.Text;edPathToExec.Text;edAPIKey.Text'
+  SessionProperties = 'edAPIKey.Text;edPathToConfig.Text;edPathToExec.Text;chRunSyncOnStart.Checked'
   LCLVersion = '1.8.0.6'
   object BitBtn1: TBitBtn
     Left = 8
@@ -25,7 +25,7 @@ object frmOptions: TfrmOptions
   object edPathToConfig: TLabeledEdit
     Left = 8
     Height = 25
-    Top = 24
+    Top = 56
     Width = 381
     Anchors = [akTop, akLeft, akRight]
     EditLabel.AnchorSideLeft.Control = edPathToConfig
@@ -34,7 +34,7 @@ object frmOptions: TfrmOptions
     EditLabel.AnchorSideBottom.Control = edPathToConfig
     EditLabel.Left = 8
     EditLabel.Height = 17
-    EditLabel.Top = 4
+    EditLabel.Top = 36
     EditLabel.Width = 381
     EditLabel.Caption = 'edPathToConfig'
     EditLabel.ParentColor = False
@@ -44,7 +44,7 @@ object frmOptions: TfrmOptions
   object btnSelectDirConfig: TButton
     Left = 388
     Height = 25
-    Top = 24
+    Top = 56
     Width = 24
     Anchors = [akTop, akRight]
     Caption = '...'
@@ -54,7 +54,7 @@ object frmOptions: TfrmOptions
   object edPathToExec: TLabeledEdit
     Left = 8
     Height = 25
-    Top = 72
+    Top = 104
     Width = 381
     Anchors = [akTop, akLeft, akRight]
     EditLabel.AnchorSideLeft.Control = edPathToExec
@@ -63,7 +63,7 @@ object frmOptions: TfrmOptions
     EditLabel.AnchorSideBottom.Control = edPathToExec
     EditLabel.Left = 8
     EditLabel.Height = 17
-    EditLabel.Top = 52
+    EditLabel.Top = 84
     EditLabel.Width = 381
     EditLabel.Caption = 'edPathToExec'
     EditLabel.ParentColor = False
@@ -73,7 +73,7 @@ object frmOptions: TfrmOptions
   object btnSelectFileExec: TButton
     Left = 388
     Height = 25
-    Top = 72
+    Top = 104
     Width = 24
     Anchors = [akTop, akRight]
     Caption = '...'
@@ -83,7 +83,7 @@ object frmOptions: TfrmOptions
   object edAPIKey: TLabeledEdit
     Left = 8
     Height = 25
-    Top = 120
+    Top = 152
     Width = 301
     Anchors = [akTop, akLeft, akRight]
     EditLabel.AnchorSideLeft.Control = edAPIKey
@@ -92,7 +92,7 @@ object frmOptions: TfrmOptions
     EditLabel.AnchorSideBottom.Control = edAPIKey
     EditLabel.Left = 8
     EditLabel.Height = 17
-    EditLabel.Top = 100
+    EditLabel.Top = 132
     EditLabel.Width = 301
     EditLabel.Caption = 'edAPIKey'
     EditLabel.ParentColor = False
@@ -102,13 +102,23 @@ object frmOptions: TfrmOptions
   object chAuto: TCheckBox
     Left = 312
     Height = 21
-    Top = 120
+    Top = 152
     Width = 100
     Anchors = [akTop, akRight]
     AutoSize = False
     Caption = 'chAuto'
     Enabled = False
     TabOrder = 6
+  end
+  object chRunSyncOnStart: TCheckBox
+    Left = 8
+    Height = 21
+    Top = 8
+    Width = 143
+    Caption = 'chRunSyncOnStart'
+    Checked = True
+    State = cbChecked
+    TabOrder = 7
   end
   object XMLPropStorageConfig: TXMLPropStorage
     StoredValues = <>

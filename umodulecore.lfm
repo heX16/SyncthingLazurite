@@ -1,7 +1,7 @@
 object Core: TCore
   OnDestroy = DataModuleDestroy
   OldCreateOrder = False
-  Height = 393
+  Height = 406
   HorizontalOffset = 793
   VerticalOffset = 171
   Width = 431
@@ -107,5 +107,12 @@ object Core: TCore
     OnTimer = TimerPauseTimer
     left = 70
     top = 272
+  end
+  object TimerStartOnStart: TTimer
+    Enabled = False
+    Interval = 3000
+    OnTimer = TimerStartOnStartTimer
+    left = 70
+    top = 336
   end
 end

@@ -17,6 +17,7 @@ type
     btnSelectDirConfig: TButton;
     btnSelectFileExec: TButton;
     chAuto: TCheckBox;
+    chRunSyncOnStart: TCheckBox;
     edPathToConfig: TLabeledEdit;
     edPathToExec: TLabeledEdit;
     edAPIKey: TLabeledEdit;

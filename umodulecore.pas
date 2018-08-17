@@ -55,6 +55,7 @@ type
     TimerInit: TTimer;
     TimerPing: TTimer;
     TimerReadStdOutput: TTimer;
+    TimerStartOnStart: TTimer;
     procedure actInitExecute(Sender: TObject);
     procedure actExitExecute(Sender: TObject);
     procedure actPauseExecute(Sender: TObject);
@@ -66,12 +67,17 @@ type
     procedure DataModuleDestroy(Sender: TObject);
     procedure TimerInitTimer(Sender: TObject);
     procedure TimerPauseTimer(Sender: TObject);
+    procedure TimerStartOnStartTimer(Sender: TObject);
     procedure TimerUpdateTimer(Sender: TObject);
     procedure TimerReadStdOutputTimer(Sender: TObject);
   private
     OutputChankStr: UTF8String;
   public
+    // flag - syncthing is work
     IsOnline: boolean;
+    // flag - checked 'syncthing is work'
+    OnlineTested: boolean;
+
     Terminated: boolean;
     aiohttp: TAsyncHTTP;
 
@@ -295,6 +301,7 @@ end;
 
 procedure TCore.httpPing(Query: THttpQuery);
 begin
+  OnlineTested := true;
   if not Terminated then
     if Query.ReadyState=httpDone then
     begin
@@ -490,6 +497,16 @@ begin
   actStart.Execute();
 end;
 
+procedure TCore.TimerStartOnStartTimer(Sender: TObject);
+begin
+  if OnlineTested then
+  begin
+    TimerStartOnStart.Enabled:=false;
+    if not IsOnline then
+      Start();
+  end;
+end;
+
 procedure TCore.actRestartExecute(Sender: TObject);
 begin
   actStop.Execute();
@@ -578,6 +595,7 @@ begin
   SyncthigHome:=GetSyncthigHome();
   APIKey:=GetAPIKey();
 
+  TimerStartOnStart.Enabled:=frmOptions.chRunSyncOnStart.Checked;
   TimerPing.Enabled:=true;
 end;
 
