@@ -39,7 +39,7 @@ msgstr ""
 
 #: tfrmmain.caption
 msgid "frmMain"
-msgstr ""
+msgstr "Syncthing"
 
 #: tfrmmain.grpdevices.caption
 msgid "grpDevices"
@@ -47,7 +47,7 @@ msgstr "Устройства"
 
 #: tfrmmain.grpevents.caption
 msgid "grpEvents"
-msgstr ""
+msgstr "События"
 
 #: tfrmmain.grpfolders.caption
 msgid "grpFolders"
@@ -65,7 +65,7 @@ msgstr ""
 
 #: tfrmoptions.caption
 msgid "frmOptions"
-msgstr ""
+msgstr "Опции"
 
 #: tfrmoptions.chauto.caption
 msgid "chAuto"
@@ -73,11 +73,11 @@ msgstr ""
 
 #: tfrmoptions.chrunsynconstart.caption
 msgid "chRunSyncOnStart"
-msgstr ""
+msgstr "Запускать синхронизация при старте программы"
 
 #: tfrmoptions.edapikey.editlabel.caption
 msgid "edAPIKey"
-msgstr ""
+msgstr "API Key"
 
 #: tfrmoptions.edapikey.text
 msgid "MJzE2GL2vOvaFydjM05ocRM64SZ0DR1-"
@@ -112,60 +112,4 @@ msgstr "Rest просмотр"
 #: tmodulemain.mnserver.caption
 msgid "mnServer"
 msgstr "Сервер"
-
-#: umodulemain.invalidaddress
-msgid "Invalid address"
-msgstr ""
-
-#: umodulemain.resadd
-msgid "add"
-msgstr ""
-
-#: umodulemain.resaddress
-msgid "address"
-msgstr ""
-
-#: umodulemain.rescalcfreedevid
-msgid "Calc free DevID"
-msgstr ""
-
-#: umodulemain.rescurrentdevice
-msgid "Current device"
-msgstr ""
-
-#: umodulemain.resdata
-msgid "data"
-msgstr ""
-
-#: umodulemain.resdevice
-msgid "device"
-msgstr ""
-
-#: umodulemain.resenterfullnamedevice
-msgid "Enter full name of device (and company if present)"
-msgstr ""
-
-#: umodulemain.resok
-msgid "ok"
-msgstr ""
-
-#: umodulemain.resregister
-msgid "register"
-msgstr ""
-
-#: umodulemain.resregshort
-msgid "reg"
-msgstr ""
-
-#: umodulemain.resresultcalcfreedevid
-msgid "Result for calc free DevID"
-msgstr ""
-
-#: umodulemain.ressend
-msgid "send"
-msgstr ""
-
-#: umodulemain.resstringmustmorethat
-msgid "String must more that 10 symbols"
-msgstr ""
 
