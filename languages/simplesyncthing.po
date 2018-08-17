@@ -53,6 +53,54 @@ msgstr ""
 msgid "grpFolders"
 msgstr ""
 
+#: tfrmoptions.btnselectdirconfig.caption
+msgctxt "tfrmoptions.btnselectdirconfig.caption"
+msgid "..."
+msgstr ""
+
+#: tfrmoptions.btnselectfileexec.caption
+msgctxt "tfrmoptions.btnselectfileexec.caption"
+msgid "..."
+msgstr ""
+
+#: tfrmoptions.caption
+msgid "frmOptions"
+msgstr ""
+
+#: tfrmoptions.chauto.caption
+msgid "chAuto"
+msgstr ""
+
+#: tfrmoptions.chrunsynconstart.caption
+msgid "chRunSyncOnStart"
+msgstr ""
+
+#: tfrmoptions.edapikey.editlabel.caption
+msgid "edAPIKey"
+msgstr ""
+
+#: tfrmoptions.edapikey.text
+msgid "MJzE2GL2vOvaFydjM05ocRM64SZ0DR1-"
+msgstr ""
+
+#: tfrmoptions.edpathtoconfig.editlabel.caption
+msgid "edPathToConfig"
+msgstr ""
+
+#: tfrmoptions.edpathtoconfig.text
+msgctxt "tfrmoptions.edpathtoconfig.text"
+msgid "./"
+msgstr ""
+
+#: tfrmoptions.edpathtoexec.editlabel.caption
+msgid "edPathToExec"
+msgstr ""
+
+#: tfrmoptions.edpathtoexec.text
+msgctxt "tfrmoptions.edpathtoexec.text"
+msgid "./"
+msgstr ""
+
 #: tmodulemain.actshowoptions.caption
 msgid "actShowOptions"
 msgstr ""
