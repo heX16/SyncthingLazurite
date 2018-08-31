@@ -153,6 +153,7 @@ var
   JData: TJSONData;
   ij: TJSONEnum;
 begin
+  //todo: httpUpdateDevice - move to Core!
   if HttpQueryToJson(Query, JData) then
   try
     frmMain.FoldersItems.Clear();
