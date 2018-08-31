@@ -113,3 +113,15 @@ msgstr "Rest просмотр"
 msgid "mnServer"
 msgstr "Сервер"
 
+#: uformmain.caddress
+msgid "Address"
+msgstr ""
+
+#: uformmain.cdays
+msgid "days"
+msgstr ""
+
+#: uformmain.coffline
+msgid "Offline"
+msgstr ""
+

@@ -61,6 +61,11 @@ type
 var
   frmMain: TfrmMain;
 
+resourcestring
+  cOffline = 'Offline';
+  cDays = 'days';
+  cAddress = 'Address';
+
 implementation
 
 uses
@@ -130,7 +135,9 @@ begin
   begin
     HintText := HintText + d.Id;
     if (not d.Connected) and (DaysBetween(d.LastSeen, Now()) < 31*6) then
-      HintText :=  HintText + #13 + 'Offline: ' + IntToStr(DaysBetween(d.LastSeen, Now())) + ' days';
+      HintText :=  HintText + #13 + cOffline + ': ' + IntToStr(DaysBetween(d.LastSeen, Now())) + ' ' + cDays;
+    if d.Connected then
+      HintText :=  HintText + #13 + cAddress + ': ' + d.Address;
   end;
 end;
 
