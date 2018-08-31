@@ -106,10 +106,14 @@ object frmMain: TfrmMain
       Header.AutoSizeIndex = 0
       Header.Columns = <>
       Header.MainColumn = -1
+      HintMode = hmHint
       Images = ModuleMain.imgTreeViewIcon
+      ParentShowHint = False
+      ShowHint = True
       TabOrder = 0
       OnGetText = treeDevicesGetText
       OnGetImageIndex = treeDevicesGetImageIndex
+      OnGetHint = treeDevicesGetHint
     end
   end
   object grpFolders: TGroupBox

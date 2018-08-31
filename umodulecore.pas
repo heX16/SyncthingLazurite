@@ -16,14 +16,15 @@ uses
 
 type
   { TDevInfo }
-  TDevId = string;
+  TDevId = ansistring;
 
   // device info 'record'
   TDevInfo = object
     Name: string;
     Id: string;
+    Address: string;
     Paused: boolean;
-    Online: boolean;
+    Connected: boolean;
     LastSeen: TDateTime;
 
     procedure Init();

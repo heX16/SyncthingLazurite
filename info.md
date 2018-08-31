@@ -1,3 +1,6 @@
+Misc
+-------
+
 procedure TfrmMain.httpTest(Query: THttpQuery);
 begin
   //example: aiohttp.Get('http://ya.ru', @httpTest);
@@ -18,8 +21,6 @@ C:\Windows\System32\cmd.exe
 /C "D:\NetDrive\AppsPortableHex\Programs\_Net\syncthing\syncthing.exe"
 /C "D:\NetDrive\AppsPortableHex\Programs\_Net\syncthing\syncthing_hex_disk.bat"
 
--------------
-
 function GetConsoleWindow: HWND; stdcall; external kernel32;
 
 procedure ShowSelfConsoleWindow;
@@ -34,10 +35,11 @@ begin
   ShowWindow(GetConsoleWindow(), SW_HIDE);
 end;
 
--------------
+
 
 
 System Endpoints
+-------------------
     GET /rest/system/config
     GET /rest/system/config/insync
     GET /rest/system/connections
@@ -57,6 +59,7 @@ System Endpoints
     POST /rest/system/upgrade
 
 Database Endpoints
+----------------------
     GET /rest/db/browse
     GET /rest/db/completion
     GET /rest/db/file
@@ -65,6 +68,7 @@ Database Endpoints
     GET /rest/db/status
 
 Event Endpoints
+------------------
     GET /rest/events
 
     since=<lastSeenID> events=EventTypeA
@@ -84,6 +88,7 @@ Event Endpoints
      }
 
 Statistics Endpoints
+-----------------------
     GET /rest/stats/device
       {
         "HJBNI74-LB5I7ND-IDXKOJH-CMM5KM3-AR4BMVB-XOXIJAB-FSYCOFN-3EBH7AS" : {
@@ -93,20 +98,35 @@ Statistics Endpoints
     GET /rest/stats/folder
 
 Misc Services Endpoints
-    GET /rest/svc/deviceid
-    GET /rest/svc/lang
-    GET /rest/svc/random/string
-    GET /rest/svc/report
+---------------------------
+    GET rest/svc/deviceid
+    GET rest/svc/lang
+    GET rest/svc/random/string
+    GET rest/svc/report
 
 
 
 
+rest/system/connections
+---------------------------
+
+    "connections" : {
+      "67SBX7B-MYCRFDG-Q3UE7N5-FO3JYZF-CAWIBWR-X54RIY3-HHVFZJW-4IEF2QY" : {
+        "address" : "5.164.194.12:16221",
+        "at" : "2018-08-31T09:13:38.8356001+03:00",
+        "clientVersion" : "v0.14.48",
+        "connected" : true,
+        "inBytesTotal" : 565,
+        "outBytesTotal" : 787,
+        "paused" : false,
+        "type" : "tcp-client"
+      },
 
 
 
-    -----------------------------
+detect "Up to Date"
+----------------------
 
-    detect “Up to Date”:
     https://forum.syncthing.net/t/syncthing-is-the-best-help-me-detect-up-to-date-with-rest/10968/5
 
     /rest/db/completion?folder=src&device=[specific_device_id]

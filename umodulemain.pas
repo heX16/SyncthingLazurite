@@ -45,9 +45,11 @@ type
     procedure TrayIconDblClick(Sender: TObject);
   private
     httpUpdateDeviceInProc: boolean;
+    httpGetExtInfoDeviceInProc: boolean;
     httpUpdateFolderInProc: boolean;
 
     procedure httpUpdateDevice(Query: THttpQuery);
+    procedure httpGetExtInfoDevice(Query: THttpQuery);
     procedure httpUpdateFolder(Query: THttpQuery);
   public
 
@@ -80,16 +82,50 @@ end;
 
 procedure TModuleMain.httpUpdateDevice(Query: THttpQuery);
 var
+  JData, j2: TJSONData;
+  ij: TJSONEnum;
+  d: TDevInfo;
+begin
+  //todo: change logic - first update MapDevInfo and after update DevicesItems
+  //todo: httpUpdateDevice - move to Core!
+  if HttpQueryToJson(Query, JData) then
+  try
+    frmMain.DevicesItems.Clear();
+    j2 := JData.GetPath('connections');
+    // enum all device
+    for ij in j2 do
+    begin
+      // find in device list.
+      if Core.MapDevInfo.GetValue(ij.Key, d) then
+      begin
+        // update data
+        d.Connected:=ij.Value.GetPath('connected').AsBoolean;
+        d.Paused:=ij.Value.GetPath('paused').AsBoolean;
+        d.Address:=ij.Value.GetPath('address').AsString;
+        //todo: use 'mutable' ptr
+        // write to map
+        Core.MapDevInfo[ij.Key] := d;
+      end;
+      frmMain.DevicesItems.Add(ij.Key);
+    end;
+    frmMain.treeDevices.RootNodeCount:=j2.Count;
+    frmMain.treeDevices.Invalidate(); //todo: <-optimize
+  finally
+    FreeAndNil(JData);
+  end;
+end;
+
+procedure TModuleMain.httpGetExtInfoDevice(Query: THttpQuery);
+var
   JData: TJSONData;
   ij: TJSONEnum;
   s: ansistring;
   dt: TDateTime;
   d: TDevInfo;
 begin
-  //todo: change logic - first update MapDevInfo and after update DevicesItems
+  //todo: httpGetExtInfoDevice - move to Core!
   if HttpQueryToJson(Query, JData) then
   try
-    frmMain.DevicesItems.Clear();
     // enum all device
     for ij in JData do
     begin
@@ -97,24 +133,18 @@ begin
       if Core.MapDevInfo.GetValue(ij.Key, d) then
       begin
         // update data
-        d.Online:=false;
         if ij.Value.FindPath('lastSeen')<>nil then
         begin
-          s := ij.Value.GetPath('lastSeen').Value;
+          s := ij.Value.GetPath('lastSeen').AsString;
           if JsonStrToDateTime(s, dt) then
-            if IncSecond(dt, 120) > Now() then
-              d.Online:=true;
+            d.LastSeen:=dt;
         end;
         //todo: use 'mutable' ptr
-        // write to map
         Core.MapDevInfo[ij.Key] := d;
       end;
-      frmMain.DevicesItems.Add(ij.Key);
     end;
-    frmMain.treeDevices.RootNodeCount:=JData.Count;
-    frmMain.treeDevices.Invalidate(); //todo: <-optimize
   finally
-    JData.Free();
+    FreeAndNil(JData);
   end;
 end;
 
@@ -150,16 +180,20 @@ var
   i: Core.MapDevInfo.TIterator;
   OnlineCount: integer;
 begin
+
   if not httpUpdateDeviceInProc and Core.IsOnline then
-    Core.aiohttp.Get(Core.SyncthigServer+'rest/stats/device', @httpUpdateDevice, '', @httpUpdateDeviceInProc);
+    Core.aiohttp.Get(Core.SyncthigServer+'rest/system/connections', @httpUpdateDevice, '', @httpUpdateDeviceInProc);
   if not httpUpdateFolderInProc and Core.IsOnline then
     Core.aiohttp.Get(Core.SyncthigServer+'rest/stats/folder', @httpUpdateFolder, '', @httpUpdateFolderInProc);
+  //todo: уменьшить кол-во обращений
+  if not httpGetExtInfoDeviceInProc and Core.IsOnline then
+    Core.aiohttp.Get(Core.SyncthigServer+'rest/stats/device', @httpGetExtInfoDevice, '', @httpGetExtInfoDeviceInProc);
 
   i := Core.MapDevInfo.Iterator();
   OnlineCount := 0;
   try
     repeat
-      if i.GetMutable()^.Online then
+      if i.GetMutable()^.Connected then
         inc(OnlineCount);
     until not i.Next;
   finally

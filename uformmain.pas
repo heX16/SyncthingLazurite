@@ -42,6 +42,9 @@ type
     procedure FormWindowStateChange(Sender: TObject);
     procedure miExitClick(Sender: TObject);
     procedure miShowClick(Sender: TObject);
+    procedure treeDevicesGetHint(Sender: TBaseVirtualTree; Node: PVirtualNode;
+      Column: TColumnIndex; var LineBreakStyle: TVTTooltipLineBreakStyle;
+      var HintText: String);
     procedure treeDevicesGetImageIndex(Sender: TBaseVirtualTree;
       Node: PVirtualNode; Kind: TVTImageKind; Column: TColumnIndex;
       var Ghosted: Boolean; var ImageIndex: Integer);
@@ -61,6 +64,7 @@ var
 implementation
 
 uses
+  dateutils,
   uModuleMain;
 
 {$R *.lfm}
@@ -115,6 +119,21 @@ begin
   ModuleMain.TrayIconDblClick(nil);
 end;
 
+procedure TfrmMain.treeDevicesGetHint(Sender: TBaseVirtualTree;
+  Node: PVirtualNode; Column: TColumnIndex;
+  var LineBreakStyle: TVTTooltipLineBreakStyle; var HintText: String);
+var
+  d: TDevInfo;
+begin
+  HintText := '';
+  if Core.MapDevInfo.GetValue(DevicesItems[Node^.Index], d) then
+  begin
+    HintText := HintText + d.Id;
+    if (not d.Connected) and (DaysBetween(d.LastSeen, Now()) < 31*6) then
+      HintText :=  HintText + #13 + 'Offline: ' + IntToStr(DaysBetween(d.LastSeen, Now())) + ' days';
+  end;
+end;
+
 procedure TfrmMain.treeDevicesGetImageIndex(Sender: TBaseVirtualTree;
   Node: PVirtualNode; Kind: TVTImageKind; Column: TColumnIndex;
   var Ghosted: Boolean; var ImageIndex: Integer);
@@ -123,8 +142,12 @@ var
 begin
   ImageIndex:=0;
   if Core.MapDevInfo.GetValue(DevicesItems[Node^.Index], d) then
-    if d.Online then
+  begin
+    if d.Connected then
       ImageIndex:=1;
+    if d.Paused then
+      ImageIndex:=2;
+  end;
 end;
 
 procedure TfrmMain.treeDevicesGetText(Sender: TBaseVirtualTree;
