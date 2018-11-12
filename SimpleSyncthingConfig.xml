@@ -1,4 +1,4 @@
 <?xml version="1.0" encoding="utf-8"?>
 <CONFIG>
-  <SimpleSyncthing edAPIKey_Text="lg4apLOJijbtqaQ-LY09tDDrXcgTnUM4" edPathToExec_Text="./" edPathToConfig_Text="./"/>
+  <SimpleSyncthing edAPIKey_Text="lg4apLOJijbtqaQ-LY09tDDrXcgTnUM4" edPathToExec_Text="./" edPathToConfig_Text="./" chRunSyncOnStart_Checked="1"/>
 </CONFIG>

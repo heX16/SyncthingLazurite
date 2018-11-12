@@ -14,23 +14,23 @@ msgid "actPause"
 msgstr ""
 
 #: tcore.actrestart.caption
-msgid "Restart"
+msgid "actRestart"
 msgstr ""
 
 #: tcore.actrunsupportproc.caption
-msgid "Run Support Proc"
+msgid "actRunSupportProc"
 msgstr ""
 
 #: tcore.actstart.caption
-msgid "Start"
+msgid "actStart"
 msgstr ""
 
 #: tcore.actstop.caption
-msgid "Stop"
+msgid "actStop"
 msgstr ""
 
 #: tcore.actterminate.caption
-msgid "Terminate"
+msgid "actTerminate"
 msgstr ""
 
 #: tfrmjsonview.caption

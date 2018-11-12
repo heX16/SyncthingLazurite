@@ -1592,6 +1592,9 @@ object ModuleMain: TModuleMain
   object menuTrayIcon: TPopupMenu
     left = 160
     top = 100
+    object mnRestart: TMenuItem
+      Action = Core.actRestart
+    end
     object miShow: TMenuItem
       Action = Core.actPause
     end

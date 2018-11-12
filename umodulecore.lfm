@@ -56,17 +56,17 @@ object Core: TCore
     top = 80
     object actStart: TAction
       Category = 'Core'
-      Caption = 'Start'
+      Caption = 'actStart'
       OnExecute = actStartExecute
     end
     object actStop: TAction
       Category = 'Core'
-      Caption = 'Stop'
+      Caption = 'actStop'
       OnExecute = actStopExecute
     end
     object actRestart: TAction
       Category = 'Core'
-      Caption = 'Restart'
+      Caption = 'actRestart'
       OnExecute = actRestartExecute
     end
     object actExit: TAction
@@ -81,12 +81,12 @@ object Core: TCore
     end
     object actTerminate: TAction
       Category = 'Core'
-      Caption = 'Terminate'
+      Caption = 'actTerminate'
       OnExecute = actTerminateExecute
     end
     object actRunSupportProc: TAction
       Category = 'Core'
-      Caption = 'Run Support Proc'
+      Caption = 'actRunSupportProc'
       OnExecute = actRunSupportProcExecute
     end
     object actInit: TAction
