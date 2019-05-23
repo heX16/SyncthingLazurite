@@ -71,6 +71,10 @@ msgstr "Options"
 msgid "chAuto"
 msgstr "Auto"
 
+#: tfrmoptions.chintervalmode.caption
+msgid "chIntervalMode"
+msgstr ""
+
 #: tfrmoptions.chrunsynconstart.caption
 msgid "chRunSyncOnStart"
 msgstr "Run sync on start program"
@@ -81,6 +85,10 @@ msgstr "API Key"
 
 #: tfrmoptions.edapikey.text
 msgid "MJzE2GL2vOvaFydjM05ocRM64SZ0DR1-"
+msgstr ""
+
+#: tfrmoptions.edinterval.text
+msgid "0.5 day"
 msgstr ""
 
 #: tfrmoptions.edpathtoconfig.editlabel.caption
@@ -99,6 +107,18 @@ msgstr "Path to exec"
 #: tfrmoptions.edpathtoexec.text
 msgctxt "tfrmoptions.edpathtoexec.text"
 msgid "./"
+msgstr ""
+
+#: tfrmoptions.groupbox1.caption
+msgid "grpShedule"
+msgstr ""
+
+#: tfrmoptions.label1.caption
+msgid "Pause_between_runs:"
+msgstr ""
+
+#: tmodulemain.actcopyselecteddevid.caption
+msgid "actCopySelectedDevID"
 msgstr ""
 
 #: tmodulemain.actshowoptions.caption

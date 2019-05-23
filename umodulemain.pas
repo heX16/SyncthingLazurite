@@ -8,6 +8,7 @@ uses
   RegExpr,
   AsyncHttp,
   Classes, SysUtils, FileUtil, Controls, ExtCtrls, Menus, ActnList,
+  VirtualTrees,
   UniqueInstance;
 
 type
@@ -15,6 +16,7 @@ type
   { TModuleMain }
 
   TModuleMain = class(TDataModule)
+    actCopySelectedDevID: TAction;
     actShowRestView: TAction;
     actShowOptions: TAction;
     ActionListGUI: TActionList;
@@ -24,6 +26,7 @@ type
     MainMenu1: TMainMenu;
     MenuItem1: TMenuItem;
     MenuItem10: TMenuItem;
+    MenuItem11: TMenuItem;
     mnRestart: TMenuItem;
     MenuItem2: TMenuItem;
     MenuItem3: TMenuItem;
@@ -37,9 +40,11 @@ type
     menuTrayIcon: TPopupMenu;
     miExit: TMenuItem;
     miShow: TMenuItem;
+    menuDevList: TPopupMenu;
     TimerUpdate: TTimer;
     TrayIcon: TTrayIcon;
     UniqueInstance1: TUniqueInstance;
+    procedure actCopySelectedDevIDExecute(Sender: TObject);
     procedure actShowOptionsExecute(Sender: TObject);
     procedure actShowRestViewExecute(Sender: TObject);
     procedure TimerUpdateTimer(Sender: TObject);
@@ -64,6 +69,7 @@ implementation
 {$R *.lfm}
 
 uses
+  Clipbrd,
   DateUtils,
   fpjson,
   uModuleCore,
@@ -169,6 +175,23 @@ end;
 procedure TModuleMain.actShowOptionsExecute(Sender: TObject);
 begin
   frmOptions.ShowModal();
+end;
+
+procedure TModuleMain.actCopySelectedDevIDExecute(Sender: TObject);
+var
+  i: PVirtualNode;
+  d: TDevInfo;
+  CpText: string;
+begin
+  CpText := '';
+  for i in frmMain.treeDevices.SelectedNodes() do begin
+    if Core.MapDevInfo.GetValue(frmMain.DevicesItems[i^.Index], d) then begin
+      CpText := CpText + #13 + d.Id;
+    end;
+  end;
+  if CpText[1]=#13 then
+    Delete(CpText, 1, 1);
+  Clipboard.AsText:=CpText;
 end;
 
 procedure TModuleMain.actShowRestViewExecute(Sender: TObject);

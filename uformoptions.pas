@@ -17,11 +17,17 @@ type
     btnSelectDirConfig: TButton;
     btnSelectFileExec: TButton;
     chAuto: TCheckBox;
+    chIntervalMode: TCheckBox;
     chRunSyncOnStart: TCheckBox;
+    edInterval: TComboBox;
     edPathToConfig: TLabeledEdit;
     edPathToExec: TLabeledEdit;
     edAPIKey: TLabeledEdit;
+    GroupBox1: TGroupBox;
+    Label1: TLabel;
     XMLPropStorageConfig: TXMLPropStorage;
+    procedure chIntervalModeChange(Sender: TObject);
+    procedure FormShow(Sender: TObject);
   private
 
   public
@@ -34,6 +40,18 @@ var
 implementation
 
 {$R *.lfm}
+
+{ TfrmOptions }
+
+procedure TfrmOptions.FormShow(Sender: TObject);
+begin
+  Label1.Enabled:=chIntervalMode.Checked;
+end;
+
+procedure TfrmOptions.chIntervalModeChange(Sender: TObject);
+begin
+  Label1.Enabled:=chIntervalMode.Checked;
+end;
 
 end.
 

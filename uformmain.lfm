@@ -13,7 +13,7 @@ object frmMain: TfrmMain
   OnDestroy = FormDestroy
   OnWindowStateChange = FormWindowStateChange
   Position = poDefaultPosOnly
-  LCLVersion = '1.8.0.6'
+  LCLVersion = '1.8.4.0'
   object Panel1: TPanel
     Left = 0
     Height = 50
@@ -109,8 +109,10 @@ object frmMain: TfrmMain
       HintMode = hmHint
       Images = ModuleMain.imgTreeViewIcon
       ParentShowHint = False
+      PopupMenu = ModuleMain.menuDevList
       ShowHint = True
       TabOrder = 0
+      TreeOptions.SelectionOptions = [toFullRowSelect, toMultiSelect, toAlwaysSelectNode]
       OnGetText = treeDevicesGetText
       OnGetImageIndex = treeDevicesGetImageIndex
       OnGetHint = treeDevicesGetHint

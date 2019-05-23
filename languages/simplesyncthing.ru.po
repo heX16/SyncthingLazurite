@@ -74,9 +74,13 @@ msgstr "Опции"
 msgid "chAuto"
 msgstr "Авто"
 
+#: tfrmoptions.chintervalmode.caption
+msgid "chIntervalMode"
+msgstr ""
+
 #: tfrmoptions.chrunsynconstart.caption
 msgid "chRunSyncOnStart"
-msgstr "Запускать синхронизация при старте программы"
+msgstr "Запускать синхронизацию при старте программы"
 
 #: tfrmoptions.edapikey.editlabel.caption
 msgid "edAPIKey"
@@ -84,6 +88,10 @@ msgstr "API Key"
 
 #: tfrmoptions.edapikey.text
 msgid "MJzE2GL2vOvaFydjM05ocRM64SZ0DR1-"
+msgstr ""
+
+#: tfrmoptions.edinterval.text
+msgid "0.5 day"
 msgstr ""
 
 #: tfrmoptions.edpathtoconfig.editlabel.caption
@@ -102,6 +110,18 @@ msgstr "Путь к программе"
 #: tfrmoptions.edpathtoexec.text
 msgctxt "tfrmoptions.edpathtoexec.text"
 msgid "./"
+msgstr ""
+
+#: tfrmoptions.groupbox1.caption
+msgid "grpShedule"
+msgstr "Расписание"
+
+#: tfrmoptions.label1.caption
+msgid "Pause_between_runs:"
+msgstr "Пауза между запусками"
+
+#: tmodulemain.actcopyselecteddevid.caption
+msgid "actCopySelectedDevID"
 msgstr ""
 
 #: tmodulemain.actshowoptions.caption

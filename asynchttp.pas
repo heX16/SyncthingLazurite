@@ -26,6 +26,9 @@ type
     Status: integer;
     // readed data
     Response: TMemoryStream;
+    // timeout
+    ConnectTimeout: dword;
+    // connected flag (operation in progress)
     Connected: boolean;
     InWorkFlagPtr: PBoolean;
     procedure SetRequestHeader(name: string; value: string);
@@ -45,6 +48,10 @@ type
   }
   THttpQueryState = (httpLoading=3, httpDone=4, httpError=5);
 
+  THttpQuery = class;
+
+  THttpCallbackEvent = procedure (Query: THttpQuery) of object;
+
   THttpQuery = class(THttpQueryBase)
   public
     {
@@ -56,6 +63,7 @@ type
       timeout – запрос был прекращён по таймауту.
       loadend – запрос был завершён (успешно или неуспешно)
     }
+    Callback: THttpCallbackEvent;
     Opened: THttpQueryEvent;
     Done: THttpQueryEvent;
     Error: THttpQueryEvent;
@@ -66,8 +74,6 @@ type
 
   { TAsyncHTTP }
 
-  THttpCallbackEvent = procedure (Query: THttpQuery) of object;
-
   TQueueHttpQuery = specialize TQueue<THttpQuery>;
 
   { THttpQueryForThreadHTTP }
@@ -75,7 +81,6 @@ type
   THttpEvent = procedure (Query: THttpQueryBase) of object;
 
   THttpQueryForThreadHTTP = class(THttpQuery)
-    Callback: THttpCallbackEvent;
     procedure HttpRequestEnded(); override;
     procedure SelfDestroy(DataPtr: IntPtr);
   end;
@@ -115,16 +120,120 @@ type
     destructor Destroy; override;
   end;
 
+  { TFakeAsyncHTTP }
+
+  TFakeAsyncHTTP = class(TObject)
+  protected
+    procedure DoLoadDone(Query: THttpQueryBase);
+    procedure DoOpened(Query: THttpQueryBase);
+    procedure DoError(Query: THttpQueryBase);
+public
+    OnOpened: THttpEvent;
+    OnLoadDone: THttpEvent;
+    OnError: THttpEvent;
+
+    constructor Create(CreateSuspended: Boolean;
+                       const StackSize: SizeUInt = DefaultStackSize);
+
+    procedure HttpMethod(Method: string; const URL: string; Callback: THttpCallbackEvent; AddHeaders: string = '';
+      const Data: string = ''; InWorkFlagPtr: PBoolean = nil);
+
+    procedure Get(const URL: string; Callback: THttpCallbackEvent; AddHeaders: string = '';
+      InWorkFlagPtr: PBoolean = nil);
+
+    procedure Post(const URL: string; const Data: string;
+      Callback: THttpCallbackEvent; AddHeaders: string = '';
+      InWorkFlagPtr: PBoolean = nil);
+
+    // call from other threads.
+    procedure Terminate;
+
+    destructor Destroy; override;
+  end;
+
 implementation
 
 uses
   Forms, Controls, Graphics, Dialogs, StdCtrls, synautil,
   ExtCtrls;
 
+{ TFakeAsyncHTTP }
+
+procedure TFakeAsyncHTTP.DoLoadDone(Query: THttpQueryBase);
+var q: THttpQueryForThreadHTTP absolute Query;
+begin
+  if q.Callback <> nil then
+    q.Callback(q);
+end;
+
+procedure TFakeAsyncHTTP.DoOpened(Query: THttpQueryBase);
+begin
+  if OnOpened<>nil then
+    OnOpened(Query);
+end;
+
+procedure TFakeAsyncHTTP.DoError(Query: THttpQueryBase);
+var q: THttpQueryForThreadHTTP absolute Query;
+begin
+  if q.Callback <> nil then
+    q.Callback(q);
+end;
+
+constructor TFakeAsyncHTTP.Create(CreateSuspended: Boolean;
+  const StackSize: SizeUInt);
+begin
+  // Empty
+end;
+
+procedure TFakeAsyncHTTP.HttpMethod(Method: string; const URL: string;
+  Callback: THttpCallbackEvent; AddHeaders: string; const Data: string;
+  InWorkFlagPtr: PBoolean);
+var q: THttpQuery;
+begin
+  q := THttpQuery.Create();
+  q.ConnectTimeout:=10;
+  q.Method:=Method;
+  q.Url:=URL;
+  q.Data:=Data;
+  q.Headers:=AddHeaders;
+  if InWorkFlagPtr<>nil then
+    q.InWorkFlagPtr:=InWorkFlagPtr;
+  q.Done:=@DoLoadDone;
+  q.Error:=@DoError;
+  q.Opened:=@DoOpened;
+  q.Callback:=Callback;
+
+  // network stun!
+  q.HttpRequest();
+end;
+
+procedure TFakeAsyncHTTP.Get(const URL: string; Callback: THttpCallbackEvent;
+  AddHeaders: string; InWorkFlagPtr: PBoolean);
+begin
+  HttpMethod('GET', Url, Callback, AddHeaders, '', InWorkFlagPtr);
+end;
+
+procedure TFakeAsyncHTTP.Post(const URL: string; const Data: string;
+  Callback: THttpCallbackEvent; AddHeaders: string; InWorkFlagPtr: PBoolean);
+begin
+  HttpMethod('POST', Url, Callback, AddHeaders, Data, InWorkFlagPtr);
+end;
+
+procedure TFakeAsyncHTTP.Terminate;
+begin
+  // Empty
+end;
+
+destructor TFakeAsyncHTTP.Destroy;
+begin
+  inherited Destroy;
+end;
+
 { THttpQueryForThreadHTTP }
 
 procedure THttpQueryForThreadHTTP.HttpRequestEnded();
 begin
+  //todo: bug! read in SelfDestroy
   Application.QueueAsyncCall(@SelfDestroy, IntPtr(Self));
 end;
 
@@ -150,6 +259,10 @@ procedure THttpQuery.HttpRequest();
 begin
   Session := THTTPSend.Create;
   try
+    if ConnectTimeout <> 0 then
+      Session.Timeout:=ConnectTimeout;
+    Session.KeepAlive:=false;
+
     if Opened<>nil then
       Opened(self);
     if Headers<>'' then
@@ -197,6 +310,7 @@ end;
 
 constructor THttpQueryBase.Create;
 begin
+  ConnectTimeout := 0;
   Response := TMemoryStream.Create();
 end;
 

@@ -1613,6 +1613,10 @@ object ModuleMain: TModuleMain
       Caption = 'actShowRestView'
       OnExecute = actShowRestViewExecute
     end
+    object actCopySelectedDevID: TAction
+      Caption = 'actCopySelectedDevID'
+      OnExecute = actCopySelectedDevIDExecute
+    end
   end
   object TimerUpdate: TTimer
     OnTimer = TimerUpdateTimer
@@ -1758,5 +1762,12 @@ object ModuleMain: TModuleMain
       41008F8F8F3F919191529C9C9CF49C9C9CF4919191529191913F414141002121
       2100919191051E1E1E0041414100
     }
+  end
+  object menuDevList: TPopupMenu
+    left = 264
+    top = 180
+    object MenuItem11: TMenuItem
+      Action = actCopySelectedDevID
+    end
   end
 end

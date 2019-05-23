@@ -80,7 +80,8 @@ type
     OnlineTested: boolean;
 
     Terminated: boolean;
-    aiohttp: TAsyncHTTP;
+    //aiohttp: TAsyncHTTP;
+    aiohttp: TFakeAsyncHTTP;
 
     APIKey: string;
     SyncthigExecPath: UTF8String;
@@ -568,8 +569,12 @@ end;
 
 procedure TCore.TimerUpdateTimer(Sender: TObject);
 begin
-  if not httpPingInProc and not Terminated then
+  if not httpPingInProc and not Terminated then begin
     aiohttp.Get(SyncthigServer+'rest/system/ping', @httpPing, '', @httpPingInProc);
+    if not IsOnline then
+      TimerPing.Interval:=10000 else
+      TimerPing.Interval:=1000;
+  end;
 
   if not httpEventsInProc and not Terminated then
     aiohttp.Get(SyncthigServer+'rest/events'+'?'+
@@ -589,7 +594,7 @@ begin
   MapDevInfo.insert('test', d);//todo:<-DEL!!!!!!!!!!!!!!!
 
   IsOnline := false;
-  aiohttp := TAsyncHTTP.Create(false);
+  aiohttp := TFakeAsyncHTTP.Create(false);
   aiohttp.OnOpened:=@aiohttpAddHeader;
   SyncthigServer:='http://127.0.0.1:8384/';
   SyncthigExecPath:=GetSyncthigExecPath();
