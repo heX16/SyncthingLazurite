@@ -205,6 +205,8 @@ begin
 
   // network stun!
   q.HttpRequest();
+
+  FreeAndNil(q);
 end;
 
 procedure TFakeAsyncHTTP.Get(const URL: string; Callback: THttpCallbackEvent;
@@ -226,6 +228,7 @@ end;
 
 destructor TFakeAsyncHTTP.Destroy;
 begin
+
   inherited Destroy;
 end;
 
