@@ -9,7 +9,7 @@ uses
   {$ENDIF}{$ENDIF}
   Interfaces, // this includes the LCL widgetset
   Forms, uFormMain, laz_synapse, uniqueinstance_package, uModuleCore,
-  AsyncHttp, uFormOptions, uModuleMain, uformjsonview, hashmapstr
+  AsyncHttp, uFormOptions, uModuleMain, uformjsonview, hashmapstr, FormAbout
   { you can add units after this };
 
 {$R *.res}

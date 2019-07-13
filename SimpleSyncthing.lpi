@@ -22,8 +22,8 @@
     <VersionInfo>
       <UseVersionInfo Value="True"/>
       <AutoIncrementBuild Value="True"/>
-      <MinorVersionNr Value="5"/>
-      <BuildNr Value="34"/>
+      <MinorVersionNr Value="6"/>
+      <BuildNr Value="38"/>
       <StringTable ProductVersion="0.0.0.0"/>
     </VersionInfo>
     <BuildModes Count="3">
@@ -123,7 +123,7 @@
         <PackageName Value="LCL"/>
       </Item7>
     </RequiredPackages>
-    <Units Count="8">
+    <Units Count="10">
       <Unit0>
         <Filename Value="SimpleSyncthing.lpr"/>
         <IsPartOfProject Value="True"/>
@@ -178,6 +178,18 @@
         <IsPartOfProject Value="True"/>
         <UnitName Value="HashMapStr"/>
       </Unit7>
+      <Unit8>
+        <Filename Value="formabout.lfm"/>
+        <IsPartOfProject Value="True"/>
+      </Unit8>
+      <Unit9>
+        <Filename Value="formabout.pas"/>
+        <IsPartOfProject Value="True"/>
+        <ComponentName Value="frmAbout"/>
+        <HasResources Value="True"/>
+        <ResourceBaseClass Value="Form"/>
+        <UnitName Value="FormAbout"/>
+      </Unit9>
     </Units>
   </ProjectOptions>
   <CompilerOptions>

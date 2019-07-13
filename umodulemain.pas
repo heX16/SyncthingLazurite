@@ -17,6 +17,7 @@ type
 
   TModuleMain = class(TDataModule)
     actCopySelectedDevID: TAction;
+    actAbout: TAction;
     actShowRestView: TAction;
     actShowOptions: TAction;
     ActionListGUI: TActionList;
@@ -27,6 +28,7 @@ type
     MenuItem1: TMenuItem;
     MenuItem10: TMenuItem;
     MenuItem11: TMenuItem;
+    MenuItem12: TMenuItem;
     mnRestart: TMenuItem;
     MenuItem2: TMenuItem;
     MenuItem3: TMenuItem;
@@ -44,6 +46,7 @@ type
     TimerUpdate: TTimer;
     TrayIcon: TTrayIcon;
     UniqueInstance1: TUniqueInstance;
+    procedure actAboutExecute(Sender: TObject);
     procedure actCopySelectedDevIDExecute(Sender: TObject);
     procedure actShowOptionsExecute(Sender: TObject);
     procedure actShowRestViewExecute(Sender: TObject);
@@ -74,6 +77,7 @@ uses
   fpjson,
   uModuleCore,
   Forms,
+  FormAbout,
   uFormJsonView,
   uFormOptions,
   uFormMain;
@@ -192,6 +196,14 @@ begin
   if CpText[1]=#13 then
     Delete(CpText, 1, 1);
   Clipboard.AsText:=CpText;
+end;
+
+procedure TModuleMain.actAboutExecute(Sender: TObject);
+var f: TfrmAbout;
+begin
+  f := TfrmAbout.Create(self);
+  f.ShowModal();
+  FreeAndNil(f);
 end;
 
 procedure TModuleMain.actShowRestViewExecute(Sender: TObject);

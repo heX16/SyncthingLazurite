@@ -33,6 +33,26 @@ msgstr "Stop"
 msgid "actTerminate"
 msgstr "Terminate"
 
+#: tfrmabout.caption
+msgid "About"
+msgstr ""
+
+#: tfrmabout.lbabouttext.caption
+msgid "lbAboutText"
+msgstr ""
+
+#: tfrmabout.lbrepurl.editlabel.caption
+msgid "Source code reposytory:"
+msgstr ""
+
+#: tfrmabout.lbrepurl.text
+msgid "https://bitbucket.org/heXor/..."
+msgstr ""
+
+#: tfrmabout.lbtranslateauthor.caption
+msgid "Author of localization: -"
+msgstr ""
+
 #: tfrmjsonview.caption
 msgid "frmJSONView"
 msgstr "JSON View"
@@ -115,6 +135,10 @@ msgstr ""
 
 #: tfrmoptions.label1.caption
 msgid "Pause_between_runs:"
+msgstr ""
+
+#: tmodulemain.actabout.caption
+msgid "actAbout"
 msgstr ""
 
 #: tmodulemain.actcopyselecteddevid.caption

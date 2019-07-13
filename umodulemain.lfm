@@ -1617,6 +1617,10 @@ object ModuleMain: TModuleMain
       Caption = 'actCopySelectedDevID'
       OnExecute = actCopySelectedDevIDExecute
     end
+    object actAbout: TAction
+      Caption = 'actAbout'
+      OnExecute = actAboutExecute
+    end
   end
   object TimerUpdate: TTimer
     OnTimer = TimerUpdateTimer
@@ -1658,6 +1662,9 @@ object ModuleMain: TModuleMain
     end
     object MenuItem10: TMenuItem
       Action = actShowRestView
+    end
+    object MenuItem12: TMenuItem
+      Action = actAbout
     end
   end
   object imgTreeViewIcon: TImageList
