@@ -29,6 +29,8 @@ type
     MenuItem10: TMenuItem;
     MenuItem11: TMenuItem;
     MenuItem12: TMenuItem;
+    MenuItem8: TMenuItem;
+    MenuItem9: TMenuItem;
     mnRestart: TMenuItem;
     MenuItem2: TMenuItem;
     MenuItem3: TMenuItem;
@@ -36,8 +38,6 @@ type
     MenuItem5: TMenuItem;
     MenuItem6: TMenuItem;
     MenuItem7: TMenuItem;
-    MenuItem8: TMenuItem;
-    MenuItem9: TMenuItem;
     mnServer: TMenuItem;
     menuTrayIcon: TPopupMenu;
     miExit: TMenuItem;

@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <CONFIG>
   <ProjectOptions>
-    <Version Value="11"/>
+    <Version Value="10"/>
     <PathDelim Value="\"/>
     <General>
       <SessionStorage Value="InProjectDir"/>
@@ -23,7 +23,7 @@
       <UseVersionInfo Value="True"/>
       <AutoIncrementBuild Value="True"/>
       <MinorVersionNr Value="6"/>
-      <BuildNr Value="39"/>
+      <BuildNr Value="42"/>
       <StringTable ProductVersion="0.0.0.0"/>
     </VersionInfo>
     <BuildModes Count="3">
@@ -96,10 +96,9 @@
       <Version Value="2"/>
     </PublishOptions>
     <RunParams>
-      <FormatVersion Value="2"/>
-      <Modes Count="1">
-        <Mode0 Name="default"/>
-      </Modes>
+      <local>
+        <FormatVersion Value="1"/>
+      </local>
     </RunParams>
     <RequiredPackages Count="7">
       <Item1>

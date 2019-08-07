@@ -43,6 +43,7 @@ type
   TCore = class(TDataModule)
     actExit: TAction;
     actInit: TAction;
+    actReloadConfig: TAction;
     actPause: TAction;
     actRunSupportProc: TAction;
     actTerminate: TAction;
@@ -60,6 +61,7 @@ type
     procedure actInitExecute(Sender: TObject);
     procedure actExitExecute(Sender: TObject);
     procedure actPauseExecute(Sender: TObject);
+    procedure actReloadConfigExecute(Sender: TObject);
     procedure actRestartExecute(Sender: TObject);
     procedure actRunSupportProcExecute(Sender: TObject);
     procedure actStartExecute(Sender: TObject);
@@ -510,8 +512,16 @@ begin
 end;
 
 procedure TCore.actRestartExecute(Sender: TObject);
+var i: integer;
 begin
   actStop.Execute();
+
+  //todo: плохое решение! - надо делать проверку и отложенный старт
+  for i:=1 to 10*5 do begin
+    sleep(100); // sleep 5 second
+    Application.ProcessMessages();
+  end;
+
   actStart.Execute();
 end;
 
@@ -525,6 +535,11 @@ procedure TCore.actPauseExecute(Sender: TObject);
 begin
   actStop.Execute();
   TimerPause.Enabled:=true;
+end;
+
+procedure TCore.actReloadConfigExecute(Sender: TObject);
+begin
+  self.aiohttp.Get(Core.SyncthigServer+'rest/system/config', @httpReadConfig);
 end;
 
 procedure TCore.actInitExecute(Sender: TObject);

@@ -13,6 +13,10 @@ msgstr "Init"
 msgid "actPause"
 msgstr "Pause"
 
+#: tcore.actreloadconfig.caption
+msgid "actReloadConfig"
+msgstr "Update config"
+
 #: tcore.actrestart.caption
 msgid "actRestart"
 msgstr "Restart"

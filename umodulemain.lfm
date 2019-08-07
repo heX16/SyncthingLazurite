@@ -1644,18 +1644,18 @@ object ModuleMain: TModuleMain
       object MenuItem1: TMenuItem
         Action = Core.actStop
       end
+      object MenuItem9: TMenuItem
+        Caption = '-'
+      end
+      object MenuItem8: TMenuItem
+        Action = Core.actReloadConfig
+      end
       object MenuItem6: TMenuItem
         Caption = '-'
       end
       object MenuItem5: TMenuItem
         Action = Core.actExit
       end
-    end
-    object MenuItem8: TMenuItem
-      Action = Core.actStart
-    end
-    object MenuItem9: TMenuItem
-      Action = Core.actStop
     end
     object MenuItem7: TMenuItem
       Action = actShowOptions

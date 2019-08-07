@@ -94,6 +94,11 @@ object Core: TCore
       Caption = 'actInit'
       OnExecute = actInitExecute
     end
+    object actReloadConfig: TAction
+      Category = 'GUI'
+      Caption = 'actReloadConfig'
+      OnExecute = actReloadConfigExecute
+    end
   end
   object TimerInit: TTimer
     Interval = 1
