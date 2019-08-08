@@ -8,8 +8,6 @@ object frmMain: TfrmMain
   ClientWidth = 551
   DesignTimePPI = 120
   Menu = ModuleMain.MainMenu1
-  OnClose = FormClose
-  OnCreate = FormCreate
   OnDestroy = FormDestroy
   OnWindowStateChange = FormWindowStateChange
   Position = poDefaultPosOnly

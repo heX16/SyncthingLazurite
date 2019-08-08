@@ -17,21 +17,39 @@ uses
 type
   { TDevInfo }
   TDevId = ansistring;
+  TFolderId = ansistring;
 
   // device info 'record'
-  TDevInfo = object
-    Name: string;
+  TDevInfo = class
+    Json: TJSONObject;
     Id: string;
+    Name: string;
     Address: string;
-    Paused: boolean;
     Connected: boolean;
+    Paused: boolean;
     LastSeen: TDateTime;
 
-    procedure Init();
-    procedure Done();
+    constructor Create(SetJson: TJSONObject);
+    destructor Destroy(); override;
+    procedure Update(NewJson: TJSONObject); virtual;
+  end;
+
+  // folders info 'record'
+
+  { TFolderInfo }
+
+  TFolderInfo = class
+    Json: TJSONObject;
+    Name: string;
+    Id: string;
+
+    constructor Create(SetJson: TJSONObject);
+    destructor Destroy(); override;
+    procedure Update(NewJson: TJSONObject); virtual;
   end;
 
   TMapDevInfo = specialize THashMap<TDevId, TDevInfo, THashFuncString>;
+  TMapFolderInfo = specialize THashMap<TFolderId, TFolderInfo, THashFuncString>;
 
 type
 
@@ -67,7 +85,9 @@ type
     procedure actStartExecute(Sender: TObject);
     procedure actStopExecute(Sender: TObject);
     procedure actTerminateExecute(Sender: TObject);
+
     procedure DataModuleDestroy(Sender: TObject);
+
     procedure TimerInitTimer(Sender: TObject);
     procedure TimerPauseTimer(Sender: TObject);
     procedure TimerStartOnStartTimer(Sender: TObject);
@@ -100,6 +120,9 @@ type
     EventsLastId: int64;
 
     MapDevInfo: TMapDevInfo;
+    MapFolderInfo: TMapFolderInfo;
+    ListDevInfo: TStringList;
+    ListFolderInfo: TStringList;
 
     procedure Init(); virtual;
     procedure Done(); virtual;
@@ -109,9 +132,10 @@ type
     function GetSyncthigExecPath: UTF8String; virtual;
     function GetSyncthigHome: UTF8String; virtual;
     function GetAPIKey: string; virtual;
-    procedure LoadDeviceNames(Json: TJSONData);
-    procedure FillSyncthingExecPath;
-    procedure FillSupportExecPath;
+    procedure LoadDevices(Json: TJSONData);
+    procedure LoadFolders(Json: TJSONData);
+    procedure FillSyncthingExecPath();
+    procedure FillSupportExecPath();
 
     procedure Start();
     procedure Stop();
@@ -124,12 +148,15 @@ type
     // call from other thread!
     procedure aiohttpAddHeader(Query: THttpQueryBase);
 
+    // read devices and folders config
     procedure httpReadConfig(Query: THttpQuery);
 
     // https://docs.syncthing.net/rest/events-get.html
     // https://docs.syncthing.net/dev/events.html#event-types
     // LocalChangeDetected,RemoteChangeDetected
     procedure httpEvents(Query: THttpQuery);
+
+    procedure httpUpdateConnections(Query: THttpQuery);
 
     procedure httpPing(Query: THttpQuery);
   end;
@@ -218,18 +245,144 @@ begin
   end;
 end;
 
-{ TDevInfo }
+{ TFolderInfo }
 
-procedure TDevInfo.Init();
+constructor TFolderInfo.Create(SetJson: TJSONObject);
 begin
-  Name:='';
-  Id:='';
+  (*
+    "id" : "config",
+    "label" : "config",
+    "filesystemType" : "basic",
+    "path" : "D:\\Sync\\config",
+    "type" : "sendreceive",
+    "devices" : [
+      {
+        "deviceID" : "XXXXXXX-VDBWOAW-QHBNBHY-2UUEL22-S4LICVU-LA6JRMO-GBR5NRG-XXXXXXX",
+        "introducedBy" : ""
+      },
+      {
+        "deviceID" : "XXXXXXX-YAT62H7-SAN2ZID-DHSFKAV-YKYCQAQ-DMCDM5K-DC67FGP-XXXXXXX",
+        "introducedBy" : ""
+      }
+    ],
+    "rescanIntervalS" : 3600,
+    "fsWatcherEnabled" : true,
+    "fsWatcherDelayS" : 10,
+    "ignorePerms" : false,
+    "autoNormalize" : true,
+    "minDiskFree" : {
+      "value" : 1,
+      "unit" : "%"
+    },
+    "versioning" : {
+      "type" : "",
+      "params" : {}
+    },
+    "copiers" : 0,
+    "pullerMaxPendingKiB" : 0,
+    "hashers" : 0,
+    "order" : "random",
+    "ignoreDelete" : false,
+    "scanProgressIntervalS" : 0,
+    "pullerPauseS" : 0,
+    "maxConflicts" : 10,
+    "disableSparseFiles" : false,
+    "disableTempIndexes" : false,
+    "paused" : false,
+    "weakHashThresholdPct" : 25,
+    "markerName" : ".stfolder",
+    "copyOwnershipFromParent" : false
+  *)
+
+  inherited Create();
+  Json:=nil;
+  Update(SetJson);
 end;
 
-procedure TDevInfo.Done();
+destructor TFolderInfo.Destroy();
 begin
   Name:='';
   Id:='';
+  if Json<>nil then
+    FreeAndNil(Json);
+  inherited;
+end;
+
+procedure TFolderInfo.Update(NewJson: TJSONObject);
+begin
+  Name:='';
+  Id:='';
+  if Json<>nil then
+    FreeAndNil(Json);
+
+  if NewJson<>nil then begin
+    // create copy of json tree
+    Json := NewJson.Clone() as TJSONObject;
+    Name:=Json.Get('label', 'ERROR');
+    Id:=Json.Get('id', 'ERROR');
+    if Name='' then
+      Name:=Id;
+  end;
+end;
+
+{ TDevInfo }
+
+constructor TDevInfo.Create(SetJson: TJSONObject);
+begin
+(*
+  "deviceID" : "XXXXXXX-7W6T5GU-Q7F4UB4-XXXXXXX-2NZFCAR-TONYMDU-JRCX67A-XXXXXXX",
+  "name" : "heX home PC",
+  "addresses" : [
+    "dynamic",
+    "tcp://hex.xxx.com:123",
+    "tcp://192.168.1.123:123"
+  ],
+  "compression" : "always",
+  "certName" : "",
+  "introducer" : false,
+  "skipIntroductionRemovals" : false,
+  "introducedBy" : "",
+  "paused" : false,
+  "allowedNetworks" : [
+  ],
+  "autoAcceptFolders" : false,
+  "maxSendKbps" : 0,
+  "maxRecvKbps" : 0,
+  "ignoredFolders" : [
+  ],
+  "pendingFolders" : [
+  ],
+  "maxRequestKiB" : 0
+*)
+  Inherited Create();
+  Update(SetJson);
+end;
+
+destructor TDevInfo.Destroy();
+begin
+  Name:='';
+  Id:='';
+  if Json<>nil then
+    FreeAndNil(Json);
+  inherited;
+end;
+
+procedure TDevInfo.Update(NewJson: TJSONObject);
+begin
+  Name:='';
+  Id:='';
+  if Json<>nil then
+    FreeAndNil(Json);
+
+  if NewJson<>nil then begin
+    // create copy of json tree
+    Json := NewJson.Clone() as TJSONObject;
+    Name:=Json.Get('label', 'ERROR');
+    Id:=Json.Get('deviceID', 'ERROR');
+    Paused:=Json.Get('paused', False);
+    if Name='' then
+      Name:=Id;
+  end;
 end;
 
 { TCore }
@@ -268,7 +421,10 @@ var j: TJSONData;
 begin
   if HttpQueryToJson(Query, j) then
   try
-    LoadDeviceNames(j);
+    LoadDevices(j);
+    LoadFolders(j);
+    frmMain.treeDevices.RootNodeCount:=ListDevInfo.Count;
+    frmMain.treeFolders.RootNodeCount:=ListFolderInfo.Count;
   finally
     FreeAndNil(j);
   end;
@@ -298,6 +454,39 @@ begin
     end;
     //ParseEvents...
     //...EventsLastId:=...
+  finally
+    FreeAndNil(JData);
+  end;
+end;
+
+procedure TCore.httpUpdateConnections(Query: THttpQuery);
+var
+  JData, j2: TJSONData;
+  ij: TJSONEnum;
+  d: TDevInfo;
+begin
+  //todo: change logic - first update MapDevInfo and after update DevicesItems
+  //todo: httpUpdateConnections - move to Core!
+  if HttpQueryToJson(Query, JData) then
+  try
+    j2 := JData.GetPath('connections');
+    // enum all device
+    for ij in j2 do
+    begin
+      // find in device list.
+      if Core.MapDevInfo.GetValue(ij.Key, d) then
+      begin
+        // update data
+        d.Connected:=ij.Value.GetPath('connected').AsBoolean;
+        d.Paused:=ij.Value.GetPath('paused').AsBoolean;
+        d.Address:=ij.Value.GetPath('address').AsString;
+        //todo: use 'mutable' ptr
+        // write to map
+        Core.MapDevInfo[ij.Key] := d;
+      end;
+    end;
+    frmMain.treeDevices.RootNodeCount:=j2.Count;
+    frmMain.treeDevices.Invalidate(); //todo: <-optimize
   finally
     FreeAndNil(JData);
   end;
@@ -380,7 +569,7 @@ begin
         if GetXml(NPtr, 'apikey') then
           if GetXml(NPtr, '#text') then
           begin
-            Result := NPtr.NodeValue;
+            Result := AnsiString(NPtr.NodeValue);
           end;
   finally
     if Assigned(FDoc) then
@@ -391,26 +580,60 @@ begin
     Result := frmOptions.edAPIKey.Text;
 end;
 
-procedure TCore.LoadDeviceNames(Json: TJSONData);
+procedure TCore.LoadDevices(Json: TJSONData);
 var
   JData: TJSONData;
   ij: TJSONEnum;
   j: TJSONObject;
+  id: string;
   d: TDevInfo;
 begin
   JData := Json.FindPath('devices');
+  ListDevInfo.Clear();
   if JData <> nil then
     for ij in JData do
     begin
       if ij.Value.InheritsFrom(TJSONObject) then
       begin
         j := ij.Value as TJSONObject;
-        //d.Init();
-        d.Id:=j.Get('deviceID', 'ERROR');
-        d.Name:=j.Get('name', 'ERROR');
-        d.Paused:=j.Get('paused', False);
+        id := j.Get('deviceID', 'ERROR');
+        if MapDevInfo.contains(id) then begin
+          d := MapDevInfo.Items[id];
+          d.Update(j);
+        end else begin
+          d := TDevInfo.Create(j);
+          MapDevInfo.insert(id, d);
+        end;
+        ListDevInfo.Add(d.Id);
+      end;
+    end;
+end;
 
-        MapDevInfo.insert(d.Id, d);
+procedure TCore.LoadFolders(Json: TJSONData);
+var
+  JData: TJSONData;
+  ij: TJSONEnum;
+  j: TJSONObject;
+  id: string;
+  d: TFolderInfo;
+begin
+  JData := Json.FindPath('folders');
+  ListFolderInfo.Clear();
+  if JData <> nil then
+    for ij in JData do
+    begin
+      if ij.Value.InheritsFrom(TJSONObject) then
+      begin
+        j := ij.Value as TJSONObject;
+        id := j.Get('id', 'ERROR');
+        if MapFolderInfo.contains(id) then begin
+          d := MapFolderInfo.Items[id];
+          d.Update(j);
+        end else begin
+          d := TFolderInfo.Create(j);
+          MapFolderInfo.insert(id, d);
+        end;
+        ListFolderInfo.Add(d.Id);
       end;
     end;
 end;
@@ -606,7 +829,10 @@ var d:TDevInfo;
 begin
   //todo: WIP: INIT
   MapDevInfo := TMapDevInfo.Create();
-  MapDevInfo.insert('test', d);//todo:<-DEL!!!!!!!!!!!!!!!
+  ListDevInfo := TStringList.Create();
+
+  MapFolderInfo := TMapFolderInfo.Create();
+  ListFolderInfo := TStringList.Create();
 
   IsOnline := false;
   aiohttp := TFakeAsyncHTTP.Create(false);
@@ -621,10 +847,40 @@ begin
 end;
 
 procedure TCore.Done();
+var
+  i: TMapFolderInfo.TIterator;
+  i2: TMapDevInfo.TIterator;
 begin
   Terminated := true;
   TimerPing.Enabled:=false;
   FreeAndNil(aiohttp);
+
+  FreeAndNil(ListFolderInfo);
+  FreeAndNil(ListDevInfo);
+
+  //todo: FUTURE. for i in MapFolderInfo do i.Free(); - https://bugs.freepascal.org/view.php?id=35940
+  i := MapFolderInfo.Iterator();
+  if i <> nil then
+    try
+      repeat
+        i.Value.Free();
+      until not i.Next;
+    finally
+      FreeAndNil(i);
+    end;
+
+  FreeAndNil(MapFolderInfo);
+
+  i2 := MapDevInfo.Iterator();
+  if i2 <> nil then
+    try
+      repeat
+        i2.Value.Free();
+      until not i2.Next;
+    finally
+      FreeAndNil(i2);
+    end;
+
   FreeAndNil(MapDevInfo);
 end;
 

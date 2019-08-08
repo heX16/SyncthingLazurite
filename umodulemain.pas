@@ -53,13 +53,12 @@ type
     procedure TimerUpdateTimer(Sender: TObject);
     procedure TrayIconDblClick(Sender: TObject);
   private
-    httpUpdateDeviceInProc: boolean;
-    httpGetExtInfoDeviceInProc: boolean;
-    httpUpdateFolderInProc: boolean;
+    httpUpdateConnectionsInProc: boolean;
+    httpUpdateDeviceStatInProc: boolean;
+    httpUpdateFolderStatInProc: boolean;
 
-    procedure httpUpdateDevice(Query: THttpQuery);
-    procedure httpGetExtInfoDevice(Query: THttpQuery);
-    procedure httpUpdateFolder(Query: THttpQuery);
+    procedure httpUpdateDeviceStat(Query: THttpQuery);
+    procedure httpUpdateFolderStat(Query: THttpQuery);
   public
 
   end;
@@ -91,42 +90,7 @@ begin
   frmMain.SetFocus();
 end;
 
-procedure TModuleMain.httpUpdateDevice(Query: THttpQuery);
-var
-  JData, j2: TJSONData;
-  ij: TJSONEnum;
-  d: TDevInfo;
-begin
-  //todo: change logic - first update MapDevInfo and after update DevicesItems
-  //todo: httpUpdateDevice - move to Core!
-  if HttpQueryToJson(Query, JData) then
-  try
-    frmMain.DevicesItems.Clear();
-    j2 := JData.GetPath('connections');
-    // enum all device
-    for ij in j2 do
-    begin
-      // find in device list.
-      if Core.MapDevInfo.GetValue(ij.Key, d) then
-      begin
-        // update data
-        d.Connected:=ij.Value.GetPath('connected').AsBoolean;
-        d.Paused:=ij.Value.GetPath('paused').AsBoolean;
-        d.Address:=ij.Value.GetPath('address').AsString;
-        //todo: use 'mutable' ptr
-        // write to map
-        Core.MapDevInfo[ij.Key] := d;
-      end;
-      frmMain.DevicesItems.Add(ij.Key);
-    end;
-    frmMain.treeDevices.RootNodeCount:=j2.Count;
-    frmMain.treeDevices.Invalidate(); //todo: <-optimize
-  finally
-    FreeAndNil(JData);
-  end;
-end;
-
-procedure TModuleMain.httpGetExtInfoDevice(Query: THttpQuery);
+procedure TModuleMain.httpUpdateDeviceStat(Query: THttpQuery);
 var
   JData: TJSONData;
   ij: TJSONEnum;
@@ -134,7 +98,7 @@ var
   dt: TDateTime;
   d: TDevInfo;
 begin
-  //todo: httpGetExtInfoDevice - move to Core!
+  //todo: httpUpdateDeviceStat - move to Core!
   if HttpQueryToJson(Query, JData) then
   try
     // enum all device
@@ -159,7 +123,7 @@ begin
   end;
 end;
 
-procedure TModuleMain.httpUpdateFolder(Query: THttpQuery);
+procedure TModuleMain.httpUpdateFolderStat(Query: THttpQuery);
 var
   JData: TJSONData;
   ij: TJSONEnum;
@@ -167,10 +131,12 @@ begin
   //todo: httpUpdateDevice - move to Core!
   if HttpQueryToJson(Query, JData) then
   try
+    {
     frmMain.FoldersItems.Clear();
     for ij in JData do
       frmMain.FoldersItems.Add(ij.Key);
     frmMain.treeFolders.RootNodeCount:=JData.Count;
+    }
   finally
     JData.Free();
   end;
@@ -189,7 +155,7 @@ var
 begin
   CpText := '';
   for i in frmMain.treeDevices.SelectedNodes() do begin
-    if Core.MapDevInfo.GetValue(frmMain.DevicesItems[i^.Index], d) then begin
+    if Core.MapDevInfo.GetValue(Core.MapDevInfo[Core.ListDevInfo[i^.Index]].Name, d) then begin
       CpText := CpText + #13 + d.Id;
     end;
   end;
@@ -218,24 +184,27 @@ var
   OnlineCount: integer;
 begin
 
-  if not httpUpdateDeviceInProc and Core.IsOnline then
-    Core.aiohttp.Get(Core.SyncthigServer+'rest/system/connections', @httpUpdateDevice, '', @httpUpdateDeviceInProc);
-  if not httpUpdateFolderInProc and Core.IsOnline then
-    Core.aiohttp.Get(Core.SyncthigServer+'rest/stats/folder', @httpUpdateFolder, '', @httpUpdateFolderInProc);
+  if not httpUpdateConnectionsInProc and Core.IsOnline then
+    Core.aiohttp.Get(Core.SyncthigServer+'rest/system/connections', @Core.httpUpdateConnections, '', @httpUpdateConnectionsInProc);
+
+  if not httpUpdateFolderStatInProc and Core.IsOnline then
+    Core.aiohttp.Get(Core.SyncthigServer+'rest/stats/folder', @httpUpdateFolderStat, '', @httpUpdateFolderStatInProc);
+
   //todo: уменьшить кол-во обращений
-  if not httpGetExtInfoDeviceInProc and Core.IsOnline then
-    Core.aiohttp.Get(Core.SyncthigServer+'rest/stats/device', @httpGetExtInfoDevice, '', @httpGetExtInfoDeviceInProc);
+  if not httpUpdateDeviceStatInProc and Core.IsOnline then
+    Core.aiohttp.Get(Core.SyncthigServer+'rest/stats/device', @httpUpdateDeviceStat, '', @httpUpdateDeviceStatInProc);
 
   i := Core.MapDevInfo.Iterator();
   OnlineCount := 0;
-  try
-    repeat
-      if i.GetMutable()^.Connected then
-        inc(OnlineCount);
-    until not i.Next;
-  finally
-    FreeAndNil(i);
-  end;
+  if i <> nil then
+    try
+      repeat
+        if i.GetMutable()^.Connected then
+          inc(OnlineCount);
+      until not i.Next;
+    finally
+      FreeAndNil(i);
+    end;
   TrayIcon.Hint:='Online ' + IntToStr(OnlineCount);
 end;
 

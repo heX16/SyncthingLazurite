@@ -36,8 +36,6 @@ type
     treeDevices: TVirtualStringTree;
     procedure btnStartClick(Sender: TObject);
     procedure btnStopClick(Sender: TObject);
-    procedure FormClose(Sender: TObject; var CloseAction: TCloseAction);
-    procedure FormCreate(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
     procedure FormWindowStateChange(Sender: TObject);
     procedure miExitClick(Sender: TObject);
@@ -54,8 +52,6 @@ type
       Column: TColumnIndex; TextType: TVSTTextType; var CellText: String);
   private
   public
-    DevicesItems: TStrings;
-    FoldersItems: TStrings;
   end;
 
 var
@@ -87,24 +83,11 @@ begin
   Core.Stop();
 end;
 
-procedure TfrmMain.FormClose(Sender: TObject; var CloseAction: TCloseAction);
-begin
-  Core.Done();
-end;
-
-procedure TfrmMain.FormCreate(Sender: TObject);
-begin
-  FoldersItems := TStringList.Create();
-  DevicesItems := TStringList.Create();
-end;
-
 procedure TfrmMain.FormDestroy(Sender: TObject);
 begin
   // Module must be destroy at first
   if Assigned(ModuleMain) then
     FreeAndNil(ModuleMain);
-  FreeAndNil(FoldersItems);
-  FreeAndNil(DevicesItems);
 end;
 
 procedure TfrmMain.FormWindowStateChange(Sender: TObject);
@@ -131,7 +114,7 @@ var
   d: TDevInfo;
 begin
   HintText := '';
-  if Core.MapDevInfo.GetValue(DevicesItems[Node^.Index], d) then
+  if Core.MapDevInfo.GetValue(Core.ListDevInfo[Node^.Index], d) then
   begin
     HintText := HintText + d.Id;
     if (not d.Connected) and (DaysBetween(d.LastSeen, Now()) < 31*6) then
@@ -148,10 +131,11 @@ var
   d: TDevInfo;
 begin
   ImageIndex:=0;
-  if Core.MapDevInfo.GetValue(DevicesItems[Node^.Index], d) then
+  if Core.MapDevInfo.GetValue(Core.ListDevInfo[Node^.Index], d) then
   begin
     if d.Connected then
       ImageIndex:=1;
+
     if d.Paused then
       ImageIndex:=2;
   end;
@@ -163,15 +147,18 @@ procedure TfrmMain.treeDevicesGetText(Sender: TBaseVirtualTree;
 var
   d: TDevInfo;
 begin
-  if Core.MapDevInfo.GetValue(DevicesItems[Node^.Index], d) then
-    CellText := d.Name;
+  if Node^.Index < Core.ListDevInfo.Count then
+    CellText := Core.MapDevInfo[Core.ListDevInfo[Node^.Index]].Name else
+    CellText := 'ERROR';
 end;
 
 procedure TfrmMain.treeFoldersGetText(Sender: TBaseVirtualTree;
   Node: PVirtualNode; Column: TColumnIndex; TextType: TVSTTextType;
   var CellText: String);
 begin
-  CellText := FoldersItems[Node^.Index];
+  if Node^.Index < Core.ListFolderInfo.Count then
+    CellText := Core.MapFolderInfo[Core.ListFolderInfo[Node^.Index]].Name else
+    CellText := 'ERROR';
 end;
 
 end.
