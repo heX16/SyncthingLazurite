@@ -155,11 +155,11 @@ var
 begin
   CpText := '';
   for i in frmMain.treeDevices.SelectedNodes() do begin
-    if Core.MapDevInfo.GetValue(Core.MapDevInfo[Core.ListDevInfo[i^.Index]].Name, d) then begin
+    if Core.MapDevInfo.GetValue(Core.ListDevInfo[i^.Index], d) then begin
       CpText := CpText + #13 + d.Id;
     end;
   end;
-  if CpText[1]=#13 then
+  if (Length(CpText)>1) and (CpText[1]=#13) then
     Delete(CpText, 1, 1);
   Clipboard.AsText:=CpText;
 end;

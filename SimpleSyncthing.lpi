@@ -22,8 +22,8 @@
     <VersionInfo>
       <UseVersionInfo Value="True"/>
       <AutoIncrementBuild Value="True"/>
-      <MinorVersionNr Value="7"/>
-      <BuildNr Value="43"/>
+      <MinorVersionNr Value="8"/>
+      <BuildNr Value="46"/>
       <StringTable ProductVersion="0.0.0.0"/>
     </VersionInfo>
     <BuildModes Count="3">
@@ -57,6 +57,13 @@
               </Win32>
             </Options>
           </Linking>
+          <Other>
+            <CustomOptions Value="-dUseCThreads"/>
+            <OtherDefines Count="2">
+              <Define0 Value="UseCThreads"/>
+              <Define1 Value="DEBUG"/>
+            </OtherDefines>
+          </Other>
         </CompilerOptions>
       </Item2>
       <Item3 Name="Release_Linux">
@@ -89,6 +96,9 @@
               </Win32>
             </Options>
           </Linking>
+          <Other>
+            <CustomOptions Value="-dUseCThreads"/>
+          </Other>
         </CompilerOptions>
       </Item3>
     </BuildModes>
@@ -232,7 +242,12 @@
       </Options>
     </Linking>
     <Other>
-      <CustomOptions Value="-dUseCThreads"/>
+      <CustomOptions Value="-dUseCThreads
+-dDEBUG"/>
+      <OtherDefines Count="2">
+        <Define0 Value="UseCThreads"/>
+        <Define1 Value="DEBUG"/>
+      </OtherDefines>
     </Other>
   </CompilerOptions>
   <Debugging>

@@ -5,6 +5,7 @@ unit uModuleCore;
 interface
 
 uses
+  Dialogs,
   AsyncHttp,
   fpjson,
   XMLRead, DOM,
@@ -377,7 +378,8 @@ begin
   if NewJson<>nil then begin
     // create copy of json tree
     Json := NewJson.Clone() as TJSONObject;
-    Name:=Json.Get('label', 'ERROR');
+    Name:=Json.Get('name', 'ERROR');
+
     Id:=Json.Get('deviceID', 'ERROR');
     Paused:=Json.Get('paused', False);
     if Name='' then
@@ -887,7 +889,7 @@ end;
 procedure TCore.Online();
 begin
   frmMain.shStatusCircle.Brush.Color:=clGreen;
-  self.aiohttp.Get(Core.SyncthigServer+'rest/system/config', @httpReadConfig);
+  actReloadConfig.Execute();
 end;
 
 procedure TCore.Offline();
