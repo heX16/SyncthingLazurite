@@ -29,6 +29,9 @@ type
     MenuItem10: TMenuItem;
     MenuItem11: TMenuItem;
     MenuItem12: TMenuItem;
+    mnStateStop: TMenuItem;
+    mnStateRun: TMenuItem;
+    MenuItem15: TMenuItem;
     MenuItem8: TMenuItem;
     MenuItem9: TMenuItem;
     mnRestart: TMenuItem;
@@ -56,6 +59,12 @@ type
     httpUpdateConnectionsInProc: boolean;
     httpUpdateDeviceStatInProc: boolean;
     httpUpdateFolderStatInProc: boolean;
+    httpEventsInProc: boolean;
+
+    // https://docs.syncthing.net/rest/events-get.html
+    // https://docs.syncthing.net/dev/events.html#event-types
+    // LocalChangeDetected,RemoteChangeDetected
+    procedure httpEvents(Query: THttpQuery);
 
     procedure httpUpdateDeviceStat(Query: THttpQuery);
     procedure httpUpdateFolderStat(Query: THttpQuery);
@@ -88,6 +97,38 @@ begin
   frmMain.WindowState := wsNormal;
   frmMain.Show();
   frmMain.SetFocus();
+end;
+
+procedure TModuleMain.httpEvents(Query: THttpQuery);
+var
+  JData: TJSONData;
+  j: TJSONObject;
+  j2: TJSONData;
+  e: TJSONEnum;
+  s: UTF8String;
+begin
+  if HttpQueryToJson(Query, JData) then
+  try
+    for e in JData do
+    begin
+      //todo: httpEvents WIP!!!
+      j := e.Value as TJSONObject;
+      Core.EventsLastId := j.Get('globalID', 0);
+      s := IntToStr(Core.EventsLastId) +' '+ j.Get('type', '');
+      j2 := j.FindPath('data.folder');
+      if j2<>nil then
+        s := s + ' folder: "' + j2.AsString + '"' else
+        s := s + ' // ' + j.AsJSON;
+      frmMain.listEvents.Lines.Insert(0, s);
+
+      while frmMain.listEvents.Lines.Count > 100 do
+        frmMain.listEvents.Lines.Delete(frmMain.listEvents.Lines.Count-1);
+    end;
+    //ParseEvents...
+    //...EventsLastId:=...
+  finally
+    FreeAndNil(JData);
+  end;
 end;
 
 procedure TModuleMain.httpUpdateDeviceStat(Query: THttpQuery);
@@ -193,6 +234,15 @@ begin
   //todo: уменьшить кол-во обращений
   if not httpUpdateDeviceStatInProc and Core.IsOnline then
     Core.aiohttp.Get(Core.SyncthigServer+'rest/stats/device', @httpUpdateDeviceStat, '', @httpUpdateDeviceStatInProc);
+
+  if not httpEventsInProc and Core.IsOnline then
+    Core.aiohttp.Get(Core.SyncthigServer+'rest/events'+'?'+
+      'since='+IntToStr(Core.EventsLastId)+'&'+
+      'limit='+IntToStr(10)+'&'+
+      'timeout='+IntToStr(0),//+'&'+
+      //'events=LocalChangeDetected,RemoteChangeDetected',
+      @httpEvents, '', @httpEventsInProc);
+
 
   i := Core.MapDevInfo.Iterator();
   OnlineCount := 0;

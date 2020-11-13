@@ -11,7 +11,7 @@ object frmMain: TfrmMain
   OnDestroy = FormDestroy
   OnWindowStateChange = FormWindowStateChange
   Position = poDefaultPosOnly
-  LCLVersion = '1.8.4.0'
+  LCLVersion = '2.1.0.0'
   object Panel1: TPanel
     Left = 0
     Height = 50
@@ -156,14 +156,17 @@ object frmMain: TfrmMain
     ClientHeight = 337
     ClientWidth = 169
     TabOrder = 6
-    object listEvents: TListBox
+    object listEvents: TMemo
       Left = 0
       Height = 337
       Top = 0
       Width = 169
       Align = alClient
-      ItemHeight = 0
+      MaxLength = 512
+      ReadOnly = True
+      ScrollBars = ssAutoBoth
       TabOrder = 0
+      WordWrap = False
     end
   end
   object Splitter3: TSplitter

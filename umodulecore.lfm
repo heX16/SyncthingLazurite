@@ -21,13 +21,13 @@ object Core: TCore
     WindowTop = 0
     WindowWidth = 0
     FillAttribute = 0
-    left = 70
-    top = 20
+    Left = 70
+    Top = 20
   end
   object TimerReadStdOutput: TTimer
     OnTimer = TimerReadStdOutputTimer
-    left = 70
-    top = 80
+    Left = 70
+    Top = 80
   end
   object ProcessSupport: TProcessUTF8
     Active = False
@@ -42,18 +42,18 @@ object Core: TCore
     WindowTop = 0
     WindowWidth = 0
     FillAttribute = 0
-    left = 244
-    top = 20
+    Left = 244
+    Top = 20
   end
   object TimerPing: TTimer
     Enabled = False
-    OnTimer = TimerUpdateTimer
-    left = 70
-    top = 144
+    OnTimer = TimerPingTimer
+    Left = 70
+    Top = 144
   end
   object ActionList: TActionList
-    left = 244
-    top = 80
+    Left = 244
+    Top = 80
     object actStart: TAction
       Category = 'Core'
       Caption = 'actStart'
@@ -103,21 +103,28 @@ object Core: TCore
   object TimerInit: TTimer
     Interval = 1
     OnTimer = TimerInitTimer
-    left = 70
-    top = 208
+    Left = 70
+    Top = 208
   end
   object TimerPause: TTimer
     Enabled = False
     Interval = 30000
     OnTimer = TimerPauseTimer
-    left = 70
-    top = 272
+    Left = 70
+    Top = 272
   end
   object TimerStartOnStart: TTimer
     Enabled = False
     Interval = 3000
     OnTimer = TimerStartOnStartTimer
-    left = 70
-    top = 336
+    Left = 70
+    Top = 336
+  end
+  object TimerAfterStartCheck: TTimer
+    Enabled = False
+    Interval = 100
+    OnTimer = TimerAfterStartCheckTimer
+    Left = 244
+    Top = 144
   end
 end

@@ -72,6 +72,7 @@ type
     ActionList: TActionList;
     ProcessSyncthing: TProcessUTF8;
     ProcessSupport: TProcessUTF8;
+    TimerAfterStartCheck: TTimer;
     TimerPause: TTimer;
     TimerInit: TTimer;
     TimerPing: TTimer;
@@ -88,11 +89,12 @@ type
     procedure actTerminateExecute(Sender: TObject);
 
     procedure DataModuleDestroy(Sender: TObject);
+    procedure TimerAfterStartCheckTimer(Sender: TObject);
 
     procedure TimerInitTimer(Sender: TObject);
     procedure TimerPauseTimer(Sender: TObject);
     procedure TimerStartOnStartTimer(Sender: TObject);
-    procedure TimerUpdateTimer(Sender: TObject);
+    procedure TimerPingTimer(Sender: TObject);
     procedure TimerReadStdOutputTimer(Sender: TObject);
   private
     OutputChankStr: UTF8String;
@@ -117,7 +119,6 @@ type
 
     httpPingInProc: boolean;
 
-    httpEventsInProc: boolean;
     EventsLastId: int64;
 
     MapDevInfo: TMapDevInfo;
@@ -151,11 +152,6 @@ type
 
     // read devices and folders config
     procedure httpReadConfig(Query: THttpQuery);
-
-    // https://docs.syncthing.net/rest/events-get.html
-    // https://docs.syncthing.net/dev/events.html#event-types
-    // LocalChangeDetected,RemoteChangeDetected
-    procedure httpEvents(Query: THttpQuery);
 
     procedure httpUpdateConnections(Query: THttpQuery);
 
@@ -432,35 +428,6 @@ begin
   end;
 end;
 
-procedure TCore.httpEvents(Query: THttpQuery);
-var
-  JData: TJSONData;
-  j: TJSONObject;
-  j2: TJSONData;
-  e: TJSONEnum;
-  s: UTF8String;
-begin
-  if HttpQueryToJson(Query, JData) then
-  try
-    for e in JData do
-    begin
-      //todo: httpEvents WIP!!!
-      j := e.Value as TJSONObject;
-      EventsLastId := j.Get('globalID', 0);
-      s := IntToStr(EventsLastId) +' '+ j.Get('type', '');
-      j2 := j.FindPath('data.folder');
-      if j2<>nil then
-        s := s + ' folder: "' + j2.AsString + '"' else
-        s := s + ' // ' + j.AsJSON;
-      frmMain.listEvents.AddItem(s, nil);
-    end;
-    //ParseEvents...
-    //...EventsLastId:=...
-  finally
-    FreeAndNil(JData);
-  end;
-end;
-
 procedure TCore.httpUpdateConnections(Query: THttpQuery);
 var
   JData, j2: TJSONData;
@@ -646,6 +613,7 @@ begin
   begin
     FillSyncthingExecPath();
     ProcessSyncthing.Execute();
+    TimerAfterStartCheck.Enabled:=True;
     if actRunSupportProc.Checked then
     begin
       FillSupportExecPath();
@@ -807,7 +775,24 @@ begin
   Done();
 end;
 
-procedure TCore.TimerUpdateTimer(Sender: TObject);
+procedure TCore.TimerAfterStartCheckTimer(Sender: TObject);
+begin
+  if TimerAfterStartCheck.Enabled then
+  begin
+    TimerAfterStartCheck.Enabled:=False;
+    if not ProcessSyncthing.Running then
+    begin
+      ShowMessage('Run fail. Exit code: '+IntToStr(ProcessSyncthing.ExitCode)+
+        #13+
+        '(press [Ctrl]+[C] to copy full error text)'+#13+
+        'Run:'+#13+
+        ProcessSyncthing.Executable + ' ' + ProcessSyncthing.Parameters.Text
+      );
+    end;
+  end;
+end;
+
+procedure TCore.TimerPingTimer(Sender: TObject);
 begin
   if not httpPingInProc and not Terminated then begin
     aiohttp.Get(SyncthigServer+'rest/system/ping', @httpPing, '', @httpPingInProc);
@@ -815,15 +800,6 @@ begin
       TimerPing.Interval:=10000 else
       TimerPing.Interval:=1000;
   end;
-
-  if not httpEventsInProc and not Terminated then
-    aiohttp.Get(SyncthigServer+'rest/events'+'?'+
-      'since='+IntToStr(self.EventsLastId)+'&'+
-      'limit='+IntToStr(10)+'&'+
-      'timeout='+IntToStr(0),//+'&'+
-//      'events=LocalChangeDetected,RemoteChangeDetected',
-      @httpEvents, '', @httpEventsInProc);
-
 end;
 
 procedure TCore.Init();
@@ -916,24 +892,36 @@ begin
   result := frmOptions.edPathToConfig.Text;
 end;
 
-procedure TCore.FillSyncthingExecPath;
+procedure TCore.FillSyncthingExecPath();
 begin
   {$IFDEF WINDOWS}
-  {Note:
-     In windows has a bug - std output pipe is empty (for an unknown reason).
-     In other program all working good (There is an error only in Syncthing).
-     For fix this bug need redirect pipe stream over other program.
-     (for redirect i am using 'find' program)
-     (my enviroment: Win7 x64, Syncthing v0.14.27 for Windows (32 bit).
-  }
-  ProcessSyncthing.Executable :=
-    GetEnvironmentVariable('WINDIR')+'\system32\cmd.exe';
-  ProcessSyncthing.Parameters.Text :=
-    '/C "' + SyncthigExecPath + ' ' +
-    //'-no-console '+
-    '-no-browser '+
-    '-home=' + SyncthigHome + ' ' +
-    ' | find /v " FAKE_FILTER_STRING_FOR_FIND_REDIRECT_COMMAND " "';
+
+  if frmOptions.chUseProxyOutputForFixBug.Checked then
+  begin
+    {Note:
+       In windows has a bug - std output pipe is empty (for an unknown reason).
+       In other program all working good (There is an error only in Syncthing).
+       For fix this bug need redirect pipe stream over other program.
+       (for redirect i am using 'find' program)
+       (my enviroment: Win7 x64, Syncthing v0.14.27 for Windows (32 bit).
+    }
+    ProcessSyncthing.Executable :=
+      GetEnvironmentVariable('WINDIR')+'\system32\cmd.exe';
+    ProcessSyncthing.Parameters.Text :=
+      '/C "' + SyncthigExecPath + ' ' +
+      //'-no-console '+
+      '-no-browser '+
+      '-home=' + SyncthigHome + ' ' +
+      ' | find /v " FAKE_FILTER_STRING_FOR_FIND_REDIRECT_COMMAND " "';
+  end else
+  begin
+    ProcessSyncthing.Executable := SyncthigExecPath;
+    ProcessSyncthing.Parameters.Text :=
+      //'-no-console '+
+      '-no-browser '+
+      '-home=' + SyncthigHome;
+  end;
+
   {$ELSE}
   //todo: WIP: FillSyncthingExecPath linux
   ProcessSyncthing.Executable := FindSyncthigPath();
@@ -943,7 +931,7 @@ begin
   {$ENDIF}
 end;
 
-procedure TCore.FillSupportExecPath;
+procedure TCore.FillSupportExecPath();
 begin
   //todo: WIP: FillSupportExecPath
   ProcessSupport.Executable := 'D:\NetDrive\AppsPortableHex\Programs\_Net\syncthing\syncthing-inotify.exe';

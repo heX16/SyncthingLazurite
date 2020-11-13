@@ -9,8 +9,8 @@ object frmOptions: TfrmOptions
   DesignTimePPI = 120
   OnShow = FormShow
   Position = poDefault
-  SessionProperties = 'chRunSyncOnStart.Checked;edAPIKey.Text;edPathToConfig.Text;edPathToExec.Text;edInterval.Text;chIntervalMode.Checked'
-  LCLVersion = '1.8.4.0'
+  SessionProperties = 'chIntervalMode.Checked;chRunSyncOnStart.Checked;edAPIKey.Text;edInterval.Text;edPathToConfig.Text;edPathToExec.Text;chUseProxyOutputForFixBug.Checked'
+  LCLVersion = '2.1.0.0'
   object BitBtn1: TBitBtn
     Left = 8
     Height = 38
@@ -29,13 +29,7 @@ object frmOptions: TfrmOptions
     Top = 56
     Width = 397
     Anchors = [akTop, akLeft, akRight]
-    EditLabel.AnchorSideLeft.Control = edPathToConfig
-    EditLabel.AnchorSideRight.Control = edPathToConfig
-    EditLabel.AnchorSideRight.Side = asrBottom
-    EditLabel.AnchorSideBottom.Control = edPathToConfig
-    EditLabel.Left = 8
     EditLabel.Height = 17
-    EditLabel.Top = 36
     EditLabel.Width = 397
     EditLabel.Caption = 'edPathToConfig'
     EditLabel.ParentColor = False
@@ -58,13 +52,7 @@ object frmOptions: TfrmOptions
     Top = 104
     Width = 397
     Anchors = [akTop, akLeft, akRight]
-    EditLabel.AnchorSideLeft.Control = edPathToExec
-    EditLabel.AnchorSideRight.Control = edPathToExec
-    EditLabel.AnchorSideRight.Side = asrBottom
-    EditLabel.AnchorSideBottom.Control = edPathToExec
-    EditLabel.Left = 8
     EditLabel.Height = 17
-    EditLabel.Top = 84
     EditLabel.Width = 397
     EditLabel.Caption = 'edPathToExec'
     EditLabel.ParentColor = False
@@ -87,13 +75,7 @@ object frmOptions: TfrmOptions
     Top = 152
     Width = 317
     Anchors = [akTop, akLeft, akRight]
-    EditLabel.AnchorSideLeft.Control = edAPIKey
-    EditLabel.AnchorSideRight.Control = edAPIKey
-    EditLabel.AnchorSideRight.Side = asrBottom
-    EditLabel.AnchorSideBottom.Control = edAPIKey
-    EditLabel.Left = 8
     EditLabel.Height = 17
-    EditLabel.Top = 132
     EditLabel.Width = 317
     EditLabel.Caption = 'edAPIKey'
     EditLabel.ParentColor = False
@@ -168,11 +150,21 @@ object frmOptions: TfrmOptions
       TabOrder = 1
     end
   end
+  object chUseProxyOutputForFixBug: TCheckBox
+    Left = 8
+    Height = 21
+    Top = 192
+    Width = 203
+    Caption = 'chUseProxyOutputForFixBug'
+    Checked = True
+    State = cbChecked
+    TabOrder = 9
+  end
   object XMLPropStorageConfig: TXMLPropStorage
     StoredValues = <>
     FileName = 'SimpleSyncthingConfig.xml'
     RootNodePath = 'SimpleSyncthing'
-    left = 312
-    top = 16
+    Left = 312
+    Top = 16
   end
 end

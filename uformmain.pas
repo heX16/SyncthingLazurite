@@ -26,7 +26,7 @@ type
     grpEvents: TGroupBox;
     grpFolders: TGroupBox;
     grpDevices: TGroupBox;
-    listEvents: TListBox;
+    listEvents: TMemo;
     Panel1: TPanel;
     shStatusCircle: TShape;
     Splitter1: TSplitter;

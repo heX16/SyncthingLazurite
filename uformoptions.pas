@@ -17,6 +17,7 @@ type
     btnSelectDirConfig: TButton;
     btnSelectFileExec: TButton;
     chAuto: TCheckBox;
+    chUseProxyOutputForFixBug: TCheckBox;
     chIntervalMode: TCheckBox;
     chRunSyncOnStart: TCheckBox;
     edInterval: TComboBox;
