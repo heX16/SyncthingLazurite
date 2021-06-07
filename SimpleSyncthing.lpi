@@ -66,6 +66,9 @@
             </Options>
           </Linking>
           <Other>
+            <CompilerMessages>
+              <IgnoredMessages idx6058="True"/>
+            </CompilerMessages>
             <CustomOptions Value="-dUseCThreads"/>
             <OtherDefines Count="2">
               <Define0 Value="UseCThreads"/>

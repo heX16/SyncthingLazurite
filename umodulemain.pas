@@ -18,6 +18,7 @@ type
   TModuleMain = class(TDataModule)
     actCopySelectedDevID: TAction;
     actAbout: TAction;
+    actShowWeb: TAction;
     actShowRestView: TAction;
     actShowOptions: TAction;
     ActionListGUI: TActionList;
@@ -53,6 +54,7 @@ type
     procedure actCopySelectedDevIDExecute(Sender: TObject);
     procedure actShowOptionsExecute(Sender: TObject);
     procedure actShowRestViewExecute(Sender: TObject);
+    procedure actShowWebExecute(Sender: TObject);
     procedure TimerUpdateTimer(Sender: TObject);
     procedure TrayIconDblClick(Sender: TObject);
   private
@@ -80,6 +82,7 @@ implementation
 {$R *.lfm}
 
 uses
+  LCLIntf, //OpenURL
   Clipbrd,
   DateUtils,
   fpjson,
@@ -222,10 +225,18 @@ begin
   frmJSONView.SetFocus();
 end;
 
+procedure TModuleMain.actShowWebExecute(Sender: TObject);
+begin
+  OpenURL(Core.SyncthigServer);
+end;
+
 procedure TModuleMain.TimerUpdateTimer(Sender: TObject);
 var
   i: Core.MapDevInfo.TIterator;
   OnlineCount: integer;
+  OnlineList: string;
+const
+  MaxItemsInHint = 5;
 begin
 
   if not httpUpdateConnectionsInProc and Core.IsOnline then
@@ -249,16 +260,22 @@ begin
 
   i := Core.MapDevInfo.Iterator();
   OnlineCount := 0;
+  OnlineList := '';
   if i <> nil then
     try
       repeat
-        if i.GetMutable()^.Connected then
+        if i.GetMutable()^.Connected then begin
           inc(OnlineCount);
+          if OnlineCount <= MaxItemsInHint then
+            OnlineList := OnlineList + i.Data.Value.Name + #13;
+        end;
       until not i.Next;
     finally
       FreeAndNil(i);
     end;
-  TrayIcon.Hint:='Online ' + IntToStr(OnlineCount);
+  if OnlineCount > MaxItemsInHint then
+    OnlineList := OnlineList + '...' + #13;
+  TrayIcon.Hint:='Online ' + IntToStr(OnlineCount) + ' devices:' + #13 + OnlineList;
 end;
 
 end.

@@ -19,6 +19,7 @@ type
   { TfrmMain }
 
   TfrmMain = class(TForm)
+    btnShowWeb: TButton;
     btnStart: TButton;
     btnStop: TButton;
     btnOptions: TButton;

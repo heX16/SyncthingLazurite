@@ -9,7 +9,7 @@ object frmOptions: TfrmOptions
   DesignTimePPI = 120
   OnShow = FormShow
   Position = poDefault
-  SessionProperties = 'chIntervalMode.Checked;chRunSyncOnStart.Checked;edAPIKey.Text;edInterval.Text;edPathToConfig.Text;edPathToExec.Text;chUseProxyOutputForFixBug.Checked'
+  SessionProperties = 'chIntervalMode.Checked;chRunSyncOnStart.Checked;chUseProxyOutputForFixBug.Checked;edAPIKey.Text;edInterval.Text;edPathToExecWithFilename.Text;edPathToConfigDir.Text'
   LCLVersion = '2.1.0.0'
   object BitBtn1: TBitBtn
     Left = 8
@@ -23,7 +23,7 @@ object frmOptions: TfrmOptions
     ModalResult = 1
     TabOrder = 0
   end
-  object edPathToConfig: TLabeledEdit
+  object edPathToConfigDir: TLabeledEdit
     Left = 8
     Height = 25
     Top = 56
@@ -31,7 +31,7 @@ object frmOptions: TfrmOptions
     Anchors = [akTop, akLeft, akRight]
     EditLabel.Height = 17
     EditLabel.Width = 397
-    EditLabel.Caption = 'edPathToConfig'
+    EditLabel.Caption = 'edPathToConfigDir'
     EditLabel.ParentColor = False
     TabOrder = 1
     Text = './'
@@ -46,7 +46,7 @@ object frmOptions: TfrmOptions
     Enabled = False
     TabOrder = 2
   end
-  object edPathToExec: TLabeledEdit
+  object edPathToExecWithFilename: TLabeledEdit
     Left = 8
     Height = 25
     Top = 104
@@ -54,7 +54,7 @@ object frmOptions: TfrmOptions
     Anchors = [akTop, akLeft, akRight]
     EditLabel.Height = 17
     EditLabel.Width = 397
-    EditLabel.Caption = 'edPathToExec'
+    EditLabel.Caption = 'edPathToExecWithFilename'
     EditLabel.ParentColor = False
     TabOrder = 3
     Text = './'

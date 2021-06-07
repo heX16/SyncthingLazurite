@@ -21,8 +21,8 @@ type
     chIntervalMode: TCheckBox;
     chRunSyncOnStart: TCheckBox;
     edInterval: TComboBox;
-    edPathToConfig: TLabeledEdit;
-    edPathToExec: TLabeledEdit;
+    edPathToConfigDir: TLabeledEdit;
+    edPathToExecWithFilename: TLabeledEdit;
     edAPIKey: TLabeledEdit;
     GroupBox1: TGroupBox;
     Label1: TLabel;

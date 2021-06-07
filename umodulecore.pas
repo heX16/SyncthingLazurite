@@ -898,13 +898,13 @@ end;
 function TCore.GetSyncthigExecPath: UTF8String;
 begin
   //OLD: result := 'D:\NetDrive\AppsPortableHex\Programs\_Net\syncthing\syncthing.exe';
-  result := frmOptions.edPathToExec.Text;
+  result := frmOptions.edPathToExecWithFilename.Text;
 end;
 
 function TCore.GetSyncthigHome: UTF8String;
 begin
   //OLD: result := 'h:\Dat\syncthing\';
-  result := frmOptions.edPathToConfig.Text;
+  result := frmOptions.edPathToConfigDir.Text;
 end;
 
 procedure TCore.FillSyncthingExecPath();

@@ -111,12 +111,22 @@ msgstr ""
 msgid "edAPIKey"
 msgstr ""
 
-#: tfrmoptions.edpathtoconfig.editlabel.caption
-msgid "edPathToConfig"
+#: tfrmoptions.edpathtoconfigdir.editlabel.caption
+msgid "edPathToConfigDir"
 msgstr ""
 
-#: tfrmoptions.edpathtoexec.editlabel.caption
-msgid "edPathToExec"
+#: tfrmoptions.edpathtoconfigdir.text
+msgctxt "tfrmoptions.edpathtoconfigdir.text"
+msgid "./"
+msgstr ""
+
+#: tfrmoptions.edpathtoexecwithfilename.editlabel.caption
+msgid "edPathToExecWithFilename"
+msgstr ""
+
+#: tfrmoptions.edpathtoexecwithfilename.text
+msgctxt "tfrmoptions.edpathtoexecwithfilename.text"
+msgid "./"
 msgstr ""
 
 #: tfrmoptions.groupbox1.caption
@@ -141,6 +151,10 @@ msgstr ""
 
 #: tmodulemain.actshowrestview.caption
 msgid "actShowRestView"
+msgstr ""
+
+#: tmodulemain.actshowweb.caption
+msgid "actShowWeb"
 msgstr ""
 
 #: tmodulemain.mnserver.caption

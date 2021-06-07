@@ -1103,6 +1103,10 @@ object ModuleMain: TModuleMain
       Caption = 'actAbout'
       OnExecute = actAboutExecute
     end
+    object actShowWeb: TAction
+      Caption = 'actShowWeb'
+      OnExecute = actShowWebExecute
+    end
   end
   object TimerUpdate: TTimer
     OnTimer = TimerUpdateTimer

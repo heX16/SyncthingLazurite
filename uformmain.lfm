@@ -22,18 +22,18 @@ object frmMain: TfrmMain
     ClientWidth = 551
     TabOrder = 0
     object btnStart: TButton
-      Left = 48
+      Left = 144
       Height = 33
-      Top = 7
+      Top = 8
       Width = 160
       Action = Core.actStart
       OnClick = btnStartClick
       TabOrder = 0
     end
     object btnStop: TButton
-      Left = 216
+      Left = 312
       Height = 33
-      Top = 7
+      Top = 8
       Width = 163
       Action = Core.actStop
       OnClick = btnStopClick
@@ -48,9 +48,9 @@ object frmMain: TfrmMain
       Shape = stCircle
     end
     object btnOptions: TButton
-      Left = 384
+      Left = 480
       Height = 33
-      Top = 7
+      Top = 8
       Width = 62
       Action = ModuleMain.actShowOptions
       TabOrder = 2
@@ -174,5 +174,13 @@ object frmMain: TfrmMain
     Height = 359
     Top = 50
     Width = 6
+  end
+  object btnShowWeb: TButton
+    Left = 72
+    Height = 33
+    Top = 8
+    Width = 62
+    Action = ModuleMain.actShowWeb
+    TabOrder = 8
   end
 end
