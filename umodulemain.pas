@@ -121,6 +121,9 @@ begin
         s := s + ' // ' + j.AsJSON;
       frmMain.listEvents.Lines.Insert(0, s);
 
+      //TODO: frmMain.listEvents.CaretPos - must by slide. code not working...
+      frmMain.listEvents.CaretPos.SetLocation(Point(0, frmMain.listEvents.Lines.Count-1));
+
       while frmMain.listEvents.Lines.Count > 100 do
         frmMain.listEvents.Lines.Delete(frmMain.listEvents.Lines.Count-1);
     end;

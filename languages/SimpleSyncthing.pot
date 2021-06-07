@@ -63,19 +63,19 @@ msgstr ""
 
 #: tfrmmain.caption
 msgid "frmMain"
-msgstr "Syncthing"
+msgstr ""
 
 #: tfrmmain.grpdevices.caption
 msgid "grpDevices"
-msgstr "Devices"
+msgstr ""
 
 #: tfrmmain.grpevents.caption
 msgid "grpEvents"
-msgstr "Events"
+msgstr ""
 
 #: tfrmmain.grpfolders.caption
 msgid "grpFolders"
-msgstr "Folders"
+msgstr ""
 
 #: tfrmoptions.btnselectdirconfig.caption
 msgctxt "tfrmoptions.btnselectdirconfig.caption"
@@ -89,7 +89,7 @@ msgstr ""
 
 #: tfrmoptions.caption
 msgid "frmOptions"
-msgstr "Options"
+msgstr ""
 
 #: tfrmoptions.chauto.caption
 msgid "chAuto"
@@ -101,36 +101,22 @@ msgstr ""
 
 #: tfrmoptions.chrunsynconstart.caption
 msgid "chRunSyncOnStart"
-msgstr "Run sync on start program"
+msgstr ""
+
+#: tfrmoptions.chuseproxyoutputforfixbug.caption
+msgid "chUseProxyOutputForFixBug"
+msgstr ""
 
 #: tfrmoptions.edapikey.editlabel.caption
 msgid "edAPIKey"
-msgstr "API Key"
-
-#: tfrmoptions.edapikey.text
-msgid "MJzE2GL2vOvaFydjM05ocRM64SZ0DR1-"
-msgstr ""
-
-#: tfrmoptions.edinterval.text
-msgid "0.5 day"
 msgstr ""
 
 #: tfrmoptions.edpathtoconfig.editlabel.caption
 msgid "edPathToConfig"
 msgstr ""
 
-#: tfrmoptions.edpathtoconfig.text
-msgctxt "tfrmoptions.edpathtoconfig.text"
-msgid "./"
-msgstr ""
-
 #: tfrmoptions.edpathtoexec.editlabel.caption
 msgid "edPathToExec"
-msgstr ""
-
-#: tfrmoptions.edpathtoexec.text
-msgctxt "tfrmoptions.edpathtoexec.text"
-msgid "./"
 msgstr ""
 
 #: tfrmoptions.groupbox1.caption
@@ -159,6 +145,14 @@ msgstr ""
 
 #: tmodulemain.mnserver.caption
 msgid "mnServer"
+msgstr ""
+
+#: tmodulemain.mnstaterun.caption
+msgid "mnStateRun"
+msgstr ""
+
+#: tmodulemain.mnstatestop.caption
+msgid "mnStateStop"
 msgstr ""
 
 #: uformmain.caddress

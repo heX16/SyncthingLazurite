@@ -1,4 +1,4 @@
 <?xml version="1.0" encoding="utf-8"?>
 <CONFIG>
-  <SimpleSyncthing edAPIKey_Text="MJzE2GL2vOvaFydjM05ocRM64SZ0DR1-" edInterval_Text="0.5 day" edPathToExec_Text="./" edPathToConfig_Text="./" chIntervalMode_Checked="0" chRunSyncOnStart_Checked="1"/>
+  <SimpleSyncthing edAPIKey_Text="MJzE2GL2vOvaFydjM05ocRM64SZ0DR1-" edInterval_Text="0.5 day" edPathToExec_Text="./" edPathToConfig_Text="./" chIntervalMode_Checked="0" chRunSyncOnStart_Checked="1" chUseProxyOutputForFixBug_Checked="1"/>
 </CONFIG>

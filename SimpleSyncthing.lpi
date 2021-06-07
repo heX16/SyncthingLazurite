@@ -20,12 +20,18 @@
     <i18n>
       <EnableI18N Value="True"/>
       <OutDir Value="languages"/>
+      <ExcludedIdentifiers Count="4">
+        <Item1 Value="tfrmoptions.edpathtoconfig.text"/>
+        <Item2 Value="tfrmoptions.edpathtoexec.text"/>
+        <Item3 Value="tfrmoptions.edapikey.text"/>
+        <Item4 Value="tfrmoptions.edinterval.text"/>
+      </ExcludedIdentifiers>
     </i18n>
     <VersionInfo>
       <UseVersionInfo Value="True"/>
       <AutoIncrementBuild Value="True"/>
       <MinorVersionNr Value="10"/>
-      <BuildNr Value="50"/>
+      <BuildNr Value="55"/>
       <StringTable ProductVersion="0.0.0.0"/>
     </VersionInfo>
     <BuildModes Count="3">

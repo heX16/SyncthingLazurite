@@ -1,4 +1,4 @@
-unit uModuleCore;
+﻿unit uModuleCore;
 
 {$mode objfpc}{$H+}
 
@@ -72,6 +72,7 @@ type
     ActionList: TActionList;
     ProcessSyncthing: TProcessUTF8;
     ProcessSupport: TProcessUTF8;
+    TimerCheckState: TTimer;
     TimerAfterStartCheck: TTimer;
     TimerPause: TTimer;
     TimerInit: TTimer;
@@ -90,6 +91,7 @@ type
 
     procedure DataModuleDestroy(Sender: TObject);
     procedure TimerAfterStartCheckTimer(Sender: TObject);
+    procedure TimerCheckStateTimer(Sender: TObject);
 
     procedure TimerInitTimer(Sender: TObject);
     procedure TimerPauseTimer(Sender: TObject);
@@ -99,6 +101,10 @@ type
   private
     OutputChankStr: UTF8String;
   public
+
+    //TODO: WIP!
+    State: (stMustWork, stMustStopped);
+
     // flag - syncthing is work
     IsOnline: boolean;
     // flag - checked 'syncthing is work'
@@ -128,8 +134,8 @@ type
 
     procedure Init(); virtual;
     procedure Done(); virtual;
-    procedure Online(); virtual;
-    procedure Offline(); virtual;
+    procedure EventOnline(); virtual;
+    procedure EventOffline(); virtual;
 
     function GetSyncthigExecPath: UTF8String; virtual;
     function GetSyncthigHome: UTF8String; virtual;
@@ -473,14 +479,14 @@ begin
         if IsOnline then
         begin
           IsOnline := false;
-          Offline();
+          EventOffline();
         end;
       end else
       begin
         if not IsOnline then
         begin
           IsOnline := true;
-          Online();
+          EventOnline();
         end;
       end;
     end else
@@ -609,6 +615,8 @@ end;
 
 procedure TCore.Start();
 begin
+  //TODO: добавить поддержку "подключения" к уже запущенному процессу (без консоли разумеется)
+  // если процесс не запущен тогда запускаем его
   if not ProcessSyncthing.Running then
   begin
     FillSyncthingExecPath();
@@ -628,7 +636,8 @@ begin
   //todo: OLD:
   SendJSON('rest/system/shutdown');
   //aiohttp.Post('rest/system/shutdown', '', nil);
-  ProcessSupport.Terminate(0);
+  if ProcessSupport.Active then
+    ProcessSupport.Terminate(0);
   //ProcessSyncthing.Terminate(0);
 end;
 
@@ -727,6 +736,7 @@ end;
 procedure TCore.actPauseExecute(Sender: TObject);
 begin
   actStop.Execute();
+  TimerPause.Enabled:=false;
   TimerPause.Enabled:=true;
 end;
 
@@ -790,6 +800,11 @@ begin
       );
     end;
   end;
+end;
+
+procedure TCore.TimerCheckStateTimer(Sender: TObject);
+begin
+  //
 end;
 
 procedure TCore.TimerPingTimer(Sender: TObject);
@@ -862,13 +877,13 @@ begin
   FreeAndNil(MapDevInfo);
 end;
 
-procedure TCore.Online();
+procedure TCore.EventOnline();
 begin
   frmMain.shStatusCircle.Brush.Color:=clGreen;
   actReloadConfig.Execute();
 end;
 
-procedure TCore.Offline();
+procedure TCore.EventOffline();
 begin
   frmMain.shStatusCircle.Brush.Color:=clPurple;
 end;

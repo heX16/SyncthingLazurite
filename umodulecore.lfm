@@ -108,7 +108,7 @@ object Core: TCore
   end
   object TimerPause: TTimer
     Enabled = False
-    Interval = 30000
+    Interval = 60000
     OnTimer = TimerPauseTimer
     Left = 70
     Top = 272
@@ -126,5 +126,11 @@ object Core: TCore
     OnTimer = TimerAfterStartCheckTimer
     Left = 244
     Top = 144
+  end
+  object TimerCheckState: TTimer
+    Interval = 10000
+    OnTimer = TimerCheckStateTimer
+    Left = 244
+    Top = 208
   end
 end
