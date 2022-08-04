@@ -27,6 +27,7 @@ type
     grpEvents: TGroupBox;
     grpFolders: TGroupBox;
     grpDevices: TGroupBox;
+    lbExcDetected: TLabel;
     listEvents: TMemo;
     Panel1: TPanel;
     shStatusCircle: TShape;

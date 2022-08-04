@@ -1060,6 +1060,12 @@ object ModuleMain: TModuleMain
   object menuTrayIcon: TPopupMenu
     Left = 160
     Top = 100
+    object mnShowWeb: TMenuItem
+      Action = actShowWeb
+    end
+    object N2: TMenuItem
+      Caption = '-'
+    end
     object mnStateRun: TMenuItem
       Caption = 'mnStateRun'
       Checked = True
@@ -1079,6 +1085,9 @@ object ModuleMain: TModuleMain
     end
     object miShow: TMenuItem
       Action = Core.actPause
+    end
+    object N1: TMenuItem
+      Caption = '-'
     end
     object miExit: TMenuItem
       Action = Core.actExit

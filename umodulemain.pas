@@ -30,6 +30,9 @@ type
     MenuItem10: TMenuItem;
     MenuItem11: TMenuItem;
     MenuItem12: TMenuItem;
+    mnShowWeb: TMenuItem;
+    N2: TMenuItem;
+    N1: TMenuItem;
     mnStateStop: TMenuItem;
     mnStateRun: TMenuItem;
     MenuItem15: TMenuItem;
@@ -110,6 +113,7 @@ var
   e: TJSONEnum;
   s: UTF8String;
 begin
+  //TODO: BUG 2022. AV. здесь падает. - дальше вызов FFFF происходит. че такое, хз...
   if HttpQueryToJson(Query, JData) then
   try
     for e in JData do
@@ -249,13 +253,20 @@ begin
   if not httpUpdateDeviceStatInProc and Core.IsOnline then
     Core.aiohttp.Get(Core.SyncthigServer+'rest/stats/device', @httpUpdateDeviceStat, '', @httpUpdateDeviceStatInProc);
 
-  if not httpEventsInProc and Core.IsOnline then
-    Core.aiohttp.Get(Core.SyncthigServer+'rest/events'+'?'+
-      'since='+IntToStr(Core.EventsLastId)+'&'+
-      'limit='+IntToStr(10)+'&'+
-      'timeout='+IntToStr(0),//+'&'+
-      //'events=LocalChangeDetected,RemoteChangeDetected',
-      @httpEvents, '', @httpEventsInProc);
+  try
+    //TODO: BUG 2022. AV. - здесь падает. отсуда начинается вызов проблемной цепочки.
+    if not httpEventsInProc and Core.IsOnline then
+      Core.aiohttp.Get(Core.SyncthigServer+'rest/events'+'?'+
+        'since='+IntToStr(Core.EventsLastId)+'&'+
+        'limit='+IntToStr(10)+'&'+
+        'timeout='+IntToStr(0),//+'&'+
+        //'events=LocalChangeDetected,RemoteChangeDetected',
+        @httpEvents, '', @httpEventsInProc);
+  except
+    //TODO: BUG 2022. AV. поставил заглушку. посмотрим...
+    frmMain.lbExcDetected.Visible:=true;
+  end;
+
 
 
   i := Core.MapDevInfo.Iterator();

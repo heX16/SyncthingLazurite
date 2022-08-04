@@ -4,14 +4,14 @@ object frmMain: TfrmMain
   Top = 324
   Width = 551
   Caption = 'frmMain'
-  ClientHeight = 554
+  ClientHeight = 553
   ClientWidth = 551
   DesignTimePPI = 120
   Menu = ModuleMain.MainMenu1
   OnDestroy = FormDestroy
   OnWindowStateChange = FormWindowStateChange
   Position = poDefaultPosOnly
-  LCLVersion = '2.1.0.0'
+  LCLVersion = '2.2.2.0'
   object Panel1: TPanel
     Left = 0
     Height = 50
@@ -55,11 +55,22 @@ object frmMain: TfrmMain
       Action = ModuleMain.actShowOptions
       TabOrder = 2
     end
+    object lbExcDetected: TLabel
+      Left = 0
+      Height = 20
+      Top = 0
+      Width = 25
+      Caption = '!EX!'
+      Color = clRed
+      ParentColor = False
+      Transparent = False
+      Visible = False
+    end
   end
   object edConsole: TMemo
     Left = 0
     Height = 140
-    Top = 414
+    Top = 413
     Width = 551
     Align = alBottom
     Color = clBlack
@@ -79,24 +90,24 @@ object frmMain: TfrmMain
     Cursor = crVSplit
     Left = 0
     Height = 5
-    Top = 409
+    Top = 408
     Width = 551
     Align = alBottom
     ResizeAnchor = akBottom
   end
   object grpDevices: TGroupBox
     Left = 0
-    Height = 359
+    Height = 358
     Top = 50
     Width = 162
     Align = alLeft
     Caption = 'grpDevices'
-    ClientHeight = 337
+    ClientHeight = 333
     ClientWidth = 158
     TabOrder = 3
     object treeDevices: TVirtualStringTree
       Left = 0
-      Height = 337
+      Height = 333
       Top = 0
       Width = 158
       Align = alClient
@@ -118,17 +129,17 @@ object frmMain: TfrmMain
   end
   object grpFolders: TGroupBox
     Left = 168
-    Height = 359
+    Height = 358
     Top = 50
     Width = 204
     Align = alLeft
     Caption = 'grpFolders'
-    ClientHeight = 337
+    ClientHeight = 333
     ClientWidth = 200
     TabOrder = 4
     object treeFolders: TVirtualStringTree
       Left = 0
-      Height = 337
+      Height = 333
       Top = 0
       Width = 200
       Align = alClient
@@ -142,23 +153,23 @@ object frmMain: TfrmMain
   end
   object Splitter2: TSplitter
     Left = 162
-    Height = 359
+    Height = 358
     Top = 50
     Width = 6
   end
   object grpEvents: TGroupBox
     Left = 378
-    Height = 359
+    Height = 358
     Top = 50
     Width = 173
     Align = alClient
     Caption = 'grpEvents'
-    ClientHeight = 337
+    ClientHeight = 333
     ClientWidth = 169
     TabOrder = 6
     object listEvents: TMemo
       Left = 0
-      Height = 337
+      Height = 333
       Top = 0
       Width = 169
       Align = alClient
@@ -171,7 +182,7 @@ object frmMain: TfrmMain
   end
   object Splitter3: TSplitter
     Left = 372
-    Height = 359
+    Height = 358
     Top = 50
     Width = 6
   end
