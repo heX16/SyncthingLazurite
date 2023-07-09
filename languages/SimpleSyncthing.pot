@@ -145,6 +145,10 @@ msgstr ""
 msgid "actAbout"
 msgstr ""
 
+#: tmodulemain.actclosegui.caption
+msgid "actCloseGUI"
+msgstr ""
+
 #: tmodulemain.actcopyselecteddevid.caption
 msgid "actCopySelectedDevID"
 msgstr ""

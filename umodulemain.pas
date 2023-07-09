@@ -18,6 +18,7 @@ type
   TModuleMain = class(TDataModule)
     actCopySelectedDevID: TAction;
     actAbout: TAction;
+    actCloseGUI: TAction;
     actShowWeb: TAction;
     actShowRestView: TAction;
     actShowOptions: TAction;
@@ -30,6 +31,7 @@ type
     MenuItem10: TMenuItem;
     MenuItem11: TMenuItem;
     MenuItem12: TMenuItem;
+    MenuItem13: TMenuItem;
     mnShowWeb: TMenuItem;
     N2: TMenuItem;
     N1: TMenuItem;
@@ -54,6 +56,7 @@ type
     TrayIcon: TTrayIcon;
     UniqueInstance1: TUniqueInstance;
     procedure actAboutExecute(Sender: TObject);
+    procedure actCloseGUIExecute(Sender: TObject);
     procedure actCopySelectedDevIDExecute(Sender: TObject);
     procedure actShowOptionsExecute(Sender: TObject);
     procedure actShowRestViewExecute(Sender: TObject);
@@ -221,6 +224,11 @@ begin
   f := TfrmAbout.Create(self);
   f.ShowModal();
   FreeAndNil(f);
+end;
+
+procedure TModuleMain.actCloseGUIExecute(Sender: TObject);
+begin
+  Application.Terminate();
 end;
 
 procedure TModuleMain.actShowRestViewExecute(Sender: TObject);

@@ -1116,6 +1116,10 @@ object ModuleMain: TModuleMain
       Caption = 'actShowWeb'
       OnExecute = actShowWebExecute
     end
+    object actCloseGUI: TAction
+      Caption = 'actCloseGUI'
+      OnExecute = actCloseGUIExecute
+    end
   end
   object TimerUpdate: TTimer
     OnTimer = TimerUpdateTimer
@@ -1147,6 +1151,9 @@ object ModuleMain: TModuleMain
       end
       object MenuItem6: TMenuItem
         Caption = '-'
+      end
+      object MenuItem13: TMenuItem
+        Action = actCloseGUI
       end
       object MenuItem5: TMenuItem
         Action = Core.actExit

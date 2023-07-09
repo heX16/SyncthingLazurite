@@ -139,7 +139,7 @@ type
 
     function GetSyncthigExecPath: UTF8String; virtual;
     function GetSyncthigHome: UTF8String; virtual;
-    function GetAPIKey: string; virtual;
+    function ReadAPIKeyFromCfg: string; virtual;
     procedure LoadDevices(Json: TJSONData);
     procedure LoadFolders(Json: TJSONData);
     procedure FillSyncthingExecPath();
@@ -525,7 +525,7 @@ begin
   end;
 end;
 
-function TCore.GetAPIKey: string;
+function TCore.ReadAPIKeyFromCfg: string;
 var
   //key: string;
   filename: UTF8String;
@@ -730,7 +730,7 @@ end;
 procedure TCore.actExitExecute(Sender: TObject);
 begin
   actStop.Execute();
-  Application.Terminate;
+  Application.Terminate();
 end;
 
 procedure TCore.actPauseExecute(Sender: TObject);
@@ -833,7 +833,7 @@ begin
   SyncthigServer:='http://127.0.0.1:8384/';
   SyncthigExecPath:=GetSyncthigExecPath();
   SyncthigHome:=GetSyncthigHome();
-  APIKey:=GetAPIKey();
+  APIKey:=ReadAPIKeyFromCfg();
 
   TimerStartOnStart.Enabled:=frmOptions.chRunSyncOnStart.Checked;
   TimerPing.Enabled:=true;

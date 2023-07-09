@@ -30,8 +30,8 @@
     <VersionInfo>
       <UseVersionInfo Value="True"/>
       <AutoIncrementBuild Value="True"/>
-      <MinorVersionNr Value="10"/>
-      <BuildNr Value="58"/>
+      <MinorVersionNr Value="11"/>
+      <BuildNr Value="60"/>
       <StringTable ProductVersion="0.0.0.0"/>
     </VersionInfo>
     <BuildModes Count="3">

@@ -40,7 +40,6 @@ type
     procedure btnStopClick(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
     procedure FormWindowStateChange(Sender: TObject);
-    procedure miExitClick(Sender: TObject);
     procedure miShowClick(Sender: TObject);
     procedure treeDevicesGetHint(Sender: TBaseVirtualTree; Node: PVirtualNode;
       Column: TColumnIndex; var LineBreakStyle: TVTTooltipLineBreakStyle;
@@ -96,11 +95,6 @@ procedure TfrmMain.FormWindowStateChange(Sender: TObject);
 begin
   if WindowState = wsMinimized then
     Hide();
-end;
-
-procedure TfrmMain.miExitClick(Sender: TObject);
-begin
-  Application.Terminate;
 end;
 
 procedure TfrmMain.miShowClick(Sender: TObject);
