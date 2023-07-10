@@ -19,6 +19,8 @@ type
     actCopySelectedDevID: TAction;
     actAbout: TAction;
     actCloseGUI: TAction;
+    actStateStop: TAction;
+    actStateRun: TAction;
     actShowWeb: TAction;
     actShowRestView: TAction;
     actShowOptions: TAction;
@@ -61,6 +63,9 @@ type
     procedure actShowOptionsExecute(Sender: TObject);
     procedure actShowRestViewExecute(Sender: TObject);
     procedure actShowWebExecute(Sender: TObject);
+    procedure actStateRunExecute(Sender: TObject);
+    procedure actStateStopExecute(Sender: TObject);
+    procedure DataModuleCreate(Sender: TObject);
     procedure TimerUpdateTimer(Sender: TObject);
     procedure TrayIconDblClick(Sender: TObject);
   private
@@ -242,6 +247,26 @@ begin
   OpenURL(Core.SyncthigServer);
 end;
 
+procedure TModuleMain.actStateRunExecute(Sender: TObject);
+begin
+  if (Core.State = stStopped) or (Core.State = stStopping) then
+  begin
+    Core.State := stLaunching;
+  end;
+end;
+
+procedure TModuleMain.actStateStopExecute(Sender: TObject);
+begin
+  if (Core.State = stWork) or (Core.State = stLaunching) then
+  begin
+    Core.State := stStopping;
+  end;
+end;
+
+procedure TModuleMain.DataModuleCreate(Sender: TObject);
+begin
+end;
+
 procedure TModuleMain.TimerUpdateTimer(Sender: TObject);
 var
   i: Core.MapDevInfo.TIterator;
@@ -262,7 +287,7 @@ begin
     Core.aiohttp.Get(Core.SyncthigServer+'rest/stats/device', @httpUpdateDeviceStat, '', @httpUpdateDeviceStatInProc);
 
   try
-    //TODO: BUG 2022. AV. - здесь падает. отсуда начинается вызов проблемной цепочки.
+    //TODO: BUG 2022. AV. - здесь падает. отсюда начинается вызов проблемной цепочки.
     if not httpEventsInProc and Core.IsOnline then
       Core.aiohttp.Get(Core.SyncthigServer+'rest/events'+'?'+
         'since='+IntToStr(Core.EventsLastId)+'&'+

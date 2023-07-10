@@ -103,13 +103,15 @@ type
     OnError: THttpEvent;
 
     // call from other threads.
-    // callback call in 'main' thread (not this thread!).
+    // `Callback` call in caller ('main') thread (not in this thread!).
     procedure HttpMethod(Method: string; const URL: string; Callback: THttpCallbackEvent; AddHeaders: string = '';
       const Data: string = ''; InWorkFlagPtr: PBoolean = nil);
 
+    // call from other threads.
     procedure Get(const URL: string; Callback: THttpCallbackEvent; AddHeaders: string = '';
       InWorkFlagPtr: PBoolean = nil);
 
+    // call from other threads.
     procedure Post(const URL: string; const Data: string;
       Callback: THttpCallbackEvent; AddHeaders: string = '';
       InWorkFlagPtr: PBoolean = nil);
@@ -127,7 +129,7 @@ type
     procedure DoLoadDone(Query: THttpQueryBase);
     procedure DoOpened(Query: THttpQueryBase);
     procedure DoError(Query: THttpQueryBase);
-public
+  public
     OnOpened: THttpEvent;
     OnLoadDone: THttpEvent;
     OnError: THttpEvent;
@@ -373,6 +375,7 @@ begin
     CritQueryList.Enter();
     QueryList.Push(q);
     CritQueryList.Leave();
+
     EventWaitWork.SetEvent();
   end;
 end;
@@ -385,26 +388,33 @@ begin
   CritQueryList := TCriticalSection.Create();
   QueryList:= TQueueHttpQuery.Create();
   EventWaitWork:= TEventObject.Create(nil, False, False, '');
+
   try
+
     // main loop
     while not Terminated do
     begin
-      CritQueryList.Enter(); // <<
+      q := nil;
 
+      CritQueryList.Enter(); // <<
       if QueryList.Size() > 0 then
       begin
         q := QueryList.Front();
         QueryList.Pop();
-        CritQueryList.Leave(); // >>
+      end;
+      CritQueryList.Leave(); // >>
+
+      if q <> nil then
+      begin
         // network stun!
         q.HttpRequest();
         //note: About 'q'. Can't run 'free' here - async callback will happen later.
         //note: About 'q'. Item not needed destroy - he used 'SelfDestroy' procedure.
-      end else
-        CritQueryList.Leave(); // >>
+      end;
 
       EventWaitWork.WaitFor(INFINITE);
     end;
+
   finally
     // program end:
 

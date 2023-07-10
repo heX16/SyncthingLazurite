@@ -88,6 +88,7 @@ type
     procedure actStartExecute(Sender: TObject);
     procedure actStopExecute(Sender: TObject);
     procedure actTerminateExecute(Sender: TObject);
+    procedure DataModuleCreate(Sender: TObject);
 
     procedure DataModuleDestroy(Sender: TObject);
     procedure TimerAfterStartCheckTimer(Sender: TObject);
@@ -102,8 +103,9 @@ type
     OutputChankStr: UTF8String;
   public
 
+    // State (FSM)
     //TODO: WIP!
-    State: (stMustWork, stMustStopped);
+    State: (stUnknown, stBrokenAndDisabled, stStopped, stLaunching, stWork, stStopping, stInstantStopped);
 
     // flag - syncthing is work
     IsOnline: boolean;
@@ -122,6 +124,8 @@ type
 
     SyncthigParam: UTF8String;
     SyncthigServer: UTF8String;
+    SyncthigHost: UTF8String;
+    SyncthigPort: integer;
 
     httpPingInProc: boolean;
 
@@ -137,9 +141,9 @@ type
     procedure EventOnline(); virtual;
     procedure EventOffline(); virtual;
 
-    function GetSyncthigExecPath: UTF8String; virtual;
-    function GetSyncthigHome: UTF8String; virtual;
-    function ReadAPIKeyFromCfg: string; virtual;
+    function GetSyncthigExecPath(): UTF8String; virtual;
+    function GetSyncthigHomePath(): UTF8String; virtual;
+    function ReadAPIKeyFromCfg(): string; virtual;
     procedure LoadDevices(Json: TJSONData);
     procedure LoadFolders(Json: TJSONData);
     procedure FillSyncthingExecPath();
@@ -467,6 +471,96 @@ begin
   end;
 end;
 
+(*
+Old code:
+>>>>>>>>>>>>>>>
+procedure TCore.HTTPClientPingDoneInput(ASocket: TLHTTPClientSocket);
+begin
+  OnlineTested := true;
+  if not Terminated then
+  begin
+
+    OnlineTested := true;
+    if ASocket.ResponseStatus = hsOK then
+    begin
+      //todo: check ping result
+
+      if not IsOnline then
+      begin
+        IsOnline := true;
+        EventOnline();
+      end;
+
+    end else
+    begin
+
+      if IsOnline then
+      begin
+        IsOnline := false;
+        EventOffline();
+      end;
+
+    end; // if
+  end;
+
+  //???
+  aSocket.Disconnect;
+end;
+
+procedure TCore.HTTPClientPingError(const msg: string; aSocket: TLSocket);
+begin
+  //TODO: WIP!!! 2023...
+  AddStringToConsole('err: '+msg);//DBG!
+
+  aSocket.ConnectionStatus;
+  IsOnline := false;
+  OnlineTested := true;
+  frmMain.shStatusCircle.Brush.Color:=clRed;
+end;
+
+function TCore.HTTPClientPingInput(ASocket: TLHTTPClientSocket; ABuffer: pchar;
+  ASize: integer): integer;
+begin
+  Result := aSize; // tell the http buffer we read it all
+end;
+
+procedure TCore.HTTPClientPingDisconnect(aSocket: TLSocket);
+begin
+  AddStringToConsole('diss!!!');//DBG!
+  IsOnline := false;
+  OnlineTested := true;
+  frmMain.shStatusCircle.Brush.Color:=clRed;
+end;
+<<<<<<<<<<<<<<<<<<<<
+*)
+
+procedure TCore.TimerPingTimer(Sender: TObject);
+begin
+  (*
+  Self.HTTPClientPing.CallAction();
+  if Self.HTTPClientPing.State = hcsIdle then
+  begin
+    Self.HTTPClientPing.URI:='rest/system/ping';
+    Self.HTTPClientPing.Host:=SyncthigHost;
+    Self.HTTPClientPing.Port:=SyncthigPort;
+    Self.HTTPClientPing.Timeout:=1000;
+    Self.HTTPClientPing.AddExtraHeader('X-API-Key: ' + self.APIKey);
+    Self.HTTPClientPing.SendRequest();
+    AddStringToConsole('req');//DBG!
+  end;
+  Self.HTTPClientPing.CallAction();
+  *)
+
+  (*
+  if not httpPingInProc and not Terminated then begin
+    aiohttp.Get(SyncthigServer+'rest/system/ping', @httpPing, '', @httpPingInProc);
+    if not IsOnline then
+      TimerPing.Interval:=10000 else
+      TimerPing.Interval:=1000;
+  end;
+  *)
+end;
+
 procedure TCore.httpPing(Query: THttpQuery);
 begin
   OnlineTested := true;
@@ -534,7 +628,7 @@ var
 begin
   try
     FDoc := nil;
-    filename := GetSyncthigHome() + '\config.xml';
+    filename := GetSyncthigHomePath() + '\config.xml';
     if FileExistsUTF8(filename) then
       ReadXMLFile(FDoc, UTF8ToSys(filename));
 
@@ -780,6 +874,11 @@ begin
   ProcessSyncthing.Terminate(0);
 end;
 
+procedure TCore.DataModuleCreate(Sender: TObject);
+begin
+
+end;
+
 procedure TCore.DataModuleDestroy(Sender: TObject);
 begin
   Done();
@@ -807,20 +906,13 @@ begin
   //
 end;
 
-procedure TCore.TimerPingTimer(Sender: TObject);
-begin
-  if not httpPingInProc and not Terminated then begin
-    aiohttp.Get(SyncthigServer+'rest/system/ping', @httpPing, '', @httpPingInProc);
-    if not IsOnline then
-      TimerPing.Interval:=10000 else
-      TimerPing.Interval:=1000;
-  end;
-end;
-
 procedure TCore.Init();
 var d:TDevInfo;
 begin
   //todo: WIP: INIT
+
+  Core.State := stUnknown;
+
   MapDevInfo := TMapDevInfo.Create();
   ListDevInfo := TStringList.Create();
 
@@ -830,9 +922,13 @@ begin
   IsOnline := false;
   aiohttp := TFakeAsyncHTTP.Create(false);
   aiohttp.OnOpened:=@aiohttpAddHeader;
-  SyncthigServer:='http://127.0.0.1:8384/';
+
+  SyncthigHost:='127.0.0.1';
+  SyncthigPort:=8384;
+  SyncthigServer:=Format('http://%s:%d/', [SyncthigHost, SyncthigPort]);
+
   SyncthigExecPath:=GetSyncthigExecPath();
-  SyncthigHome:=GetSyncthigHome();
+  SyncthigHome:=GetSyncthigHomePath();
   APIKey:=ReadAPIKeyFromCfg();
 
   TimerStartOnStart.Enabled:=frmOptions.chRunSyncOnStart.Checked;
@@ -901,7 +997,7 @@ begin
   result := frmOptions.edPathToExecWithFilename.Text;
 end;
 
-function TCore.GetSyncthigHome: UTF8String;
+function TCore.GetSyncthigHomePath: UTF8String;
 begin
   //OLD: result := 'h:\Dat\syncthing\';
   result := frmOptions.edPathToConfigDir.Text;

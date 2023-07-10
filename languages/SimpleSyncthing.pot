@@ -165,6 +165,14 @@ msgstr ""
 msgid "actShowWeb"
 msgstr ""
 
+#: tmodulemain.actstaterun.caption
+msgid "actStateRun"
+msgstr ""
+
+#: tmodulemain.actstatestop.caption
+msgid "actStateStop"
+msgstr ""
+
 #: tmodulemain.mnserver.caption
 msgid "mnServer"
 msgstr ""

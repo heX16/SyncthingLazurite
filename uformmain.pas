@@ -4,6 +4,16 @@ unit uFormMain;
 
 {$mode objfpc}{$H+}
 
+{
+Dependency:
+
+
+Dependency old:
+* LNet https://github.com/almindor/lnet
+  пришлось отказаться - там утечка памяти (issue создал - #32)
+
+}
+
 interface
 
 uses

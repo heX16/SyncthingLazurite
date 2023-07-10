@@ -1,4 +1,5 @@
 object ModuleMain: TModuleMain
+  OnCreate = DataModuleCreate
   OldCreateOrder = False
   Height = 349
   HorizontalOffset = 409
@@ -1119,6 +1120,14 @@ object ModuleMain: TModuleMain
     object actCloseGUI: TAction
       Caption = 'actCloseGUI'
       OnExecute = actCloseGUIExecute
+    end
+    object actStateRun: TAction
+      Caption = 'actStateRun'
+      OnExecute = actStateRunExecute
+    end
+    object actStateStop: TAction
+      Caption = 'actStateStop'
+      OnExecute = actStateStopExecute
     end
   end
   object TimerUpdate: TTimer
