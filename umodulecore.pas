@@ -551,14 +551,12 @@ begin
   Self.HTTPClientPing.CallAction();
   *)
 
-  (*
   if not httpPingInProc and not Terminated then begin
     aiohttp.Get(SyncthigServer+'rest/system/ping', @httpPing, '', @httpPingInProc);
     if not IsOnline then
-      TimerPing.Interval:=10000 else
-      TimerPing.Interval:=1000;
+      TimerPing.Interval:=5000 else
+      TimerPing.Interval:=500;
   end;
-  *)
 end;
 
 procedure TCore.httpPing(Query: THttpQuery);
@@ -920,8 +918,10 @@ begin
   ListFolderInfo := TStringList.Create();
 
   IsOnline := false;
+
   aiohttp := TFakeAsyncHTTP.Create(false);
   aiohttp.OnOpened:=@aiohttpAddHeader;
+  aiohttp.ConnectTimeout:=1000;
 
   SyncthigHost:='127.0.0.1';
   SyncthigPort:=8384;

@@ -101,9 +101,11 @@ type
     OnOpened: THttpEvent;
     OnLoadDone: THttpEvent;
     OnError: THttpEvent;
+    ConnectTimeout: LongInt;
 
     // call from other threads.
     // `Callback` call in caller ('main') thread (not in this thread!).
+    // 'Callback' call the main thread. Main thread must have "Form" or just call "CheckSynchronize".
     procedure HttpMethod(Method: string; const URL: string; Callback: THttpCallbackEvent; AddHeaders: string = '';
       const Data: string = ''; InWorkFlagPtr: PBoolean = nil);
 
@@ -119,6 +121,7 @@ type
     // call from other threads.
     procedure Terminate;
 
+    procedure AfterConstruction; override;
     destructor Destroy; override;
   end;
 
@@ -133,6 +136,7 @@ type
     OnOpened: THttpEvent;
     OnLoadDone: THttpEvent;
     OnError: THttpEvent;
+    ConnectTimeout: LongInt;
 
     constructor Create(CreateSuspended: Boolean;
                        const StackSize: SizeUInt = DefaultStackSize);
@@ -184,7 +188,7 @@ end;
 constructor TFakeAsyncHTTP.Create(CreateSuspended: Boolean;
   const StackSize: SizeUInt);
 begin
-  // Empty
+  ConnectTimeout:=100;
 end;
 
 procedure TFakeAsyncHTTP.HttpMethod(Method: string; const URL: string;
@@ -193,7 +197,7 @@ procedure TFakeAsyncHTTP.HttpMethod(Method: string; const URL: string;
 var q: THttpQuery;
 begin
   q := THttpQuery.Create();
-  q.ConnectTimeout:=10;
+  q.ConnectTimeout:=ConnectTimeout;
   q.Method:=Method;
   q.Url:=URL;
   q.Data:=Data;
@@ -261,6 +265,7 @@ begin
 end;
 
 procedure THttpQuery.HttpRequest();
+var repeat_count: Integer;
 begin
   Session := THTTPSend.Create;
   try
@@ -277,7 +282,13 @@ begin
       WriteStrToStream(Session.Document, Data);
     Data := '';
 
-    Connected := Session.HTTPMethod(Method, Url);
+    for repeat_count:=1 to 5 do
+    begin
+      Connected := Session.HTTPMethod(Method, Url);
+      if (not Connected) and (Session.Sock.LastError = 10060) then
+        continue;
+      break;
+    end;
     Status := Session.ResultCode;
     if Connected then
     begin
@@ -340,7 +351,6 @@ begin
   //off: q := THttpQueryForThreadHTTP(Query); - use 'absolute' keyword.
 
   if q.Callback <> nil then
-    // 'put' call to main thread. Main thread must have "Form" or just call "CheckSynchronize"
     Application.QueueAsyncCall(TDataEvent(q.Callback), IntPtr(q));
 end;
 
@@ -459,6 +469,12 @@ begin
   // wake up and get out!
   if EventWaitWork <> nil then
     EventWaitWork.SetEvent();
+end;
+
+procedure TAsyncHTTP.AfterConstruction;
+begin
+  inherited AfterConstruction;
+  ConnectTimeout:=100;
 end;
 
 end.
