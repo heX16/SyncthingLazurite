@@ -1070,11 +1070,13 @@ object ModuleMain: TModuleMain
     object mnStateRun: TMenuItem
       Caption = 'mnStateRun'
       Checked = True
+      Enabled = False
       GroupIndex = 1
       RadioItem = True
     end
     object mnStateStop: TMenuItem
       Caption = 'mnStateStop'
+      Enabled = False
       GroupIndex = 1
       RadioItem = True
     end
@@ -1092,6 +1094,9 @@ object ModuleMain: TModuleMain
     end
     object miExit: TMenuItem
       Action = Core.actExit
+    end
+    object MenuItem19: TMenuItem
+      Action = actCloseGUI
     end
   end
   object ActionListGUI: TActionList
@@ -1128,6 +1133,14 @@ object ModuleMain: TModuleMain
     object actStateStop: TAction
       Caption = 'actStateStop'
       OnExecute = actStateStopExecute
+    end
+    object actShowEvents: TAction
+      Caption = 'actShowEvents'
+      OnExecute = actShowEventsExecute
+    end
+    object actShowConsole: TAction
+      Caption = 'actShowConsole'
+      OnExecute = actShowConsoleExecute
     end
   end
   object TimerUpdate: TTimer
@@ -1168,11 +1181,32 @@ object ModuleMain: TModuleMain
         Action = Core.actExit
       end
     end
+    object mnView: TMenuItem
+      Caption = 'mnView'
+      object MenuItem14: TMenuItem
+        Action = actShowConsole
+      end
+      object MenuItem16: TMenuItem
+        Action = actShowEvents
+      end
+      object MenuItem17: TMenuItem
+        Action = actShowRestView
+      end
+      object Separator1: TMenuItem
+        Caption = '-'
+      end
+      object MenuItem10: TMenuItem
+        Action = actShowWeb
+      end
+      object Separator2: TMenuItem
+        Caption = '-'
+      end
+      object MenuItem18: TMenuItem
+        Action = actShowOptions
+      end
+    end
     object MenuItem7: TMenuItem
       Action = actShowOptions
-    end
-    object MenuItem10: TMenuItem
-      Action = actShowRestView
     end
     object MenuItem12: TMenuItem
       Action = actAbout

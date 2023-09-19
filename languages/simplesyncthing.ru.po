@@ -42,14 +42,14 @@ msgstr "Завершить"
 
 #: tfrmabout.caption
 msgid "About"
-msgstr ""
+msgstr "About"
 
 #: tfrmabout.lbabouttext.caption
 msgid "lbAboutText"
 msgstr ""
 
 #: tfrmabout.lbrepurl.editlabel.caption
-msgid "Source code reposytory:"
+msgid "Source code repository:"
 msgstr ""
 
 #: tfrmabout.lbrepurl.text
@@ -106,16 +106,20 @@ msgstr ""
 msgid "chRunSyncOnStart"
 msgstr "Запускать синхронизацию при старте программы"
 
+#: tfrmoptions.chuseproxyoutputforfixbug.caption
+msgid "chUseProxyOutputForFixBug"
+msgstr ""
+
 #: tfrmoptions.edapikey.editlabel.caption
 msgid "edAPIKey"
 msgstr "API Key"
 
-#: tfrmoptions.edpathtoconfig.editlabel.caption
-msgid "edPathToConfig"
+#: tfrmoptions.edpathtoconfigdir.editlabel.caption
+msgid "edPathToConfigDir"
 msgstr "Путь к конфигурации"
 
-#: tfrmoptions.edpathtoexec.editlabel.caption
-msgid "edPathToExec"
+#: tfrmoptions.edpathtoexecwithfilename.editlabel.caption
+msgid "edPathToExecWithFilename"
 msgstr "Путь к программе"
 
 #: tfrmoptions.groupbox1.caption
@@ -132,7 +136,7 @@ msgstr ""
 
 #: tmodulemain.actcopyselecteddevid.caption
 msgid "actCopySelectedDevID"
-msgstr ""
+msgstr "Copy Dev ID"
 
 #: tmodulemain.actshowoptions.caption
 msgid "actShowOptions"

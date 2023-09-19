@@ -1,15 +1,15 @@
 object frmAbout: TfrmAbout
-  Left = 171
-  Height = 300
-  Top = 407
+  Left = 330
+  Height = 375
+  Top = 259
   Width = 400
   Caption = 'About'
-  ClientHeight = 300
+  ClientHeight = 375
   ClientWidth = 400
   DesignTimePPI = 120
   OnCreate = FormCreate
   Position = poMainFormCenter
-  LCLVersion = '2.2.2.0'
+  LCLVersion = '2.2.6.0'
   object lbNameAndVer: TLabel
     Left = 10
     Height = 30
@@ -22,25 +22,14 @@ object frmAbout: TfrmAbout
     ParentColor = False
     ParentFont = False
   end
-  object lbAboutText: TLabel
-    Left = 10
-    Height = 80
-    Top = 90
-    Width = 375
-    AutoSize = False
-    Caption = 'lbAboutText'
-    ParentColor = False
-    ParentFont = False
-    WordWrap = True
-  end
   object lbRepURL: TLabeledEdit
-    Left = 10
+    Left = 8
     Height = 28
-    Top = 200
+    Top = 120
     Width = 375
     EditLabel.Height = 20
     EditLabel.Width = 375
-    EditLabel.Caption = 'Source code reposytory:'
+    EditLabel.Caption = 'Source code repository:'
     EditLabel.ParentColor = False
     EditLabel.ParentFont = False
     ParentFont = False
@@ -64,5 +53,22 @@ object frmAbout: TfrmAbout
     Caption = 'Author of localization: -'
     ParentColor = False
     ParentFont = False
+  end
+  object lbAboutText: TMemo
+    Left = 8
+    Height = 176
+    Top = 160
+    Width = 375
+    Lines.Strings = (
+      'This is GUI client for Syncthing application.'
+      ''
+      'https://syncthing.net/'
+      ''
+      'About Syncthing project:'
+      'Syncthing is an application that lets you synchronize your files across multiple devices. This means the creation, modification or deletion of files on one machine will automatically be replicated to your other devices. We believe your data is your data alone and you deserve to choose where it is stored. Therefore Syncthing does not upload your data to the cloud but exchanges your data across your machines as soon as they are online at the same time.'
+    )
+    ReadOnly = True
+    ScrollBars = ssVertical
+    TabOrder = 1
   end
 end

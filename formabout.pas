@@ -16,8 +16,8 @@ type
     lbAuthor: TLabel;
     lbTranslateAuthor: TLabel;
     lbNameAndVer: TLabel;
-    lbAboutText: TLabel;
     lbRepURL: TLabeledEdit;
+    lbAboutText: TMemo;
     procedure FormCreate(Sender: TObject);
   private
     { private declarations }
@@ -71,7 +71,7 @@ end;
 
 procedure TfrmAbout.FormCreate(Sender: TObject);
 begin
-  lbNameAndVer.Caption:='OpenModbusTool';
+  lbNameAndVer.Caption:='Simple Syncthing';
   lbNameAndVer.Caption:=lbNameAndVer.Caption + '   ver.'+GetMyVersion(4);
   lbAuthor.Caption:='Author: heXor';
 end;

@@ -19,6 +19,8 @@ type
     actCopySelectedDevID: TAction;
     actAbout: TAction;
     actCloseGUI: TAction;
+    actShowConsole: TAction;
+    actShowEvents: TAction;
     actStateStop: TAction;
     actStateRun: TAction;
     actShowWeb: TAction;
@@ -34,6 +36,14 @@ type
     MenuItem11: TMenuItem;
     MenuItem12: TMenuItem;
     MenuItem13: TMenuItem;
+    MenuItem14: TMenuItem;
+    MenuItem16: TMenuItem;
+    MenuItem17: TMenuItem;
+    MenuItem18: TMenuItem;
+    MenuItem19: TMenuItem;
+    Separator2: TMenuItem;
+    Separator1: TMenuItem;
+    mnView: TMenuItem;
     mnShowWeb: TMenuItem;
     N2: TMenuItem;
     N1: TMenuItem;
@@ -60,6 +70,8 @@ type
     procedure actAboutExecute(Sender: TObject);
     procedure actCloseGUIExecute(Sender: TObject);
     procedure actCopySelectedDevIDExecute(Sender: TObject);
+    procedure actShowConsoleExecute(Sender: TObject);
+    procedure actShowEventsExecute(Sender: TObject);
     procedure actShowOptionsExecute(Sender: TObject);
     procedure actShowRestViewExecute(Sender: TObject);
     procedure actShowWebExecute(Sender: TObject);
@@ -221,6 +233,32 @@ begin
   if (Length(CpText)>1) and (CpText[1]=#13) then
     Delete(CpText, 1, 1);
   Clipboard.AsText:=CpText;
+end;
+
+procedure TModuleMain.actShowConsoleExecute(Sender: TObject);
+begin
+  if frmMain.edConsole.Visible then
+  begin
+    frmMain.edConsole.Visible := false;
+    frmMain.Splitter1.Visible := false;
+  end else
+  begin
+    frmMain.Splitter1.Visible := true;
+    frmMain.edConsole.Visible := true;
+  end;
+end;
+
+procedure TModuleMain.actShowEventsExecute(Sender: TObject);
+begin
+  if frmMain.grpEvents.Visible then
+  begin
+    frmMain.grpEvents.Visible := false;
+    frmMain.Splitter3.Visible := false;
+  end else
+  begin
+    frmMain.Splitter3.Visible := true;
+    frmMain.grpEvents.Visible := true;
+  end;
 end;
 
 procedure TModuleMain.actAboutExecute(Sender: TObject);

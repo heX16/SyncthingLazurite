@@ -97,17 +97,17 @@ object frmMain: TfrmMain
   end
   object grpDevices: TGroupBox
     Left = 0
-    Height = 358
+    Height = 240
     Top = 50
     Width = 162
     Align = alLeft
     Caption = 'grpDevices'
-    ClientHeight = 333
+    ClientHeight = 215
     ClientWidth = 158
     TabOrder = 3
     object treeDevices: TVirtualStringTree
       Left = 0
-      Height = 333
+      Height = 215
       Top = 0
       Width = 158
       Align = alClient
@@ -129,19 +129,19 @@ object frmMain: TfrmMain
   end
   object grpFolders: TGroupBox
     Left = 168
-    Height = 358
+    Height = 240
     Top = 50
-    Width = 204
-    Align = alLeft
+    Width = 383
+    Align = alClient
     Caption = 'grpFolders'
-    ClientHeight = 333
-    ClientWidth = 200
+    ClientHeight = 215
+    ClientWidth = 379
     TabOrder = 4
     object treeFolders: TVirtualStringTree
       Left = 0
-      Height = 333
+      Height = 215
       Top = 0
-      Width = 200
+      Width = 379
       Align = alClient
       DefaultText = 'Node'
       Header.AutoSizeIndex = 0
@@ -153,25 +153,26 @@ object frmMain: TfrmMain
   end
   object Splitter2: TSplitter
     Left = 162
-    Height = 358
+    Height = 240
     Top = 50
     Width = 6
   end
   object grpEvents: TGroupBox
-    Left = 378
-    Height = 358
-    Top = 50
-    Width = 173
-    Align = alClient
+    Left = 0
+    Height = 112
+    Top = 296
+    Width = 551
+    Align = alBottom
     Caption = 'grpEvents'
-    ClientHeight = 333
-    ClientWidth = 169
+    ClientHeight = 87
+    ClientWidth = 547
     TabOrder = 6
+    Visible = False
     object listEvents: TMemo
       Left = 0
-      Height = 333
+      Height = 87
       Top = 0
-      Width = 169
+      Width = 547
       Align = alClient
       MaxLength = 512
       ReadOnly = True
@@ -181,10 +182,14 @@ object frmMain: TfrmMain
     end
   end
   object Splitter3: TSplitter
-    Left = 372
-    Height = 358
-    Top = 50
-    Width = 6
+    Cursor = crVSplit
+    Left = 0
+    Height = 6
+    Top = 290
+    Width = 551
+    Align = alBottom
+    ResizeAnchor = akBottom
+    Visible = False
   end
   object btnShowWeb: TButton
     Left = 72

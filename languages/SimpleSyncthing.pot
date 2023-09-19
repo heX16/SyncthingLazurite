@@ -41,12 +41,8 @@ msgstr ""
 msgid "About"
 msgstr ""
 
-#: tfrmabout.lbabouttext.caption
-msgid "lbAboutText"
-msgstr ""
-
 #: tfrmabout.lbrepurl.editlabel.caption
-msgid "Source code reposytory:"
+msgid "Source code repository:"
 msgstr ""
 
 #: tfrmabout.lbrepurl.text
@@ -153,6 +149,14 @@ msgstr ""
 msgid "actCopySelectedDevID"
 msgstr ""
 
+#: tmodulemain.actshowconsole.caption
+msgid "actShowConsole"
+msgstr ""
+
+#: tmodulemain.actshowevents.caption
+msgid "actShowEvents"
+msgstr ""
+
 #: tmodulemain.actshowoptions.caption
 msgid "actShowOptions"
 msgstr ""
@@ -183,6 +187,10 @@ msgstr ""
 
 #: tmodulemain.mnstatestop.caption
 msgid "mnStateStop"
+msgstr ""
+
+#: tmodulemain.mnview.caption
+msgid "mnView"
 msgstr ""
 
 #: uformmain.caddress
