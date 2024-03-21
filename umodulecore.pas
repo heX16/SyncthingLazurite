@@ -35,18 +35,20 @@ type
     procedure Update(NewJson: TJSONObject); virtual;
   end;
 
-  // folders info 'record'
 
   { TFolderInfo }
 
+  // folders info 'record'
   TFolderInfo = class
     Json: TJSONObject;
     Name: string;
     Id: string;
+    Path: string;
 
     constructor Create(SetJson: TJSONObject);
     destructor Destroy(); override;
     procedure Update(NewJson: TJSONObject); virtual;
+    function DirectoryExists(): Boolean;
   end;
 
   TMapDevInfo = specialize THashMap<TDevId, TDevInfo, THashFuncString>;
@@ -329,6 +331,26 @@ begin
     Id:=Json.Get('id', 'ERROR');
     if Name='' then
       Name:=Id;
+    Path:=Json.Get('path', '');
+  end;
+end;
+
+function TFolderInfo.DirectoryExists: Boolean;
+var Info: TSearchRec;
+begin
+  Result := DirectoryExistsUTF8(self.Path);
+  if Result then
+  begin
+    try
+      If FindFirstUTF8('*', faAnyFile, Info)=0
+      then
+        FindCloseUTF8(Info)
+      else
+        Result := false;
+    except
+      on EFileNotFoundException do Result := false;
+      on EDirectoryNotFoundException do Result := false;
+    end;
   end;
 end;
 
@@ -1023,7 +1045,7 @@ begin
       //'-no-console '+
       '-no-browser '+
       '-home=' + SyncthigHome + ' ' +
-      ' | find /v " FAKE_FILTER_STRING_FOR_FIND_REDIRECT_COMMAND " "';
+      ' | find /v " empty_find_just_for_redirect_stdio_00686558 " "';
   end else
   begin
     ProcessSyncthing.Executable := SyncthigExecPath;

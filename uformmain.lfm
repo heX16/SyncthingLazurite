@@ -149,6 +149,7 @@ object frmMain: TfrmMain
       Header.MainColumn = -1
       TabOrder = 0
       OnGetText = treeFoldersGetText
+      OnGetImageIndex = treeFoldersGetImageIndex
     end
   end
   object Splitter2: TSplitter

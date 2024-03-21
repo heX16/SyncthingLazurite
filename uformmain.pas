@@ -84,6 +84,9 @@ type
       var Ghosted: Boolean; var ImageIndex: Integer);
     procedure treeDevicesGetText(Sender: TBaseVirtualTree; Node: PVirtualNode;
       Column: TColumnIndex; TextType: TVSTTextType; var CellText: String);
+    procedure treeFoldersGetImageIndex(Sender: TBaseVirtualTree;
+      Node: PVirtualNode; Kind: TVTImageKind; Column: TColumnIndex;
+      var Ghosted: Boolean; var ImageIndex: Integer);
     procedure treeFoldersGetText(Sender: TBaseVirtualTree; Node: PVirtualNode;
       Column: TColumnIndex; TextType: TVSTTextType; var CellText: String);
   private
@@ -142,16 +145,16 @@ procedure TfrmMain.treeDevicesGetHint(Sender: TBaseVirtualTree;
   Node: PVirtualNode; Column: TColumnIndex;
   var LineBreakStyle: TVTTooltipLineBreakStyle; var HintText: String);
 var
-  d: TDevInfo;
+  item: TDevInfo;
 begin
   HintText := '';
-  if Core.MapDevInfo.GetValue(Core.ListDevInfo[Node^.Index], d) then
+  if Core.MapDevInfo.GetValue(Core.ListDevInfo[Node^.Index], item) then
   begin
-    HintText := HintText + d.Id;
-    if (not d.Connected) and (DaysBetween(d.LastSeen, Now()) < 31*6) then
-      HintText :=  HintText + #13 + cOffline + ': ' + IntToStr(DaysBetween(d.LastSeen, Now())) + ' ' + cDays;
-    if d.Connected then
-      HintText :=  HintText + #13 + cAddress + ': ' + d.Address;
+    HintText := HintText + item.Id;
+    if (not item.Connected) and (DaysBetween(item.LastSeen, Now()) < 31*6) then
+      HintText :=  HintText + #13 + cOffline + ': ' + IntToStr(DaysBetween(item.LastSeen, Now())) + ' ' + cDays;
+    if item.Connected then
+      HintText :=  HintText + #13 + cAddress + ': ' + item.Address;
   end;
 end;
 
@@ -159,16 +162,36 @@ procedure TfrmMain.treeDevicesGetImageIndex(Sender: TBaseVirtualTree;
   Node: PVirtualNode; Kind: TVTImageKind; Column: TColumnIndex;
   var Ghosted: Boolean; var ImageIndex: Integer);
 var
-  d: TDevInfo;
+  item: TDevInfo;
 begin
   ImageIndex:=0;
-  if Core.MapDevInfo.GetValue(Core.ListDevInfo[Node^.Index], d) then
+  if Core.MapDevInfo.GetValue(Core.ListDevInfo[Node^.Index], item) then
   begin
-    if d.Connected then
+    if item.Connected then
       ImageIndex:=1;
 
-    if d.Paused then
+    if item.Paused then
       ImageIndex:=2;
+  end;
+end;
+
+procedure TfrmMain.treeFoldersGetImageIndex(Sender: TBaseVirtualTree;
+  Node: PVirtualNode; Kind: TVTImageKind; Column: TColumnIndex;
+  var Ghosted: Boolean; var ImageIndex: Integer);
+var
+  item: TFolderInfo;
+begin
+  // WIP
+  ImageIndex:=0;
+  if Core.MapFolderInfo.GetValue(Core.ListFolderInfo[Node^.Index], item) then
+  begin
+    (*
+    if not item.DirectoryExists() then
+      ImageIndex:=1;
+
+    if item.Paused then
+      ImageIndex:=2;
+    *)
   end;
 end;
 
@@ -183,12 +206,17 @@ begin
     CellText := 'ERROR';
 end;
 
+
 procedure TfrmMain.treeFoldersGetText(Sender: TBaseVirtualTree;
   Node: PVirtualNode; Column: TColumnIndex; TextType: TVSTTextType;
   var CellText: String);
 begin
   if Node^.Index < Core.ListFolderInfo.Count then
-    CellText := Core.MapFolderInfo[Core.ListFolderInfo[Node^.Index]].Name else
+  begin
+    CellText := Core.MapFolderInfo[Core.ListFolderInfo[Node^.Index]].Name;
+    if not Core.MapFolderInfo[Core.ListFolderInfo[Node^.Index]].DirectoryExists() then
+      CellText := 'NOT FOUND! ' + CellText;
+  end else
     CellText := 'ERROR';
 end;
 
