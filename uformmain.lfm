@@ -18,6 +18,7 @@ object frmMain: TfrmMain
     Top = 0
     Width = 551
     Align = alTop
+    BevelOuter = bvNone
     ClientHeight = 50
     ClientWidth = 551
     TabOrder = 0
