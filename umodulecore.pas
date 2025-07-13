@@ -177,6 +177,8 @@ function HttpQueryToJson(Query: THttpQuery; out Json: TJSONData): boolean;
 
 function JsonStrToDateTime(Str: AnsiString; out dt: TDateTime): boolean;
 
+function IsLocalIP(const IP: string): boolean;
+
 implementation
 
 uses
@@ -219,6 +221,111 @@ begin
   finally
     re.Free();
   end;
+end;
+
+function IsLocalIP(const IP: string): boolean;
+var
+  TrimmedIP: string;
+  B1, B2, B3, B4: byte;
+  Parts: array[0..3] of string;
+  PartCount: integer;
+  i: integer;
+  Part: string;
+  PartValue: integer;
+begin
+  Result := false;
+  TrimmedIP := Trim(IP);
+  
+  if TrimmedIP = '' then
+    Exit;
+  
+  // Check if it looks like IPv6 (contains colon)
+  if Pos(':', TrimmedIP) > 0 then
+  begin
+    // Simple IPv6 checks
+    
+    // Check for ::1 (localhost)
+    if (TrimmedIP = '::1') then
+      Exit(true);
+    
+    // Check for fe80:: (link-local)
+    if (Length(TrimmedIP) >= 5) and (LowerCase(Copy(TrimmedIP, 1, 5)) = 'fe80:') then
+      Exit(true);
+    
+    // Check for fc00:: and fd00:: (unique local)
+    if (Length(TrimmedIP) >= 5) and 
+       ((LowerCase(Copy(TrimmedIP, 1, 5)) = 'fc00:') or (LowerCase(Copy(TrimmedIP, 1, 5)) = 'fd00:')) then
+      Exit(true);
+    
+    // For other IPv6 addresses, assume they are not local
+    Exit(false);
+  end;
+  
+  // Parse IPv4 manually
+  PartCount := 0;
+  Part := '';
+  
+  for i := 1 to Length(TrimmedIP) do
+  begin
+    if TrimmedIP[i] = '.' then
+    begin
+      if (PartCount >= 4) or (Part = '') then
+        Exit(false); // Invalid format
+      
+      if not TryStrToInt(Part, PartValue) or (PartValue < 0) or (PartValue > 255) then
+        Exit(false); // Invalid number
+      
+      Parts[PartCount] := Part;
+      Inc(PartCount);
+      Part := '';
+    end
+    else if TrimmedIP[i] in ['0'..'9'] then
+    begin
+      Part := Part + TrimmedIP[i];
+    end
+    else
+    begin
+      Exit(false); // Invalid character
+    end;
+  end;
+  
+  // Add the last part
+  if (PartCount <> 3) or (Part = '') then
+    Exit(false); // Should have exactly 4 parts
+  
+  if not TryStrToInt(Part, PartValue) or (PartValue < 0) or (PartValue > 255) then
+    Exit(false); // Invalid number
+  
+  Parts[3] := Part;
+  
+  // Convert to bytes
+  B1 := StrToInt(Parts[0]);
+  B2 := StrToInt(Parts[1]);
+  B3 := StrToInt(Parts[2]);
+  B4 := StrToInt(Parts[3]);
+  
+  // Check IPv4 private/local ranges
+  // 127.0.0.0/8 (localhost)
+  if B1 = 127 then
+    Exit(true);
+  
+  // 10.0.0.0/8 (private)
+  if B1 = 10 then
+    Exit(true);
+  
+  // 172.16.0.0/12 (private)
+  if (B1 = 172) and (B2 >= 16) and (B2 <= 31) then
+    Exit(true);
+  
+  // 192.168.0.0/16 (private)
+  if (B1 = 192) and (B2 = 168) then
+    Exit(true);
+  
+  // 169.254.0.0/16 (link-local)
+  if (B1 = 169) and (B2 = 254) then
+    Exit(true);
+  
+  Result := false;
 end;
 
 function HttpQueryToJson(Query: THttpQuery; out Json: TJSONData): boolean;

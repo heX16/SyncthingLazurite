@@ -116,6 +116,9 @@ uses
   uFormOptions,
   uFormMain;
 
+resourcestring
+  rsLocal = ' (local)';
+
 { TModuleMain }
 
 procedure TModuleMain.TrayIconDblClick(Sender: TObject);
@@ -310,6 +313,7 @@ var
   i: Core.MapDevInfo.TIterator;
   OnlineCount: integer;
   OnlineList: string;
+  DeviceName: string;
 const
   MaxItemsInHint = 5;
 begin
@@ -349,7 +353,12 @@ begin
         if i.GetMutable()^.Connected then begin
           inc(OnlineCount);
           if OnlineCount <= MaxItemsInHint then
-            OnlineList := OnlineList + i.Data.Value.Name + #13;
+          begin
+            DeviceName := i.Data.Value.Name;
+            if IsLocalIP(i.Data.Value.Address) then
+              DeviceName := DeviceName + rsLocal;
+            OnlineList := OnlineList + DeviceName + #13;
+          end;
         end;
       until not i.Next;
     finally
