@@ -1149,25 +1149,25 @@ begin
       GetEnvironmentVariable('WINDIR')+'\system32\cmd.exe';
     ProcessSyncthing.Parameters.Text :=
       '/C "' + SyncthigExecPath + ' ' +
-      //'-no-console '+
-      '-no-browser '+
-      '-home=' + SyncthigHome + ' ' +
+      //'--no-console '+
+      '--no-browser '+
+      '--home=' + SyncthigHome + ' ' +
       ' | find /v " empty_find_just_for_redirect_stdio_00686558 " "';
   end else
   begin
     ProcessSyncthing.Executable := SyncthigExecPath;
     ProcessSyncthing.Parameters.Text :=
-      //'-no-console '+
-      '-no-browser '+
-      '-home=' + SyncthigHome;
+      //'--no-console '+
+      '--no-browser '+
+      '--home=' + SyncthigHome;
   end;
 
   {$ELSE}
   //todo: WIP: FillSyncthingExecPath linux
   ProcessSyncthing.Executable := FindSyncthigPath();
   ProcessSyncthing.Parameters.Clear;
-  ProcessSyncthing.Parameters.Add('-home=' + SyncthigHome);
-  ProcessSyncthing.Parameters.Add('-no-browser');
+  ProcessSyncthing.Parameters.Add('--home=' + SyncthigHome);
+  ProcessSyncthing.Parameters.Add('--no-browser');
   {$ENDIF}
 end;
 
@@ -1175,7 +1175,7 @@ procedure TCore.FillSupportExecPath();
 begin
   //todo: WIP: FillSupportExecPath
   ProcessSupport.Executable := 'D:\NetDrive\AppsPortableHex\Programs\_Net\syncthing\syncthing-inotify.exe';
-  ProcessSupport.Parameters.Text := '-home=' + SyncthigHome;
+  ProcessSupport.Parameters.Text := '--home=' + SyncthigHome;
 end;
 
 end.

@@ -7,9 +7,9 @@ object frmAbout: TfrmAbout
   ClientHeight = 375
   ClientWidth = 400
   DesignTimePPI = 120
-  OnCreate = FormCreate
   Position = poMainFormCenter
-  LCLVersion = '2.2.6.0'
+  LCLVersion = '4.2.0.0'
+  OnCreate = FormCreate
   object lbNameAndVer: TLabel
     Left = 10
     Height = 30

@@ -42,7 +42,7 @@ uses
 function GetMyVersion(VerCount: Byte = 4):string;
 type
   TVerInfo=packed record
-    Nevazhno: array[0..47] of byte; // ненужные нам 48 байт
+    OtherBytes: array[0..47] of byte; // ненужные нам 48 байт
     Minor,Major,Build,Release: word; // а тут версия
   end;
 var
