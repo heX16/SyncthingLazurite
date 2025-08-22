@@ -50,6 +50,9 @@ uses
   uModuleCore, VirtualTrees, Forms, Controls,
   StdCtrls, ExtCtrls, Graphics;
 
+const
+  cDevListAdditionalHeight = 8;
+
 type
 
   { TfrmMain }
@@ -236,7 +239,7 @@ begin
   begin
     TargetCanvas.Font := Sender.Font;
     NodeHeight := (Sender as TVirtualStringTree).ComputeNodeHeight(
-        TargetCanvas, Node, 0, Core.ListDev_GetText(Node^.Index) + ' ___');
+        TargetCanvas, Node, 0, Core.ListDev_GetText(Node^.Index) + ' ___') + cDevListAdditionalHeight;
   end;
   // else use default height
 end;
@@ -245,7 +248,7 @@ procedure TfrmMain.treeDevicesResize(Sender: TObject);
 begin
   with Sender as TVirtualStringTree do
   begin
-    Header.Columns[0].Width:=ClientWidth;
+    Header.Columns[0].Width:=Max(ClientWidth, Header.Columns[0].MinWidth);
   end;
 end;
 

@@ -116,8 +116,9 @@ object frmMain: TfrmMain
       Header.AutoSizeIndex = -1
       Header.Columns = <      
         item
+          MinWidth = 150
           Position = 0
-          Width = 133
+          Width = 150
         end>
       Header.Options = [hoAutoResize, hoColumnResize, hoDrag]
       HintMode = hmHint
