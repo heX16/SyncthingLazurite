@@ -105,6 +105,9 @@ type
     OutputChankStr: UTF8String;
   public
 
+    // Flag that core is inited
+    Inited: boolean;
+
     // State (FSM)
     //TODO: WIP!
     State: (stUnknown, stBrokenAndDisabled, stStopped, stLaunching, stWork, stStopping, stInstantStopped);
@@ -143,6 +146,8 @@ type
     procedure EventOnline(); virtual;
     procedure EventOffline(); virtual;
 
+    function ListDev_GetText(NodeIndex: Cardinal): String;
+
     function GetSyncthigExecPath(): UTF8String; virtual;
     function GetSyncthigHomePath(): UTF8String; virtual;
     function ReadAPIKeyFromCfg(): string; virtual;
@@ -177,7 +182,7 @@ function HttpQueryToJson(Query: THttpQuery; out Json: TJSONData): boolean;
 
 function JsonStrToDateTime(Str: AnsiString; out dt: TDateTime): boolean;
 
-function IsLocalIP(const IP: string): boolean;
+function IsLocalIP(IP: string): boolean;
 
 implementation
 
@@ -223,9 +228,8 @@ begin
   end;
 end;
 
-function IsLocalIP(const IP: string): boolean;
+function IsLocalIP(IP: string): boolean;
 var
-  TrimmedIP: string;
   B1, B2, B3, B4: byte;
   Parts: array[0..3] of string;
   PartCount: integer;
@@ -234,27 +238,27 @@ var
   PartValue: integer;
 begin
   Result := false;
-  TrimmedIP := Trim(IP);
+  IP := LowerCase(Trim(IP));
   
-  if TrimmedIP = '' then
+  if IP = '' then
     Exit;
   
   // Check if it looks like IPv6 (contains colon)
-  if Pos(':', TrimmedIP) > 0 then
+  if Pos(':', IP) > 0 then
   begin
     // Simple IPv6 checks
     
     // Check for ::1 (localhost)
-    if (TrimmedIP = '::1') then
+    if (IP = '::1') then
       Exit(true);
     
     // Check for fe80:: (link-local)
-    if (Length(TrimmedIP) >= 5) and (LowerCase(Copy(TrimmedIP, 1, 5)) = 'fe80:') then
+    if (Length(IP) >= 5) and (LeftStr(IP, 5) = 'fe80:') then
       Exit(true);
     
-    // Check for fc00:: and fd00:: (unique local)
-    if (Length(TrimmedIP) >= 5) and 
-       ((LowerCase(Copy(TrimmedIP, 1, 5)) = 'fc00:') or (LowerCase(Copy(TrimmedIP, 1, 5)) = 'fd00:')) then
+    // Check for ULA (fc00:: and fd00::) (unique local address)
+    if (Length(IP) >= 2) and
+       ((LeftStr(IP, 2) = 'fc') or (LeftStr(IP, 2) = 'fd')) then
       Exit(true);
     
     // For other IPv6 addresses, assume they are not local
@@ -265,9 +269,9 @@ begin
   PartCount := 0;
   Part := '';
   
-  for i := 1 to Length(TrimmedIP) do
+  for i := 1 to Length(IP) do
   begin
-    if TrimmedIP[i] = '.' then
+    if IP[i] = '.' then
     begin
       if (PartCount >= 4) or (Part = '') then
         Exit(false); // Invalid format
@@ -279,9 +283,9 @@ begin
       Inc(PartCount);
       Part := '';
     end
-    else if TrimmedIP[i] in ['0'..'9'] then
+    else if IP[i] in ['0'..'9'] then
     begin
-      Part := Part + TrimmedIP[i];
+      Part := Part + IP[i];
     end
     else
     begin
@@ -1062,6 +1066,8 @@ begin
 
   TimerStartOnStart.Enabled:=frmOptions.chRunSyncOnStart.Checked;
   TimerPing.Enabled:=true;
+
+  Inited := true;
 end;
 
 procedure TCore.Done();
@@ -1069,6 +1075,8 @@ var
   i: TMapFolderInfo.TIterator;
   i2: TMapDevInfo.TIterator;
 begin
+  Inited := false;
+
   Terminated := true;
   TimerPing.Enabled:=false;
   FreeAndNil(aiohttp);
@@ -1111,6 +1119,16 @@ end;
 procedure TCore.EventOffline();
 begin
   frmMain.shStatusCircle.Brush.Color:=clPurple;
+end;
+
+function TCore.ListDev_GetText(NodeIndex: Cardinal): String;
+begin
+  if Core.Inited and
+     (NodeIndex < Self.ListDevInfo.Count)
+  then
+    ListDev_GetText := Self.MapDevInfo[Self.ListDevInfo[NodeIndex]].Name
+  else
+    ListDev_GetText := '';
 end;
 
 procedure TCore.AddStringToConsole(Str: UTF8String);

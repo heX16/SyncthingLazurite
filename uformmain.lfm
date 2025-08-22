@@ -4,14 +4,14 @@ object frmMain: TfrmMain
   Top = 324
   Width = 551
   Caption = 'frmMain'
-  ClientHeight = 553
+  ClientHeight = 578
   ClientWidth = 551
   DesignTimePPI = 120
   Menu = ModuleMain.MainMenu1
+  Position = poDefaultPosOnly
+  OnCreate = FormCreate
   OnDestroy = FormDestroy
   OnWindowStateChange = FormWindowStateChange
-  Position = poDefaultPosOnly
-  LCLVersion = '2.2.6.0'
   object Panel1: TPanel
     Left = 0
     Height = 50
@@ -28,8 +28,8 @@ object frmMain: TfrmMain
       Top = 8
       Width = 160
       Action = Core.actStart
-      OnClick = btnStartClick
       TabOrder = 0
+      OnClick = btnStartClick
     end
     object btnStop: TButton
       Left = 312
@@ -37,8 +37,8 @@ object frmMain: TfrmMain
       Top = 8
       Width = 163
       Action = Core.actStop
-      OnClick = btnStopClick
       TabOrder = 1
+      OnClick = btnStopClick
     end
     object shStatusCircle: TShape
       Left = 8
@@ -71,7 +71,7 @@ object frmMain: TfrmMain
   object edConsole: TMemo
     Left = 0
     Height = 140
-    Top = 413
+    Top = 438
     Width = 551
     Align = alBottom
     Color = clBlack
@@ -91,56 +91,66 @@ object frmMain: TfrmMain
     Cursor = crVSplit
     Left = 0
     Height = 5
-    Top = 408
+    Top = 433
     Width = 551
     Align = alBottom
     ResizeAnchor = akBottom
   end
   object grpDevices: TGroupBox
     Left = 0
-    Height = 240
+    Height = 265
     Top = 50
     Width = 162
     Align = alLeft
     Caption = 'grpDevices'
-    ClientHeight = 215
+    ClientHeight = 240
     ClientWidth = 158
     TabOrder = 3
     object treeDevices: TVirtualStringTree
       Left = 0
-      Height = 215
+      Height = 240
       Top = 0
       Width = 158
       Align = alClient
       DefaultText = 'Node'
-      Header.AutoSizeIndex = 0
-      Header.Columns = <>
-      Header.MainColumn = -1
+      Header.AutoSizeIndex = -1
+      Header.Columns = <      
+        item
+          Position = 0
+          Width = 133
+        end>
+      Header.Options = [hoAutoResize, hoColumnResize, hoDrag]
       HintMode = hmHint
       Images = ModuleMain.imgTreeViewIcon
       ParentShowHint = False
       PopupMenu = ModuleMain.menuDevList
+      RootNodeCount = 16
       ShowHint = True
       TabOrder = 0
+      TreeOptions.MiscOptions = [toAcceptOLEDrop, toFullRepaintOnResize, toInitOnSave, toToggleOnDblClick, toWheelPanning, toVariableNodeHeight, toEditOnClick]
+      TreeOptions.PaintOptions = [toShowButtons, toShowDropmark, toShowTreeLines, toThemeAware, toUseBlendedImages]
       TreeOptions.SelectionOptions = [toFullRowSelect, toMultiSelect, toAlwaysSelectNode]
       OnGetText = treeDevicesGetText
       OnGetImageIndex = treeDevicesGetImageIndex
       OnGetHint = treeDevicesGetHint
+      OnInitNode = treeDevicesInitNode
+      OnMeasureItem = treeDevicesMeasureItem
+      OnResize = treeDevicesResize
     end
   end
   object grpFolders: TGroupBox
     Left = 168
-    Height = 240
+    Height = 265
     Top = 50
     Width = 383
     Align = alClient
     Caption = 'grpFolders'
-    ClientHeight = 215
+    ClientHeight = 240
     ClientWidth = 379
     TabOrder = 4
     object treeFolders: TVirtualStringTree
       Left = 0
-      Height = 215
+      Height = 240
       Top = 0
       Width = 379
       Align = alClient
@@ -148,21 +158,23 @@ object frmMain: TfrmMain
       Header.AutoSizeIndex = 0
       Header.Columns = <>
       Header.MainColumn = -1
+      RootNodeCount = 16
       TabOrder = 0
+      TreeOptions.PaintOptions = [toShowButtons, toShowDropmark, toShowTreeLines, toThemeAware, toUseBlendedImages]
       OnGetText = treeFoldersGetText
       OnGetImageIndex = treeFoldersGetImageIndex
     end
   end
   object Splitter2: TSplitter
     Left = 162
-    Height = 240
+    Height = 265
     Top = 50
     Width = 6
   end
   object grpEvents: TGroupBox
     Left = 0
     Height = 112
-    Top = 296
+    Top = 321
     Width = 551
     Align = alBottom
     Caption = 'grpEvents'
@@ -187,7 +199,7 @@ object frmMain: TfrmMain
     Cursor = crVSplit
     Left = 0
     Height = 6
-    Top = 290
+    Top = 315
     Width = 551
     Align = alBottom
     ResizeAnchor = akBottom

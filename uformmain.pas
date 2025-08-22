@@ -43,6 +43,7 @@ interface
 
 uses
   Classes,
+  Math,
   SysUtils,
   //SynHighlighterJScript,
   //SynEdit,
@@ -73,6 +74,7 @@ type
     treeDevices: TVirtualStringTree;
     procedure btnStartClick(Sender: TObject);
     procedure btnStopClick(Sender: TObject);
+    procedure FormCreate(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
     procedure FormWindowStateChange(Sender: TObject);
     procedure miShowClick(Sender: TObject);
@@ -84,6 +86,11 @@ type
       var Ghosted: Boolean; var ImageIndex: Integer);
     procedure treeDevicesGetText(Sender: TBaseVirtualTree; Node: PVirtualNode;
       Column: TColumnIndex; TextType: TVSTTextType; var CellText: String);
+    procedure treeDevicesInitNode(Sender: TBaseVirtualTree; ParentNode,
+      Node: PVirtualNode; var InitialStates: TVirtualNodeInitStates);
+    procedure treeDevicesMeasureItem(Sender: TBaseVirtualTree;
+      TargetCanvas: TCanvas; Node: PVirtualNode; var NodeHeight: Integer);
+    procedure treeDevicesResize(Sender: TObject);
     procedure treeFoldersGetImageIndex(Sender: TBaseVirtualTree;
       Node: PVirtualNode; Kind: TVTImageKind; Column: TColumnIndex;
       var Ghosted: Boolean; var ImageIndex: Integer);
@@ -120,6 +127,12 @@ end;
 procedure TfrmMain.btnStopClick(Sender: TObject);
 begin
   Core.Stop();
+end;
+
+procedure TfrmMain.FormCreate(Sender: TObject);
+begin
+  Self.treeDevices.RootNodeCount:=0;
+  Self.treeFolders.RootNodeCount:=0;
 end;
 
 procedure TfrmMain.FormDestroy(Sender: TObject);
@@ -165,7 +178,9 @@ var
   item: TDevInfo;
 begin
   ImageIndex:=0;
-  if Core.MapDevInfo.GetValue(Core.ListDevInfo[Node^.Index], item) then
+  if Core.Inited and
+     (Column = 0) and
+     (Core.MapDevInfo.GetValue(Core.ListDevInfo[Node^.Index], item)) then
   begin
     if item.Connected then
       ImageIndex:=1;
@@ -198,12 +213,40 @@ end;
 procedure TfrmMain.treeDevicesGetText(Sender: TBaseVirtualTree;
   Node: PVirtualNode; Column: TColumnIndex; TextType: TVSTTextType;
   var CellText: String);
-var
-  d: TDevInfo;
 begin
-  if Node^.Index < Core.ListDevInfo.Count then
-    CellText := Core.MapDevInfo[Core.ListDevInfo[Node^.Index]].Name else
+  if Core.Inited and (Column = 0) then
+    CellText := Core.ListDev_GetText(Node^.Index) else
     CellText := 'ERROR';
+end;
+
+procedure TfrmMain.treeDevicesInitNode(Sender: TBaseVirtualTree; ParentNode,
+  Node: PVirtualNode; var InitialStates: TVirtualNodeInitStates);
+begin
+  // Multiline example:
+  // MultilineDemo.pas `TNodeForm.MLTreeInitNode`
+
+  // For nodes that need multiline text
+  Include(InitialStates, ivsMultiline);
+end;
+
+procedure TfrmMain.treeDevicesMeasureItem(Sender: TBaseVirtualTree;
+  TargetCanvas: TCanvas; Node: PVirtualNode; var NodeHeight: Integer);
+begin
+  if (Node <> nil) and Sender.MultiLine[Node] then
+  begin
+    TargetCanvas.Font := Sender.Font;
+    NodeHeight := (Sender as TVirtualStringTree).ComputeNodeHeight(
+        TargetCanvas, Node, 0, Core.ListDev_GetText(Node^.Index) + ' ___');
+  end;
+  // else use default height
+end;
+
+procedure TfrmMain.treeDevicesResize(Sender: TObject);
+begin
+  with Sender as TVirtualStringTree do
+  begin
+    Header.Columns[0].Width:=ClientWidth;
+  end;
 end;
 
 
@@ -211,7 +254,7 @@ procedure TfrmMain.treeFoldersGetText(Sender: TBaseVirtualTree;
   Node: PVirtualNode; Column: TColumnIndex; TextType: TVSTTextType;
   var CellText: String);
 begin
-  if Node^.Index < Core.ListFolderInfo.Count then
+  if Core.Inited and (Node^.Index < Core.ListFolderInfo.Count) then
   begin
     CellText := Core.MapFolderInfo[Core.ListFolderInfo[Node^.Index]].Name;
     if not Core.MapFolderInfo[Core.ListFolderInfo[Node^.Index]].DirectoryExists() then
