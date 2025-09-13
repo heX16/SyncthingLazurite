@@ -85,18 +85,13 @@ type
     procedure TimerUpdateTimer(Sender: TObject);
     procedure TrayIconDblClick(Sender: TObject);
   private
-    httpUpdateConnectionsInProc: boolean;
-    httpUpdateDeviceStatInProc: boolean;
-    httpUpdateFolderStatInProc: boolean;
-    httpEventsInProc: boolean;
-
     // https://docs.syncthing.net/rest/events-get.html
     // https://docs.syncthing.net/dev/events.html#event-types
     // LocalChangeDetected,RemoteChangeDetected
-    procedure httpEvents(Query: THttpQuery);
+    procedure httpEvents(Request: THttpRequest);
 
-    procedure httpUpdateDeviceStat(Query: THttpQuery);
-    procedure httpUpdateFolderStat(Query: THttpQuery);
+    procedure httpUpdateDeviceStat(Request: THttpRequest);
+    procedure httpUpdateFolderStat(Request: THttpRequest);
   public
 
   end;
@@ -129,7 +124,7 @@ begin
   frmMain.SetFocus();
 end;
 
-procedure TModuleMain.httpEvents(Query: THttpQuery);
+procedure TModuleMain.httpEvents(Request: THttpRequest);
 var
   JData: TJSONData;
   j: TJSONObject;
@@ -138,7 +133,7 @@ var
   s: UTF8String;
 begin
   //TODO: BUG 2022. AV. здесь падает. - дальше вызов FFFF происходит. че такое, хз...
-  if HttpQueryToJson(Query, JData) then
+  if HttpRequestToJson(Request, JData) then
   try
     for e in JData do
     begin
@@ -165,7 +160,7 @@ begin
   end;
 end;
 
-procedure TModuleMain.httpUpdateDeviceStat(Query: THttpQuery);
+procedure TModuleMain.httpUpdateDeviceStat(Request: THttpRequest);
 var
   JData: TJSONData;
   ij: TJSONEnum;
@@ -174,7 +169,7 @@ var
   d: TDevInfo;
 begin
   //todo: httpUpdateDeviceStat - move to Core!
-  if HttpQueryToJson(Query, JData) then
+  if HttpRequestToJson(Request, JData) then
   try
     // enum all device
     for ij in JData do
@@ -198,13 +193,13 @@ begin
   end;
 end;
 
-procedure TModuleMain.httpUpdateFolderStat(Query: THttpQuery);
+procedure TModuleMain.httpUpdateFolderStat(Request: THttpRequest);
 var
   JData: TJSONData;
   ij: TJSONEnum;
 begin
   //todo: httpUpdateDevice - move to Core!
-  if HttpQueryToJson(Query, JData) then
+  if HttpRequestToJson(Request, JData) then
   try
     {
     frmMain.FoldersItems.Clear();
@@ -320,25 +315,25 @@ const
   MaxItemsInHint = 5;
 begin
 
-  if not httpUpdateConnectionsInProc and Core.IsOnline then
-    Core.aiohttp.Get(Core.SyncthigServer+'rest/system/connections', @Core.httpUpdateConnections, '', @httpUpdateConnectionsInProc);
+  if Core.IsOnline and not Core.aiohttp.RequestInQueue('system-connections') then
+    Core.aiohttp.Get(Core.SyncthigServer+'rest/system/connections', @Core.httpUpdateConnections, '', 'system-connections');
 
-  if not httpUpdateFolderStatInProc and Core.IsOnline then
-    Core.aiohttp.Get(Core.SyncthigServer+'rest/stats/folder', @httpUpdateFolderStat, '', @httpUpdateFolderStatInProc);
+  if Core.IsOnline and not Core.aiohttp.RequestInQueue('stats-folder') then
+    Core.aiohttp.Get(Core.SyncthigServer+'rest/stats/folder', @httpUpdateFolderStat, '', 'stats-folder');
 
   //todo: уменьшить кол-во обращений
-  if not httpUpdateDeviceStatInProc and Core.IsOnline then
-    Core.aiohttp.Get(Core.SyncthigServer+'rest/stats/device', @httpUpdateDeviceStat, '', @httpUpdateDeviceStatInProc);
+  if Core.IsOnline and not Core.aiohttp.RequestInQueue('stats-device') then
+    Core.aiohttp.Get(Core.SyncthigServer+'rest/stats/device', @httpUpdateDeviceStat, '', 'stats-device');
 
   try
     //TODO: BUG 2022. AV. - здесь падает. отсюда начинается вызов проблемной цепочки.
-    if not httpEventsInProc and Core.IsOnline then
+    if Core.IsOnline and not Core.aiohttp.RequestInQueue('events') then
       Core.aiohttp.Get(Core.SyncthigServer+'rest/events'+'?'+
         'since='+IntToStr(Core.EventsLastId)+'&'+
         'limit='+IntToStr(10)+'&'+
         'timeout='+IntToStr(0),//+'&'+
         //'events=LocalChangeDetected,RemoteChangeDetected',
-        @httpEvents, '', @httpEventsInProc);
+        @httpEvents, '', 'events');
   except
     //TODO: BUG 2022. AV. поставил заглушку. посмотрим...
     frmMain.lbExcDetected.Visible:=true;

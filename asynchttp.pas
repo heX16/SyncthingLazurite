@@ -58,8 +58,8 @@ type
     destructor Destroy; override;
   end;
 
-  // Simple event signature
-  TEventHandler = procedure(Sender: TObject) of object;
+  // Event signature providing the request first, then sender (owner)
+  TAsyncHttpRequestEvent = procedure(Request: THttpRequest; Sender: TObject) of object;
 
   // Dictionary mapping operation name to request instance
   TDictHttpRequest = specialize THashMap<string, THttpRequest, THashFuncString>;
@@ -74,7 +74,7 @@ type
   TRequestWorkerThread = class(TThread)
   private
     FOwner: TAsyncHTTP;
-    FInvokeCallbackRequest: THttpRequest;
+    FInvokeRequest: THttpRequest;
     FInvokeCallbackProc: CallbackFunction;
     FInvokeKind: TInvokeEventKind;
     procedure DoInvokeCallback;
@@ -105,9 +105,9 @@ type
     FWorker: TRequestWorkerThread;
     FNamedRequestsDict: TDictHttpRequest;
     FNamedRequestsLock: TCriticalSection;
-    FOnOpened: TEventHandler;
-    FOnLoadDone: TEventHandler;
-    FOnError: TEventHandler;
+    FOnOpened: TAsyncHttpRequestEvent;
+    FOnLoadDone: TAsyncHttpRequestEvent;
+    FOnError: TAsyncHttpRequestEvent;
     FRetryCount: Integer;
     FIOTimeout: Integer;
     FTerminated: Boolean;
@@ -160,9 +160,9 @@ type
     property RetryCount: Integer read FRetryCount write FRetryCount;
     // When true, reuse one HTTP client (keep-alive) within the worker thread
     property KeepConnection: Boolean read FKeepConnection write FKeepConnection;
-    property OnOpened: TEventHandler read FOnOpened write FOnOpened;
-    property OnLoadDone: TEventHandler read FOnLoadDone write FOnLoadDone;
-    property OnError: TEventHandler read FOnError write FOnError;
+    property OnOpened: TAsyncHttpRequestEvent read FOnOpened write FOnOpened;
+    property OnLoadDone: TAsyncHttpRequestEvent read FOnLoadDone write FOnLoadDone;
+    property OnError: TAsyncHttpRequestEvent read FOnError write FOnError;
   end;
 
 implementation
@@ -262,7 +262,7 @@ begin
   inherited Create(True);
   Self.FreeOnTerminate := False;
   Self.FOwner := Owner;
-  Self.FInvokeCallbackRequest := nil;
+  Self.FInvokeRequest := nil;
   Self.FInvokeCallbackProc := nil;
   Self.FInvokeKind := iekNone;
   Self.Start;
@@ -274,13 +274,13 @@ begin
   case Self.FInvokeKind of
     iekOpened:
       if Assigned(Self.FOwner.FOnOpened) then
-        Self.FOwner.FOnOpened(Self.FOwner);
+        Self.FOwner.FOnOpened(Self.FInvokeRequest, Self.FOwner);
     iekSuccess:
       if Assigned(Self.FOwner.FOnLoadDone) then
-        Self.FOwner.FOnLoadDone(Self.FOwner);
+        Self.FOwner.FOnLoadDone(Self.FInvokeRequest, Self.FOwner);
     iekError:
       if Assigned(Self.FOwner.FOnError) then
-        Self.FOwner.FOnError(Self.FOwner);
+        Self.FOwner.FOnError(Self.FInvokeRequest, Self.FOwner);
   else
     ;
   end;
@@ -289,8 +289,8 @@ end;
 procedure TRequestWorkerThread.DoInvokeCallback;
 begin
   // Execute callback in the main/UI thread
-  if Assigned(Self.FInvokeCallbackProc) and Assigned(Self.FInvokeCallbackRequest) then
-    Self.FInvokeCallbackProc(Self.FInvokeCallbackRequest);
+  if Assigned(Self.FInvokeCallbackProc) and Assigned(Self.FInvokeRequest) then
+    Self.FInvokeCallbackProc(Self.FInvokeRequest);
 end;
 
 procedure TRequestWorkerThread.Execute;
@@ -350,6 +350,7 @@ var
 begin
   // Mark started and fire OnOpened on the main thread
   Self.FInvokeKind := iekOpened;
+  Self.FInvokeRequest := ARequest;
   Self.Synchronize(@DoInvokeEvents);
 
   succeeded := False;
@@ -442,11 +443,12 @@ begin
     Self.FInvokeKind := iekSuccess
   else
     Self.FInvokeKind := iekError;
+  Self.FInvokeRequest := ARequest;
   Self.Synchronize(@DoInvokeEvents);
 
   // Prepare and invoke the user callback in main thread
   ARequest.Response.Position := 0;
-  Self.FInvokeCallbackRequest := ARequest;
+  Self.FInvokeRequest := ARequest;
   Self.FInvokeCallbackProc := ARequest.Callback;
   Self.Synchronize(@DoInvokeCallback);
 

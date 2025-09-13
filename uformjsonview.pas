@@ -24,7 +24,7 @@ type
   private
 
   public
-    procedure httpGetAPItoTree(Query: THttpQuery);
+    procedure httpGetAPItoTree(Request: THttpRequest);
     procedure ShowJSONDocument(TV: TTreeView; DataSource: TJSONData;
       Compact: boolean = False; SortObjectMembers: boolean = False);
     procedure ShowJSONData(TV: TTreeView; AParent: TTreeNode;
@@ -42,11 +42,11 @@ uses
 
 {$R *.lfm}
 
-procedure TfrmJSONView.httpGetAPItoTree(Query: THttpQuery);
+procedure TfrmJSONView.httpGetAPItoTree(Request: THttpRequest);
 var
   JData: TJSONData;
 begin
-  if HttpQueryToJson(Query, JData) then
+  if HttpRequestToJson(Request, JData) then
   try
     edJSONView.Text := JData.FormatJSON();
     ShowJSONDocument(treeJsonData, JData, True);

@@ -118,8 +118,7 @@ type
     OnlineTested: boolean;
 
     Terminated: boolean;
-    //aiohttp: TAsyncHTTP;
-    aiohttp: TFakeAsyncHTTP;
+    aiohttp: TAsyncHTTP;
 
     APIKey: string;
     SyncthigExecPath: UTF8String;
@@ -165,20 +164,20 @@ type
     function SendJSON(const RESTPath: string; const DataForSend: TStrings = nil): Boolean;
 
     // call from other thread!
-    procedure aiohttpAddHeader(Query: THttpQueryBase);
+    procedure aiohttpAddHeader(Request: THttpRequest; Sender: TObject);
 
     // read devices and folders config
-    procedure httpReadConfig(Query: THttpQuery);
+    procedure httpReadConfig(Request: THttpRequest);
 
-    procedure httpUpdateConnections(Query: THttpQuery);
+    procedure httpUpdateConnections(Request: THttpRequest);
 
-    procedure httpPing(Query: THttpQuery);
+    procedure httpPing(Request: THttpRequest);
   end;
 
 var
   Core: TCore;
 
-function HttpQueryToJson(Query: THttpQuery; out Json: TJSONData): boolean;
+function HttpRequestToJson(Request: THttpRequest; out Json: TJSONData): boolean;
 
 function JsonStrToDateTime(Str: AnsiString; out dt: TDateTime): boolean;
 
@@ -335,21 +334,21 @@ begin
   Result := false;
 end;
 
-function HttpQueryToJson(Query: THttpQuery; out Json: TJSONData): boolean;
+function HttpRequestToJson(Request: THttpRequest; out Json: TJSONData): boolean;
 var
   JN: TJSONParser;
   JData: TJSONData;
 begin
   Result := false;
   Json := nil;
-  if (Query.ReadyState=httpDone) and (Query.Status=200) then
+  if Request.Connected then
   begin
     try
-      if Query.Response.Size>0 then
+      if (Request.Response <> nil) and (Request.Response.Size>0) then
       begin
         JData:=nil;
         JN := nil;
-        JN := TJSONParser.Create(Query.Response, [joUTF8]);
+        JN := TJSONParser.Create(Request.Response, [joUTF8]);
         try
           JData := JN.Parse();
         except
@@ -555,15 +554,21 @@ begin
   end;
 end;
 
-procedure TCore.aiohttpAddHeader(Query: THttpQueryBase);
+procedure TCore.aiohttpAddHeader(Request: THttpRequest; Sender: TObject);
 begin
-  Query.SetRequestHeader('X-API-Key', self.APIKey);
+  if Pos('X-API-Key:', Request.HeadersRaw) = 0 then
+  begin
+    if Request.HeadersRaw <> '' then
+      Request.HeadersRaw := 'X-API-Key: ' + self.APIKey + LineEnding + Request.HeadersRaw
+    else
+      Request.HeadersRaw := 'X-API-Key: ' + self.APIKey;
+  end;
 end;
 
-procedure TCore.httpReadConfig(Query: THttpQuery);
+procedure TCore.httpReadConfig(Request: THttpRequest);
 var j: TJSONData;
 begin
-  if HttpQueryToJson(Query, j) then
+  if HttpRequestToJson(Request, j) then
   try
     LoadDevices(j);
     LoadFolders(j);
@@ -574,7 +579,7 @@ begin
   end;
 end;
 
-procedure TCore.httpUpdateConnections(Query: THttpQuery);
+procedure TCore.httpUpdateConnections(Request: THttpRequest);
 var
   JData, j2: TJSONData;
   ij: TJSONEnum;
@@ -582,7 +587,7 @@ var
 begin
   //todo: change logic - first update MapDevInfo and after update DevicesItems
   //todo: httpUpdateConnections - move to Core!
-  if HttpQueryToJson(Query, JData) then
+  if HttpRequestToJson(Request, JData) then
   try
     j2 := JData.GetPath('connections');
     // enum all device
@@ -672,37 +677,23 @@ end;
 
 procedure TCore.TimerPingTimer(Sender: TObject);
 begin
-  (*
-  Self.HTTPClientPing.CallAction();
-  if Self.HTTPClientPing.State = hcsIdle then
-  begin
-    Self.HTTPClientPing.URI:='rest/system/ping';
-    Self.HTTPClientPing.Host:=SyncthigHost;
-    Self.HTTPClientPing.Port:=SyncthigPort;
-    Self.HTTPClientPing.Timeout:=1000;
-    Self.HTTPClientPing.AddExtraHeader('X-API-Key: ' + self.APIKey);
-    Self.HTTPClientPing.SendRequest();
-    AddStringToConsole('req');//DBG!
-  end;
-  Self.HTTPClientPing.CallAction();
-  *)
-
-  if not httpPingInProc and not Terminated then begin
-    aiohttp.Get(SyncthigServer+'rest/system/ping', @httpPing, '', @httpPingInProc);
+  if not Terminated then begin
+    if not aiohttp.RequestInQueue('system-ping') then
+      aiohttp.Get(SyncthigServer+'rest/system/ping', @httpPing, '', 'system-ping');
     if not IsOnline then
       TimerPing.Interval:=5000 else
       TimerPing.Interval:=500;
   end;
 end;
 
-procedure TCore.httpPing(Query: THttpQuery);
+procedure TCore.httpPing(Request: THttpRequest);
 begin
   OnlineTested := true;
   if not Terminated then
-    if Query.ReadyState=httpDone then
+    if Request.Connected then
     begin
       //todo: check ping result
-      if Query.Status <> 200 then
+      if Request.Status <> 200 then
       begin
         if IsOnline then
         begin
@@ -1055,9 +1046,12 @@ begin
 
   IsOnline := false;
 
-  aiohttp := TFakeAsyncHTTP.Create(false);
-  aiohttp.OnOpened:=@aiohttpAddHeader;
+  aiohttp := TAsyncHTTP.Create;
   aiohttp.ConnectTimeout:=1000;
+  aiohttp.RetryCount:=1;
+  aiohttp.IOTimeout:=1000;
+  aiohttp.KeepConnection:=false;
+  aiohttp.OnOpened:=@aiohttpAddHeader;
 
   SyncthigHost:='127.0.0.1';
   SyncthigPort:=8384;
