@@ -1068,16 +1068,11 @@ object ModuleMain: TModuleMain
       Caption = '-'
     end
     object mnStateRun: TMenuItem
-      Caption = 'mnStateRun'
-      Checked = True
-      Enabled = False
-      GroupIndex = 1
+      Action = actSetStateRun
       RadioItem = True
     end
     object mnStateStop: TMenuItem
-      Caption = 'mnStateStop'
-      Enabled = False
-      GroupIndex = 1
+      Action = actSetStateStop
       RadioItem = True
     end
     object MenuItem15: TMenuItem
@@ -1086,14 +1081,14 @@ object ModuleMain: TModuleMain
     object mnRestart: TMenuItem
       Action = Core.actRestart
     end
-    object miShow: TMenuItem
+    object MenuItem22: TMenuItem
       Action = Core.actPause
     end
     object N1: TMenuItem
       Caption = '-'
     end
     object miExit: TMenuItem
-      Action = Core.actExit
+      Action = Core.actStopAndExit
     end
     object MenuItem19: TMenuItem
       Action = actCloseGUI
@@ -1126,13 +1121,13 @@ object ModuleMain: TModuleMain
       Caption = 'actCloseGUI'
       OnExecute = actCloseGUIExecute
     end
-    object actStateRun: TAction
-      Caption = 'actStateRun'
-      OnExecute = actStateRunExecute
+    object actSetStateRun: TAction
+      Caption = 'actSetStateRun'
+      OnExecute = actSetStateRunExecute
     end
-    object actStateStop: TAction
-      Caption = 'actStateStop'
-      OnExecute = actStateStopExecute
+    object actSetStateStop: TAction
+      Caption = 'actSetStateStop'
+      OnExecute = actSetStateStopExecute
     end
     object actShowEvents: TAction
       Caption = 'actShowEvents'
@@ -1179,7 +1174,7 @@ object ModuleMain: TModuleMain
         Action = actCloseGUI
       end
       object MenuItem5: TMenuItem
-        Action = Core.actExit
+        Action = Core.actStopAndExit
       end
     end
     object mnView: TMenuItem

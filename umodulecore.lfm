@@ -70,10 +70,10 @@ object Core: TCore
       Caption = 'actRestart'
       OnExecute = actRestartExecute
     end
-    object actExit: TAction
+    object actStopAndExit: TAction
       Category = 'GUI'
-      Caption = 'actExit'
-      OnExecute = actExitExecute
+      Caption = 'actStopAndExit'
+      OnExecute = actStopAndExitExecute
     end
     object actPause: TAction
       Category = 'Core'

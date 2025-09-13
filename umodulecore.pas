@@ -56,8 +56,10 @@ type
 
   TCoreState = (
     stUnknown,
-    // execute fail
-    stBrokenAndDisabled,
+    // execute fault
+    stFaultAndDisconnected,
+    // detect: connect to present syncthing or execure syncthing
+    stConnectOrStart,
     // syncthing disabled
     stStopped,
     // syncthinc still working, but GUI paused
@@ -68,6 +70,10 @@ type
     stLaunchingWait,
     // syncthinc working, GUI working
     stWork,
+    // shutdown and start (restart)
+    stShutdownAndStart,
+    // shutdown and start, wait ack (restart)
+    stShutdownAndStartWait,
     // send stop command
     stStopping,
     // wait stopping ack
@@ -81,7 +87,7 @@ type
 
   //todo: extract real core code to 'model'(or 'control') and 'utils'
   TCore = class(TDataModule)
-    actExit: TAction;
+    actStopAndExit: TAction;
     actInit: TAction;
     actReloadConfig: TAction;
     actPause: TAction;
@@ -101,7 +107,7 @@ type
     TimerReadStdOutput: TTimer;
     TimerStartOnStart: TTimer;
     procedure actInitExecute(Sender: TObject);
-    procedure actExitExecute(Sender: TObject);
+    procedure actStopAndExitExecute(Sender: TObject);
     procedure actPauseExecute(Sender: TObject);
     procedure actReloadConfigExecute(Sender: TObject);
     procedure actRestartExecute(Sender: TObject);
@@ -187,6 +193,7 @@ type
     procedure LoadFolders(Json: TJSONData);
     procedure FillSyncthingExecPath();
     procedure FillSupportExecPath();
+    procedure UpdateSyncthingVersion();
 
     procedure Start();
     procedure Stop();
@@ -924,7 +931,7 @@ begin
   actStart.Execute();
 end;
 
-procedure TCore.actExitExecute(Sender: TObject);
+procedure TCore.actStopAndExitExecute(Sender: TObject);
 begin
   actStop.Execute();
   Application.Terminate();
@@ -1169,6 +1176,12 @@ begin
   //todo: WIP: FillSupportExecPath
   ProcessSupport.Executable := 'D:\NetDrive\AppsPortableHex\Programs\_Net\syncthing\syncthing-inotify.exe';
   ProcessSupport.Parameters.Text := '--home=' + SyncthigHome;
+end;
+
+procedure TCore.UpdateSyncthingVersion();
+begin
+  Self.aiohttp.Get(
+    Core.SyncthigServer+'rest/system/version', @Self.httpGetVer);
 end;
 
 end.

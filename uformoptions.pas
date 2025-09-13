@@ -18,16 +18,16 @@ type
     btnSelectFileExec: TButton;
     chAuto: TCheckBox;
     chUseProxyOutputForFixBug: TCheckBox;
-    chIntervalMode: TCheckBox;
+    chScheduleIntervalMode: TCheckBox;
     chRunSyncOnStart: TCheckBox;
     edInterval: TComboBox;
     edPathToConfigDir: TLabeledEdit;
     edPathToExecWithFilename: TLabeledEdit;
     edAPIKey: TLabeledEdit;
-    GroupBox1: TGroupBox;
+    grpSchedule: TGroupBox;
     lbSchedulePauseBetweenRuns: TLabel;
     XMLPropStorageConfig: TXMLPropStorage;
-    procedure chIntervalModeChange(Sender: TObject);
+    procedure chScheduleIntervalModeChange(Sender: TObject);
     procedure FormShow(Sender: TObject);
   private
 
@@ -46,12 +46,12 @@ implementation
 
 procedure TfrmOptions.FormShow(Sender: TObject);
 begin
-  lbSchedulePauseBetweenRuns.Enabled:=chIntervalMode.Checked;
+  lbSchedulePauseBetweenRuns.Enabled:=chScheduleIntervalMode.Checked;
 end;
 
-procedure TfrmOptions.chIntervalModeChange(Sender: TObject);
+procedure TfrmOptions.chScheduleIntervalModeChange(Sender: TObject);
 begin
-  lbSchedulePauseBetweenRuns.Enabled:=chIntervalMode.Checked;
+  lbSchedulePauseBetweenRuns.Enabled:=chScheduleIntervalMode.Checked;
 end;
 
 end.

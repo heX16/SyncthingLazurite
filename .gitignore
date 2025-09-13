@@ -11,3 +11,4 @@ syncthing folder.lnk
 /GRTAGS
 /GTAGS
 /.vscode/GTEMP.pas
+/rest_api_doc/*

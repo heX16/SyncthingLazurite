@@ -25,8 +25,8 @@ type
     actCloseGUI: TAction;
     actShowConsole: TAction;
     actShowEvents: TAction;
-    actStateStop: TAction;
-    actStateRun: TAction;
+    actSetStateStop: TAction;
+    actSetStateRun: TAction;
     actShowWeb: TAction;
     actShowRestView: TAction;
     actShowOptions: TAction;
@@ -66,7 +66,7 @@ type
     mnServer: TMenuItem;
     menuTrayIcon: TPopupMenu;
     miExit: TMenuItem;
-    miShow: TMenuItem;
+    MenuItem22: TMenuItem;
     menuDevList: TPopupMenu;
     TimerUpdate: TTimer;
     TrayIcon: TTrayIcon;
@@ -79,8 +79,8 @@ type
     procedure actShowOptionsExecute(Sender: TObject);
     procedure actShowRestViewExecute(Sender: TObject);
     procedure actShowWebExecute(Sender: TObject);
-    procedure actStateRunExecute(Sender: TObject);
-    procedure actStateStopExecute(Sender: TObject);
+    procedure actSetStateRunExecute(Sender: TObject);
+    procedure actSetStateStopExecute(Sender: TObject);
     procedure DataModuleCreate(Sender: TObject);
     procedure TimerUpdateTimer(Sender: TObject);
     procedure TrayIconDblClick(Sender: TObject);
@@ -284,7 +284,7 @@ begin
   OpenURL(Core.SyncthigServer);
 end;
 
-procedure TModuleMain.actStateRunExecute(Sender: TObject);
+procedure TModuleMain.actSetStateRunExecute(Sender: TObject);
 begin
   if (Core.State = stStopped) or (Core.State = stStopping) then
   begin
@@ -292,7 +292,7 @@ begin
   end;
 end;
 
-procedure TModuleMain.actStateStopExecute(Sender: TObject);
+procedure TModuleMain.actSetStateStopExecute(Sender: TObject);
 begin
   if (Core.State = stWork) or (Core.State = stLaunching) then
   begin

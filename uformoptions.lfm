@@ -102,7 +102,7 @@ object frmOptions: TfrmOptions
     State = cbChecked
     TabOrder = 7
   end
-  object GroupBox1: TGroupBox
+  object grpSchedule: TGroupBox
     Left = 8
     Height = 120
     Top = 224
@@ -135,18 +135,18 @@ object frmOptions: TfrmOptions
       Left = 8
       Height = 20
       Top = 35
-      Width = 136
-      Caption = 'Pause_between_runs:'
+      Width = 198
+      Caption = 'lbSchedulePauseBetweenRuns'
       ParentColor = False
     end
-    object chIntervalMode: TCheckBox
+    object chScheduleIntervalMode: TCheckBox
       Left = 8
       Height = 24
       Top = 8
       Width = 184
       Caption = 'chScheduleIntervalMode'
       TabOrder = 1
-      OnChange = chIntervalModeChange
+      OnChange = chScheduleIntervalModeChange
     end
   end
   object chUseProxyOutputForFixBug: TCheckBox
