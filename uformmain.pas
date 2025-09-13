@@ -48,7 +48,7 @@ uses
   //SynHighlighterJScript,
   //SynEdit,
   uModuleCore, VirtualTrees, Forms, Controls,
-  StdCtrls, ExtCtrls, Graphics;
+  StdCtrls, ExtCtrls, Graphics, IniPropStorage;
 
 const
   cDevListAdditionalHeight = 8;
@@ -66,13 +66,14 @@ type
     grpEvents: TGroupBox;
     grpFolders: TGroupBox;
     grpDevices: TGroupBox;
+    IniPropStoragePos: TIniPropStorage;
     lbExcDetected: TLabel;
     listEvents: TMemo;
     Panel1: TPanel;
     shStatusCircle: TShape;
-    Splitter1: TSplitter;
-    Splitter2: TSplitter;
-    Splitter3: TSplitter;
+    SplitterBottom1: TSplitter;
+    SplitterLeft: TSplitter;
+    SplitterBottom2: TSplitter;
     treeFolders: TVirtualStringTree;
     treeDevices: TVirtualStringTree;
     procedure btnStartClick(Sender: TObject);

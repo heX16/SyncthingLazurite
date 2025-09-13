@@ -6,7 +6,7 @@ interface
 
 uses
   Classes, SysUtils, XMLConf, FileUtil, Forms, Controls, Graphics, Dialogs,
-  Buttons, ExtCtrls, StdCtrls, XMLPropStorage;
+  Buttons, ExtCtrls, StdCtrls, XMLPropStorage, IniPropStorage;
 
 type
 
@@ -25,8 +25,8 @@ type
     edPathToExecWithFilename: TLabeledEdit;
     edAPIKey: TLabeledEdit;
     grpSchedule: TGroupBox;
+    IniPropStorageConfig: TIniPropStorage;
     lbSchedulePauseBetweenRuns: TLabel;
-    XMLPropStorageConfig: TXMLPropStorage;
     procedure chScheduleIntervalModeChange(Sender: TObject);
     procedure FormShow(Sender: TObject);
   private

@@ -1170,11 +1170,11 @@ object ModuleMain: TModuleMain
       object MenuItem6: TMenuItem
         Caption = '-'
       end
-      object MenuItem13: TMenuItem
-        Action = actCloseGUI
-      end
       object MenuItem5: TMenuItem
         Action = Core.actStopAndExit
+      end
+      object MenuItem13: TMenuItem
+        Action = actCloseGUI
       end
     end
     object mnView: TMenuItem

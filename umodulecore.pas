@@ -155,7 +155,12 @@ type
     OnlineTested: boolean;
 
     Terminated: boolean;
+
+    // REST API access
     aiohttp: TAsyncHTTP;
+
+    // REST API pooling
+    aiohttpLongPooling: TAsyncHTTP;
 
     Version: string;
 

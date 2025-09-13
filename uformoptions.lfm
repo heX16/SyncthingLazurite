@@ -159,11 +159,10 @@ object frmOptions: TfrmOptions
     State = cbChecked
     TabOrder = 9
   end
-  object XMLPropStorageConfig: TXMLPropStorage
+  object IniPropStorageConfig: TIniPropStorage
     StoredValues = <>
-    FileName = 'SimpleSyncthingConfig.xml'
-    RootNodePath = 'SimpleSyncthing'
-    Left = 312
+    IniFileName = 'SimpleSyncthingConfig.ini'
+    Left = 376
     Top = 16
   end
 end
