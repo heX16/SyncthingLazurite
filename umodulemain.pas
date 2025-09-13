@@ -339,6 +339,8 @@ begin
     frmMain.lbExcDetected.Visible:=true;
   end;
 
+
+
   i := Core.MapDevInfo.Iterator();
   OnlineCount := 0;
   OnlineList := '';

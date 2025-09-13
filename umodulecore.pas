@@ -681,8 +681,8 @@ begin
     if not aiohttp.RequestInQueue('system-ping') then
       aiohttp.Get(SyncthigServer+'rest/system/ping', @httpPing, '', 'system-ping');
     if not IsOnline then
-      TimerPing.Interval:=5000 else
-      TimerPing.Interval:=500;
+      TimerPing.Interval:=1000 else
+      TimerPing.Interval:=5000;
   end;
 end;
 

@@ -48,6 +48,7 @@ object Core: TCore
   end
   object TimerPing: TTimer
     Enabled = False
+    Interval = 5000
     OnTimer = TimerPingTimer
     Left = 70
     Top = 144
