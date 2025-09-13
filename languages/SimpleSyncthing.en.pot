@@ -3,123 +3,123 @@ msgstr "Content-Type: text/plain; charset=UTF-8"
 
 #: tcore.actinit.caption
 msgid "actInit"
-msgstr ""
+msgstr "Initialize"
 
 #: tcore.actpause.caption
 msgid "actPause"
-msgstr ""
+msgstr "Pause"
 
 #: tcore.actreloadconfig.caption
 msgid "actReloadConfig"
-msgstr ""
+msgstr "Reload configuration"
 
 #: tcore.actrestart.caption
 msgid "actRestart"
-msgstr ""
+msgstr "Restart"
 
 #: tcore.actrunsupportproc.caption
 msgid "actRunSupportProc"
-msgstr ""
+msgstr "Run support program"
 
 #: tcore.actstart.caption
 msgid "actStart"
-msgstr ""
+msgstr "Start"
 
 #: tcore.actstop.caption
 msgid "actStop"
-msgstr ""
+msgstr "Stop"
 
 #: tcore.actstopandexit.caption
 msgid "actStopAndExit"
-msgstr ""
+msgstr "Stop and exit"
 
 #: tcore.actterminate.caption
 msgid "actTerminate"
-msgstr ""
+msgstr "Terminate"
 
 #: tfrmabout.caption
 msgid "About"
-msgstr ""
+msgstr "About"
 
 #: tfrmabout.lbrepurl.editlabel.caption
 msgid "Source code repository:"
-msgstr ""
+msgstr "Source code repository:"
 
 #: tfrmabout.lbrepurl.text
 msgid "https://bitbucket.org/heXor/..."
-msgstr ""
+msgstr "https://bitbucket.org/heXor/..."
 
 #: tfrmabout.lbsyncthingversion.editlabel.caption
 msgid "lbSyncthingVersion"
-msgstr ""
+msgstr "Syncthing version"
 
 #: tfrmabout.lbsyncthingversion.text
 msgctxt "tfrmabout.lbsyncthingversion.text"
 msgid "..."
-msgstr ""
+msgstr "..."
 
 #: tfrmabout.lbtranslateauthor.caption
 msgid "Author of localization: -"
-msgstr ""
+msgstr "Author of localization: -"
 
 #: tfrmjsonview.caption
 msgid "frmJSONView"
-msgstr ""
+msgstr "JSON View"
 
 #: tfrmmain.caption
 msgid "frmMain"
-msgstr ""
+msgstr "Syncthing"
 
 #: tfrmmain.grpdevices.caption
 msgid "grpDevices"
-msgstr ""
+msgstr "Devices"
 
 #: tfrmmain.grpevents.caption
 msgid "grpEvents"
-msgstr ""
+msgstr "Events"
 
 #: tfrmmain.grpfolders.caption
 msgid "grpFolders"
-msgstr ""
+msgstr "Folders"
 
 #: tfrmmain.lbexcdetected.caption
 msgid "!EX!"
-msgstr ""
+msgstr "!EX!"
 
 #: tfrmoptions.btnselectdirconfig.caption
 msgctxt "tfrmoptions.btnselectdirconfig.caption"
 msgid "..."
-msgstr ""
+msgstr "..."
 
 #: tfrmoptions.btnselectfileexec.caption
 msgctxt "tfrmoptions.btnselectfileexec.caption"
 msgid "..."
-msgstr ""
+msgstr "..."
 
 #: tfrmoptions.caption
 msgid "frmOptions"
-msgstr ""
+msgstr "Options"
 
 #: tfrmoptions.chauto.caption
 msgid "chAuto"
-msgstr ""
+msgstr "Auto"
 
 #: tfrmoptions.chrunsynconstart.caption
 msgid "chRunSyncOnStart"
-msgstr ""
+msgstr "Run sync on startup"
 
 #: tfrmoptions.chscheduleintervalmode.caption
 msgctxt "tfrmoptions.chscheduleintervalmode.caption"
 msgid "chScheduleIntervalMode"
-msgstr ""
+msgstr "Interval mode"
 
 #: tfrmoptions.chuseproxyoutputforfixbug.caption
 msgid "chUseProxyOutputForFixBug"
-msgstr ""
+msgstr "Use proxy output to fix bug"
 
 #: tfrmoptions.edapikey.editlabel.caption
 msgid "edAPIKey"
-msgstr ""
+msgstr "API Key"
 
 #: tfrmoptions.edapikey.editlabel.hint
 msgid ""
@@ -128,97 +128,101 @@ msgid ""
 "\n"
 "API Key example: xzMwbz6rDUuAv9tjVSbqfVMNta4kPWss"
 msgstr ""
+"Goto:\n"
+"Settings -> Common -> API Key\n"
+"\n"
+"API Key example: xzMwbz6rDUuAv9tjVSbqfVMNta4kPWss"
 
 #: tfrmoptions.edpathtoconfigdir.editlabel.caption
 msgid "edPathToConfigDir"
-msgstr ""
+msgstr "Path to configuration"
 
 #: tfrmoptions.edpathtoconfigdir.text
 msgctxt "tfrmoptions.edpathtoconfigdir.text"
 msgid "./"
-msgstr ""
+msgstr "./"
 
 #: tfrmoptions.edpathtoexecwithfilename.editlabel.caption
 msgid "edPathToExecWithFilename"
-msgstr ""
+msgstr "Path to program"
 
 #: tfrmoptions.edpathtoexecwithfilename.text
 msgctxt "tfrmoptions.edpathtoexecwithfilename.text"
 msgid "./"
-msgstr ""
+msgstr "./"
 
 #: tfrmoptions.grpschedule.caption
 msgctxt "tfrmoptions.grpschedule.caption"
 msgid "grpSchedule"
-msgstr ""
+msgstr "Schedule"
 
 #: tfrmoptions.lbschedulepausebetweenruns.caption
 msgctxt "tfrmoptions.lbschedulepausebetweenruns.caption"
 msgid "lbSchedulePauseBetweenRuns"
-msgstr ""
+msgstr "Pause between runs:"
 
 #: tmodulemain.actabout.caption
 msgid "actAbout"
-msgstr ""
+msgstr "About"
 
 #: tmodulemain.actclosegui.caption
 msgid "actCloseGUI"
-msgstr ""
+msgstr "Close GUI"
 
 #: tmodulemain.actcopyselecteddevid.caption
 msgid "actCopySelectedDevID"
-msgstr ""
+msgstr "Copy Device ID"
 
 #: tmodulemain.actsetstaterun.caption
 msgid "actSetStateRun"
-msgstr ""
+msgstr "Run"
 
 #: tmodulemain.actsetstatestop.caption
 msgid "actSetStateStop"
-msgstr ""
+msgstr "Stop"
 
 #: tmodulemain.actshowconsole.caption
 msgid "actShowConsole"
-msgstr ""
+msgstr "Show console"
 
 #: tmodulemain.actshowevents.caption
 msgid "actShowEvents"
-msgstr ""
+msgstr "Show events"
 
 #: tmodulemain.actshowoptions.caption
 msgid "actShowOptions"
-msgstr ""
+msgstr "Options"
 
 #: tmodulemain.actshowrestview.caption
 msgid "actShowRestView"
-msgstr ""
+msgstr "View REST data"
 
 #: tmodulemain.actshowweb.caption
 msgid "actShowWeb"
-msgstr ""
+msgstr "Open web interface in browser"
 
 #: tmodulemain.mnserver.caption
 msgid "mnServer"
-msgstr ""
+msgstr "Server"
 
 #: tmodulemain.mnview.caption
 msgid "mnView"
-msgstr ""
+msgstr "View"
 
 #: uformmain.caddress
 msgid "Address"
-msgstr ""
+msgstr "Address"
 
 #: uformmain.cdays
 msgid "days"
-msgstr ""
+msgstr "days"
 
 #: uformmain.coffline
 msgid "Offline"
-msgstr ""
+msgstr "Offline"
 
 #: umodulemain.cstrlocal
 msgctxt "umodulemain.cstrlocal"
 msgid " (local)"
-msgstr ""
+msgstr " (local)"
 
