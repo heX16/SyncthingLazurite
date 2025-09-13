@@ -18,7 +18,6 @@ msgid "actReloadConfig"
 msgstr "Обновить конфигурацию"
 
 #: tcore.actrestart.caption
-#| msgid "Restart"
 msgid "actRestart"
 msgstr "Рестарт"
 
@@ -27,14 +26,16 @@ msgid "actRunSupportProc"
 msgstr "Доп. программа"
 
 #: tcore.actstart.caption
-#| msgid "Start"
 msgid "actStart"
 msgstr "Старт"
 
 #: tcore.actstop.caption
-#| msgid "Stop"
 msgid "actStop"
 msgstr "Стоп"
+
+#: tcore.actstopandexit.caption
+msgid "actStopAndExit"
+msgstr "Остановить и выйти"
 
 #: tcore.actterminate.caption
 msgid "actTerminate"
@@ -42,23 +43,28 @@ msgstr "Завершить"
 
 #: tfrmabout.caption
 msgid "About"
-msgstr "About"
-
-#: tfrmabout.lbabouttext.caption
-msgid "lbAboutText"
-msgstr ""
+msgstr "О программе"
 
 #: tfrmabout.lbrepurl.editlabel.caption
 msgid "Source code repository:"
-msgstr ""
+msgstr "Репозиторий исходного кода:"
 
 #: tfrmabout.lbrepurl.text
 msgid "https://bitbucket.org/heXor/..."
-msgstr ""
+msgstr "https://bitbucket.org/heXor/..."
+
+#: tfrmabout.lbsyncthingversion.editlabel.caption
+msgid "lbSyncthingVersion"
+msgstr "Версия Syncthing"
+
+#: tfrmabout.lbsyncthingversion.text
+msgctxt "tfrmabout.lbsyncthingversion.text"
+msgid "..."
+msgstr "..."
 
 #: tfrmabout.lbtranslateauthor.caption
 msgid "Author of localization: -"
-msgstr ""
+msgstr "Автор локализации: -"
 
 #: tfrmjsonview.caption
 msgid "frmJSONView"
@@ -80,15 +86,19 @@ msgstr "События"
 msgid "grpFolders"
 msgstr "Папки"
 
+#: tfrmmain.lbexcdetected.caption
+msgid "!EX!"
+msgstr "!EX!"
+
 #: tfrmoptions.btnselectdirconfig.caption
 msgctxt "tfrmoptions.btnselectdirconfig.caption"
 msgid "..."
-msgstr ""
+msgstr "..."
 
 #: tfrmoptions.btnselectfileexec.caption
 msgctxt "tfrmoptions.btnselectfileexec.caption"
 msgid "..."
-msgstr ""
+msgstr "..."
 
 #: tfrmoptions.caption
 msgid "frmOptions"
@@ -99,8 +109,8 @@ msgid "chAuto"
 msgstr "Авто"
 
 #: tfrmoptions.chintervalmode.caption
-msgid "chIntervalMode"
-msgstr ""
+msgid "chScheduleIntervalMode"
+msgstr "Интервальный режим"
 
 #: tfrmoptions.chrunsynconstart.caption
 msgid "chRunSyncOnStart"
@@ -108,35 +118,70 @@ msgstr "Запускать синхронизацию при старте про
 
 #: tfrmoptions.chuseproxyoutputforfixbug.caption
 msgid "chUseProxyOutputForFixBug"
-msgstr ""
+msgstr "Использовать прокси-вывод для исправления ошибки"
 
 #: tfrmoptions.edapikey.editlabel.caption
 msgid "edAPIKey"
 msgstr "API Key"
 
+#: tfrmoptions.edapikey.editlabel.hint
+msgid ""
+"Goto:\n"
+"Settings -> Common -> API Key\n"
+"\n"
+"API Key example: xzMwbz6rDUuAv9tjVSbqfVMNta4kPWss"
+msgstr ""
+"Перейдите:\n"
+"Настройки -> Общие -> API Key\n"
+"\n"
+"Пример API Key: xzMwbz6rDUuAv9tjVSbqfVMNta4kPWss"
+
 #: tfrmoptions.edpathtoconfigdir.editlabel.caption
 msgid "edPathToConfigDir"
 msgstr "Путь к конфигурации"
+
+#: tfrmoptions.edpathtoconfigdir.text
+msgctxt "tfrmoptions.edpathtoconfigdir.text"
+msgid "./"
+msgstr "./"
 
 #: tfrmoptions.edpathtoexecwithfilename.editlabel.caption
 msgid "edPathToExecWithFilename"
 msgstr "Путь к программе"
 
+#: tfrmoptions.edpathtoexecwithfilename.text
+msgctxt "tfrmoptions.edpathtoexecwithfilename.text"
+msgid "./"
+msgstr "./"
+
 #: tfrmoptions.groupbox1.caption
-msgid "grpShedule"
+msgid "grpSchedule"
 msgstr "Расписание"
 
-#: tfrmoptions.label1.caption
+#: tfrmoptions.lbschedulepausebetweenruns.caption
+msgctxt "tfrmoptions.lbschedulepausebetweenruns.caption"
 msgid "Pause_between_runs:"
 msgstr "Пауза между запусками"
 
 #: tmodulemain.actabout.caption
 msgid "actAbout"
-msgstr ""
+msgstr "О программе"
+
+#: tmodulemain.actclosegui.caption
+msgid "actCloseGUI"
+msgstr "Закрыть интерфейс"
 
 #: tmodulemain.actcopyselecteddevid.caption
 msgid "actCopySelectedDevID"
-msgstr "Copy Dev ID"
+msgstr "Скопировать ID устройства"
+
+#: tmodulemain.actshowconsole.caption
+msgid "actShowConsole"
+msgstr "Показать консоль"
+
+#: tmodulemain.actshowevents.caption
+msgid "actShowEvents"
+msgstr "Показать события"
 
 #: tmodulemain.actshowoptions.caption
 msgid "actShowOptions"
@@ -144,11 +189,35 @@ msgstr "Опции"
 
 #: tmodulemain.actshowrestview.caption
 msgid "actShowRestView"
-msgstr "Rest просмотр"
+msgstr "Просмотр REST данных"
+
+#: tmodulemain.actshowweb.caption
+msgid "actShowWeb"
+msgstr "Открыть веб-интерфейс в браузере"
+
+#: tmodulemain.actsetstaterun.caption
+msgid "actSetStateRun"
+msgstr "Запустить"
+
+#: tmodulemain.actsetstatestop.caption
+msgid "actSetStateStop"
+msgstr "Остановить"
 
 #: tmodulemain.mnserver.caption
 msgid "mnServer"
 msgstr "Сервер"
+
+#: tmodulemain.mnstaterun.caption
+msgid "mnStateRun"
+msgstr "Запустить"
+
+#: tmodulemain.mnstatestop.caption
+msgid "mnStateStop"
+msgstr "Остановить"
+
+#: tmodulemain.mnview.caption
+msgid "mnView"
+msgstr "Вид"
 
 #: uformmain.caddress
 msgid "Address"
@@ -161,4 +230,9 @@ msgstr "дни"
 #: uformmain.coffline
 msgid "Offline"
 msgstr "Оффлайн"
+
+#: umodulemain.cstrlocal
+msgctxt "umodulemain.cstrlocal"
+msgid " (local)"
+msgstr " (локально)"
 

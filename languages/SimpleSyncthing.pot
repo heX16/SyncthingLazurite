@@ -1,10 +1,6 @@
 msgid ""
 msgstr "Content-Type: text/plain; charset=UTF-8"
 
-#: tcore.actexit.caption
-msgid "actExit"
-msgstr ""
-
 #: tcore.actinit.caption
 msgid "actInit"
 msgstr ""
@@ -33,6 +29,10 @@ msgstr ""
 msgid "actStop"
 msgstr ""
 
+#: tcore.actstopandexit.caption
+msgid "actStopAndExit"
+msgstr ""
+
 #: tcore.actterminate.caption
 msgid "actTerminate"
 msgstr ""
@@ -47,6 +47,15 @@ msgstr ""
 
 #: tfrmabout.lbrepurl.text
 msgid "https://bitbucket.org/heXor/..."
+msgstr ""
+
+#: tfrmabout.lbsyncthingversion.editlabel.caption
+msgid "lbSyncthingVersion"
+msgstr ""
+
+#: tfrmabout.lbsyncthingversion.text
+msgctxt "tfrmabout.lbsyncthingversion.text"
+msgid "..."
 msgstr ""
 
 #: tfrmabout.lbtranslateauthor.caption
@@ -96,7 +105,7 @@ msgid "chAuto"
 msgstr ""
 
 #: tfrmoptions.chintervalmode.caption
-msgid "chIntervalMode"
+msgid "chScheduleIntervalMode"
 msgstr ""
 
 #: tfrmoptions.chrunsynconstart.caption
@@ -138,11 +147,11 @@ msgid "./"
 msgstr ""
 
 #: tfrmoptions.groupbox1.caption
-msgid "grpShedule"
+msgid "grpSchedule"
 msgstr ""
 
-#: tfrmoptions.label1.caption
-msgid "Pause_between_runs:"
+#: tfrmoptions.lbschedulepausebetweenruns.caption
+msgctxt "tfrmoptions.lbschedulepausebetweenruns.caption"
 msgstr ""
 
 #: tmodulemain.actabout.caption
@@ -155,6 +164,14 @@ msgstr ""
 
 #: tmodulemain.actcopyselecteddevid.caption
 msgid "actCopySelectedDevID"
+msgstr ""
+
+#: tmodulemain.actsetstaterun.caption
+msgid "actSetStateRun"
+msgstr ""
+
+#: tmodulemain.actsetstatestop.caption
+msgid "actSetStateStop"
 msgstr ""
 
 #: tmodulemain.actshowconsole.caption
@@ -177,24 +194,8 @@ msgstr ""
 msgid "actShowWeb"
 msgstr ""
 
-#: tmodulemain.actstaterun.caption
-msgid "actStateRun"
-msgstr ""
-
-#: tmodulemain.actstatestop.caption
-msgid "actStateStop"
-msgstr ""
-
 #: tmodulemain.mnserver.caption
 msgid "mnServer"
-msgstr ""
-
-#: tmodulemain.mnstaterun.caption
-msgid "mnStateRun"
-msgstr ""
-
-#: tmodulemain.mnstatestop.caption
-msgid "mnStateStop"
 msgstr ""
 
 #: tmodulemain.mnview.caption
