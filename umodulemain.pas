@@ -332,25 +332,24 @@ const
   MaxItemsInHint = 5;
 begin
 
-  if Core.IsOnline and not Core.aiohttp.RequestInQueue('system-connections') then
-    Core.aiohttp.Get(Core.SyncthigServer+'rest/system/connections', @Core.httpUpdateConnections, '', 'system-connections');
+  if Core.IsOnline and not Core.aiohttp.RequestInQueue('system/connections') then
+    Core.API_Get('system/connections', @Core.httpUpdateConnections);
 
-  if Core.IsOnline and not Core.aiohttp.RequestInQueue('stats-folder') then
-    Core.aiohttp.Get(Core.SyncthigServer+'rest/stats/folder', @httpUpdateFolderStat, '', 'stats-folder');
+  if Core.IsOnline and not Core.aiohttp.RequestInQueue('stats/folder') then
+    Core.API_Get('stats/folder', @httpUpdateFolderStat);
 
   //todo: уменьшить кол-во обращений
-  if Core.IsOnline and not Core.aiohttp.RequestInQueue('stats-device') then
-    Core.aiohttp.Get(Core.SyncthigServer+'rest/stats/device', @httpUpdateDeviceStat, '', 'stats-device');
+  if Core.IsOnline and not Core.aiohttp.RequestInQueue('stats/device') then
+    Core.API_Get('stats/device', @httpUpdateDeviceStat);
 
   try
     //TODO: BUG 2022. AV. - здесь падает. отсюда начинается вызов проблемной цепочки.
     if Core.IsOnline and not Core.aiohttp.RequestInQueue('events') then
-      Core.aiohttp.Get(Core.SyncthigServer+'rest/events'+'?'+
+      Core.API_Get('events'+'?'+
         'since='+IntToStr(Core.EventsLastId)+'&'+
         'limit='+IntToStr(10)+'&'+
-        'timeout='+IntToStr(0),//+'&'+
-        //'events=LocalChangeDetected,RemoteChangeDetected',
-        @httpEvents, '', 'events');
+        'timeout='+IntToStr(0),
+        @httpEvents);
   except
     //TODO: BUG 2022. AV. поставил заглушку. посмотрим...
     frmMain.lbExcDetected.Visible:=true;

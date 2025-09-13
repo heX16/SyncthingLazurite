@@ -126,16 +126,13 @@ var endpoint: string;
 begin
   if listGetAPI.ItemIndex>=0 then
   begin
-    endpoint := 'rest/'+listGetAPI.Items[listGetAPI.ItemIndex];
+    endpoint := listGetAPI.Items[listGetAPI.ItemIndex];
 
     // Remove everything after " (" including the bracket and space
     if Pos(' (', endpoint) > 0 then
       endpoint := Copy(endpoint, 1, Pos(' (', endpoint) - 1);
 
-    Core.aiohttp.Get(
-      Core.SyncthigServer+endpoint, @httpGetAPItoTree, 
-      '',
-      'jsonview-'+IntToStr(listGetAPI.ItemIndex));
+    Core.API_Get(endpoint, @httpGetAPItoTree);
   end;
 end;
 

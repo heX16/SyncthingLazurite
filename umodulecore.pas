@@ -592,18 +592,32 @@ begin
 end;
 
 procedure TCore.API_Get(api: string; callback: THttpRequestCallbackFunction);
+var
+  queueKey: string;
 begin
+  // Use API path without query as queue key to avoid flooding the queue
+  queueKey := api;
+  if Pos('?', api) > 0 then
+    queueKey := Copy(api, 1, Pos('?', api) - 1);
+
   Core.aiohttp.Get(
     Core.SyncthigServer+'rest/'+api, callback,
-    '', api);
+    '', queueKey);
 end;
 
 procedure TCore.API_Post(api: string; data: string;
   callback: THttpRequestCallbackFunction);
+var
+  queueKey: string;
 begin
+  // Use API path without query as queue key
+  queueKey := api;
+  if Pos('?', api) > 0 then
+    queueKey := Copy(api, 1, Pos('?', api) - 1);
+
   Core.aiohttp.Post(
     Core.SyncthigServer+'rest/'+api, data, callback,
-    '', api);
+    '', queueKey);
 end;
 
 procedure TCore.aiohttpAddHeader(Request: THttpRequest; Sender: TObject);
@@ -667,8 +681,8 @@ end;
 procedure TCore.TimerPingTimer(Sender: TObject);
 begin
   if not Terminated then begin
-    if not aiohttp.RequestInQueue('system-ping') then
-      aiohttp.Get(SyncthigServer+'rest/system/ping', @httpPing, '', 'system-ping');
+    if not aiohttp.RequestInQueue('system/ping') then
+      API_Get('system/ping', @httpPing);
     if not IsOnline then
       TimerPing.Interval:=1000 else
       TimerPing.Interval:=5000;
@@ -967,12 +981,13 @@ end;
 
 procedure TCore.actReloadConfigExecute(Sender: TObject);
 begin
+  // TODO: /rest/system/config (DEPRECATED)
   // GET /rest/system/config (DEPRECATED)
   // https://docs.syncthing.net/dev/rest.html#system-endpoints
   // Deprecated since version v1.12.0:
   // This endpoint still works as before but is deprecated.
   // Use /rest/config instead.
-  self.aiohttp.Get(Core.SyncthigServer+'rest/system/config', @httpReadConfig);
+  self.API_Get('system/config', @httpReadConfig);
 end;
 
 procedure TCore.actInitExecute(Sender: TObject);
@@ -1197,8 +1212,7 @@ end;
 
 procedure TCore.UpdateSyncthingVersion();
 begin
-  Self.aiohttp.Get(
-    Core.SyncthigServer+'rest/system/version', @Self.httpGetVer);
+  Self.API_Get('system/version', @Self.httpGetVer);
 end;
 
 end.

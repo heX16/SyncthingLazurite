@@ -84,8 +84,7 @@ end;
 
 procedure TfrmAbout.FormShow(Sender: TObject);
 begin
-  Core.aiohttp.Get(
-    Core.SyncthigServer+'rest/system/version', @httpGetVer);
+  Core.API_Get('system/version', @httpGetVer);
 end;
 
 procedure TfrmAbout.httpGetVer(Request: THttpRequest);
