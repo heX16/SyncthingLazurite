@@ -54,6 +54,25 @@ type
   TMapDevInfo = specialize THashMap<TDevId, TDevInfo, THashFuncString>;
   TMapFolderInfo = specialize THashMap<TFolderId, TFolderInfo, THashFuncString>;
 
+  TCoreState = (
+    stUnknown,
+    // execute fail
+    stBrokenAndDisabled,
+    // syncthing disabled
+    stStopped,
+    // syncthinc still working, but GUI paused
+    stDisconnectedGUI,
+    // execute syncthinc app
+    stLaunching,
+    // wait ack from syncthinc app
+    stLaunchingWait,
+    // syncthinc working, GUI working
+    stWork,
+    // send stop command
+    stStopping,
+    // wait stopping ack
+    stStoppingWait);
+
 type
 
   TAddConsoleLine = procedure (Line: UTF8String) of object;
@@ -90,7 +109,6 @@ type
     procedure actStartExecute(Sender: TObject);
     procedure actStopExecute(Sender: TObject);
     procedure actTerminateExecute(Sender: TObject);
-    procedure DataModuleCreate(Sender: TObject);
 
     procedure DataModuleDestroy(Sender: TObject);
     procedure TimerAfterStartCheckTimer(Sender: TObject);
@@ -103,6 +121,19 @@ type
     procedure TimerReadStdOutputTimer(Sender: TObject);
   private
     OutputChankStr: UTF8String;
+
+    // call from other thread!
+    procedure aiohttpAddHeader(Request: THttpRequest; Sender: TObject);
+
+  public
+    // read devices and folders config
+    procedure httpReadConfig(Request: THttpRequest);
+
+    procedure httpUpdateConnections(Request: THttpRequest);
+
+    procedure httpPing(Request: THttpRequest);
+
+    procedure httpGetVer(Request: THttpRequest);
   public
 
     // Flag that core is inited
@@ -110,7 +141,7 @@ type
 
     // State (FSM)
     //TODO: WIP!
-    State: (stUnknown, stBrokenAndDisabled, stStopped, stLaunching, stWork, stStopping, stInstantStopped);
+    State: TCoreState;
 
     // flag - syncthing is work
     IsOnline: boolean;
@@ -119,6 +150,8 @@ type
 
     Terminated: boolean;
     aiohttp: TAsyncHTTP;
+
+    Version: string;
 
     APIKey: string;
     SyncthigExecPath: UTF8String;
@@ -163,15 +196,6 @@ type
 
     function SendJSON(const RESTPath: string; const DataForSend: TStrings = nil): Boolean;
 
-    // call from other thread!
-    procedure aiohttpAddHeader(Request: THttpRequest; Sender: TObject);
-
-    // read devices and folders config
-    procedure httpReadConfig(Request: THttpRequest);
-
-    procedure httpUpdateConnections(Request: THttpRequest);
-
-    procedure httpPing(Request: THttpRequest);
   end;
 
 var
@@ -612,69 +636,6 @@ begin
   end;
 end;
 
-(*
-Old code:
->>>>>>>>>>>>>>>
-procedure TCore.HTTPClientPingDoneInput(ASocket: TLHTTPClientSocket);
-begin
-  OnlineTested := true;
-  if not Terminated then
-  begin
-
-    OnlineTested := true;
-    if ASocket.ResponseStatus = hsOK then
-    begin
-      //todo: check ping result
-
-      if not IsOnline then
-      begin
-        IsOnline := true;
-        EventOnline();
-      end;
-
-    end else
-    begin
-
-      if IsOnline then
-      begin
-        IsOnline := false;
-        EventOffline();
-      end;
-
-    end; // if
-  end;
-
-  //???
-  aSocket.Disconnect;
-end;
-
-procedure TCore.HTTPClientPingError(const msg: string; aSocket: TLSocket);
-begin
-  //TODO: WIP!!! 2023...
-  AddStringToConsole('err: '+msg);//DBG!
-
-  aSocket.ConnectionStatus;
-  IsOnline := false;
-  OnlineTested := true;
-  frmMain.shStatusCircle.Brush.Color:=clRed;
-end;
-
-function TCore.HTTPClientPingInput(ASocket: TLHTTPClientSocket; ABuffer: pchar;
-  ASize: integer): integer;
-begin
-  Result := aSize; // tell the http buffer we read it all
-end;
-
-procedure TCore.HTTPClientPingDisconnect(aSocket: TLSocket);
-begin
-  AddStringToConsole('diss!!!');//DBG!
-  IsOnline := false;
-  OnlineTested := true;
-  frmMain.shStatusCircle.Brush.Color:=clRed;
-end;
-<<<<<<<<<<<<<<<<<<<<
-*)
-
 procedure TCore.TimerPingTimer(Sender: TObject);
 begin
   if not Terminated then begin
@@ -713,6 +674,23 @@ begin
       IsOnline := false;
       frmMain.shStatusCircle.Brush.Color:=clRed;
     end;
+end;
+
+procedure TCore.httpGetVer(Request: THttpRequest);
+var 
+  j: TJSONData;
+begin
+  if HttpRequestToJson(Request, j) then
+  try
+    // Extract version information from Syncthing response
+    // JSON structure: {"arch": "amd64", "longVersion": "...", "os": "darwin", "version": "v0.10.27+3-gea8c3de"}
+    if j.FindPath('version') <> nil then
+      Version := j.GetPath('version').AsString
+    else
+      Version := 'Unknown';
+  finally
+    FreeAndNil(j);
+  end;
 end;
 
 //todo: TEMP!!!!!!!!!
@@ -961,6 +939,11 @@ end;
 
 procedure TCore.actReloadConfigExecute(Sender: TObject);
 begin
+  // GET /rest/system/config (DEPRECATED)
+  // https://docs.syncthing.net/dev/rest.html#system-endpoints
+  // Deprecated since version v1.12.0:
+  // This endpoint still works as before but is deprecated.
+  // Use /rest/config instead.
   self.aiohttp.Get(Core.SyncthigServer+'rest/system/config', @httpReadConfig);
 end;
 
@@ -997,11 +980,6 @@ procedure TCore.actTerminateExecute(Sender: TObject);
 begin
   ProcessSupport.Terminate(0);
   ProcessSyncthing.Terminate(0);
-end;
-
-procedure TCore.DataModuleCreate(Sender: TObject);
-begin
-
 end;
 
 procedure TCore.DataModuleDestroy(Sender: TObject);

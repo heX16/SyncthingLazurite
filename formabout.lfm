@@ -1,15 +1,16 @@
 object frmAbout: TfrmAbout
   Left = 330
-  Height = 375
+  Height = 422
   Top = 259
   Width = 400
   Caption = 'About'
-  ClientHeight = 375
+  ClientHeight = 422
   ClientWidth = 400
   DesignTimePPI = 120
+  Font.Height = -15
   Position = poMainFormCenter
-  LCLVersion = '4.2.0.0'
   OnCreate = FormCreate
+  OnShow = FormShow
   object lbNameAndVer: TLabel
     Left = 10
     Height = 30
@@ -23,9 +24,9 @@ object frmAbout: TfrmAbout
     ParentFont = False
   end
   object lbRepURL: TLabeledEdit
-    Left = 8
+    Left = 10
     Height = 28
-    Top = 120
+    Top = 168
     Width = 375
     EditLabel.Height = 20
     EditLabel.Width = 375
@@ -57,7 +58,7 @@ object frmAbout: TfrmAbout
   object lbAboutText: TMemo
     Left = 8
     Height = 176
-    Top = 160
+    Top = 208
     Width = 375
     Lines.Strings = (
       'This is GUI client for Syncthing application.'
@@ -70,5 +71,19 @@ object frmAbout: TfrmAbout
     ReadOnly = True
     ScrollBars = ssVertical
     TabOrder = 1
+  end
+  object lbSyncthingVersion: TLabeledEdit
+    Left = 10
+    Height = 28
+    Top = 112
+    Width = 136
+    EditLabel.Height = 20
+    EditLabel.Width = 136
+    EditLabel.Caption = 'lbSyncthingVersion'
+    EditLabel.ParentColor = False
+    EditLabel.ParentFont = False
+    ParentFont = False
+    TabOrder = 2
+    Text = '...'
   end
 end

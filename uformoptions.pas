@@ -25,7 +25,7 @@ type
     edPathToExecWithFilename: TLabeledEdit;
     edAPIKey: TLabeledEdit;
     GroupBox1: TGroupBox;
-    Label1: TLabel;
+    lbSchedulePauseBetweenRuns: TLabel;
     XMLPropStorageConfig: TXMLPropStorage;
     procedure chIntervalModeChange(Sender: TObject);
     procedure FormShow(Sender: TObject);
@@ -46,12 +46,12 @@ implementation
 
 procedure TfrmOptions.FormShow(Sender: TObject);
 begin
-  Label1.Enabled:=chIntervalMode.Checked;
+  lbSchedulePauseBetweenRuns.Enabled:=chIntervalMode.Checked;
 end;
 
 procedure TfrmOptions.chIntervalModeChange(Sender: TObject);
 begin
-  Label1.Enabled:=chIntervalMode.Checked;
+  lbSchedulePauseBetweenRuns.Enabled:=chIntervalMode.Checked;
 end;
 
 end.

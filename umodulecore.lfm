@@ -1,5 +1,4 @@
 object Core: TCore
-  OnCreate = DataModuleCreate
   OnDestroy = DataModuleDestroy
   OldCreateOrder = False
   Height = 406

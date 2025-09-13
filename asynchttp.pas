@@ -29,7 +29,8 @@ type
   THttpRequest = class;
 
   // Callback signature
-  CallbackFunction = procedure(Request: THttpRequest) of object;
+  THttpRequestCallbackFunction = procedure(Request: THttpRequest) of object;
+  THttpRequestCallbackFunctionStatic = procedure(Request: THttpRequest);
 
   // Request object passed to user callback
   THttpRequest = class
@@ -51,7 +52,7 @@ type
     // Optional request body for POST/other methods
     Data: string;
     // User callback to be invoked in main thread
-    Callback: CallbackFunction;
+    Callback: THttpRequestCallbackFunction;
     // Optional operation name for external tracking
     OperationName: string;
     constructor Create;
@@ -75,7 +76,7 @@ type
   private
     FOwner: TAsyncHTTP;
     FInvokeRequest: THttpRequest;
-    FInvokeCallbackProc: CallbackFunction;
+    FInvokeCallbackProc: THttpRequestCallbackFunction;
     FInvokeKind: TInvokeEventKind;
     procedure DoInvokeCallback;
     procedure DoInvokeEvents;
@@ -130,20 +131,20 @@ type
     destructor Destroy; override;
 
     procedure Get(url: string;
-      callback: CallbackFunction;
+      callback: THttpRequestCallbackFunction;
       headers: string = '';
       operationName: string = '');
 
     procedure Post(url: string;
       data: string; callback:
-      CallbackFunction;
+      THttpRequestCallbackFunction;
       headers: string = '';
       operationName: string = '');
 
     procedure HttpMethod(
       method: string;
       url: string;
-      callback: CallbackFunction;
+      callback: THttpRequestCallbackFunction;
       headers: string = '';
       data: string = '';
       operationName: string = '');
@@ -538,7 +539,7 @@ begin
   end;
 end;
 
-procedure TAsyncHTTP.Get(url: string; callback: CallbackFunction; headers: string; operationName: string);
+procedure TAsyncHTTP.Get(url: string; callback: THttpRequestCallbackFunction; headers: string; operationName: string);
 var
   req: THttpRequest;
 begin
@@ -552,7 +553,7 @@ begin
   Self.EnqueueRequest(req);
 end;
 
-procedure TAsyncHTTP.Post(url: string; data: string; callback: CallbackFunction; headers: string; operationName: string);
+procedure TAsyncHTTP.Post(url: string; data: string; callback: THttpRequestCallbackFunction; headers: string; operationName: string);
 var
   req: THttpRequest;
 begin
@@ -566,7 +567,7 @@ begin
   Self.EnqueueRequest(req);
 end;
 
-procedure TAsyncHTTP.HttpMethod(method: string; url: string; callback: CallbackFunction; headers: string; data: string; operationName: string);
+procedure TAsyncHTTP.HttpMethod(method: string; url: string; callback: THttpRequestCallbackFunction; headers: string; data: string; operationName: string);
 var
   req: THttpRequest;
 begin

@@ -104,12 +104,12 @@ object frmOptions: TfrmOptions
   end
   object GroupBox1: TGroupBox
     Left = 8
-    Height = 88
+    Height = 120
     Top = 224
     Width = 420
     Anchors = [akTop, akLeft, akRight]
-    Caption = 'grpShedule'
-    ClientHeight = 63
+    Caption = 'grpSchedule'
+    ClientHeight = 95
     ClientWidth = 416
     TabOrder = 8
     Visible = False
@@ -131,7 +131,7 @@ object frmOptions: TfrmOptions
       TabOrder = 0
       Text = '0.5 day'
     end
-    object Label1: TLabel
+    object lbSchedulePauseBetweenRuns: TLabel
       Left = 8
       Height = 20
       Top = 35
@@ -143,8 +143,8 @@ object frmOptions: TfrmOptions
       Left = 8
       Height = 24
       Top = 8
-      Width = 124
-      Caption = 'chIntervalMode'
+      Width = 184
+      Caption = 'chScheduleIntervalMode'
       TabOrder = 1
       OnChange = chIntervalModeChange
     end
