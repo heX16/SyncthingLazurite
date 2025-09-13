@@ -108,7 +108,8 @@ msgstr "Опции"
 msgid "chAuto"
 msgstr "Авто"
 
-#: tfrmoptions.chintervalmode.caption
+#: tfrmoptions.chscheduleintervalmode.caption
+msgctxt "tfrmoptions.chscheduleintervalmode.caption"
 msgid "chScheduleIntervalMode"
 msgstr "Интервальный режим"
 
@@ -154,13 +155,14 @@ msgctxt "tfrmoptions.edpathtoexecwithfilename.text"
 msgid "./"
 msgstr "./"
 
-#: tfrmoptions.groupbox1.caption
+#: tfrmoptions.grpschedule.caption
+msgctxt "tfrmoptions.grpschedule.caption"
 msgid "grpSchedule"
 msgstr "Расписание"
 
 #: tfrmoptions.lbschedulepausebetweenruns.caption
 msgctxt "tfrmoptions.lbschedulepausebetweenruns.caption"
-msgid "Pause_between_runs:"
+msgid "lbSchedulePauseBetweenRuns"
 msgstr "Пауза между запусками"
 
 #: tmodulemain.actabout.caption
