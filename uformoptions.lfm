@@ -7,10 +7,9 @@ object frmOptions: TfrmOptions
   ClientHeight = 450
   ClientWidth = 442
   DesignTimePPI = 120
-  OnShow = FormShow
   Position = poDefault
   SessionProperties = 'chIntervalMode.Checked;chRunSyncOnStart.Checked;chUseProxyOutputForFixBug.Checked;edAPIKey.Text;edInterval.Text;edPathToExecWithFilename.Text;edPathToConfigDir.Text'
-  LCLVersion = '2.1.0.0'
+  OnShow = FormShow
   object BitBtn1: TBitBtn
     Left = 8
     Height = 38
@@ -25,11 +24,11 @@ object frmOptions: TfrmOptions
   end
   object edPathToConfigDir: TLabeledEdit
     Left = 8
-    Height = 25
+    Height = 28
     Top = 56
     Width = 397
     Anchors = [akTop, akLeft, akRight]
-    EditLabel.Height = 17
+    EditLabel.Height = 20
     EditLabel.Width = 397
     EditLabel.Caption = 'edPathToConfigDir'
     EditLabel.ParentColor = False
@@ -48,11 +47,11 @@ object frmOptions: TfrmOptions
   end
   object edPathToExecWithFilename: TLabeledEdit
     Left = 8
-    Height = 25
+    Height = 28
     Top = 104
     Width = 397
     Anchors = [akTop, akLeft, akRight]
-    EditLabel.Height = 17
+    EditLabel.Height = 20
     EditLabel.Width = 397
     EditLabel.Caption = 'edPathToExecWithFilename'
     EditLabel.ParentColor = False
@@ -71,16 +70,16 @@ object frmOptions: TfrmOptions
   end
   object edAPIKey: TLabeledEdit
     Left = 8
-    Height = 25
+    Height = 28
     Top = 152
     Width = 317
     Anchors = [akTop, akLeft, akRight]
-    EditLabel.Height = 17
+    EditLabel.Height = 20
+    EditLabel.Hint = 'Goto:'#13#10'Settings -> Common -> API Key'#13#10#13#10'API Key example: xzMwbz6rDUuAv9tjVSbqfVMNta4kPWss'
     EditLabel.Width = 317
     EditLabel.Caption = 'edAPIKey'
     EditLabel.ParentColor = False
     TabOrder = 5
-    Text = 'MJzE2GL2vOvaFydjM05ocRM64SZ0DR1-'
   end
   object chAuto: TCheckBox
     Left = 328
@@ -95,9 +94,9 @@ object frmOptions: TfrmOptions
   end
   object chRunSyncOnStart: TCheckBox
     Left = 8
-    Height = 21
+    Height = 24
     Top = 8
-    Width = 143
+    Width = 141
     Caption = 'chRunSyncOnStart'
     Checked = True
     State = cbChecked
@@ -110,16 +109,16 @@ object frmOptions: TfrmOptions
     Width = 420
     Anchors = [akTop, akLeft, akRight]
     Caption = 'grpShedule'
-    ClientHeight = 66
+    ClientHeight = 63
     ClientWidth = 416
     TabOrder = 8
     Visible = False
     object edInterval: TComboBox
       Left = 192
-      Height = 25
+      Height = 28
       Top = 32
       Width = 125
-      ItemHeight = 17
+      ItemHeight = 20
       ItemIndex = 0
       Items.Strings = (
         '0.5 day'
@@ -134,7 +133,7 @@ object frmOptions: TfrmOptions
     end
     object Label1: TLabel
       Left = 8
-      Height = 17
+      Height = 20
       Top = 35
       Width = 136
       Caption = 'Pause_between_runs:'
@@ -142,19 +141,19 @@ object frmOptions: TfrmOptions
     end
     object chIntervalMode: TCheckBox
       Left = 8
-      Height = 21
+      Height = 24
       Top = 8
-      Width = 118
+      Width = 124
       Caption = 'chIntervalMode'
-      OnChange = chIntervalModeChange
       TabOrder = 1
+      OnChange = chIntervalModeChange
     end
   end
   object chUseProxyOutputForFixBug: TCheckBox
     Left = 8
-    Height = 21
+    Height = 24
     Top = 192
-    Width = 203
+    Width = 207
     Caption = 'chUseProxyOutputForFixBug'
     Checked = True
     State = cbChecked

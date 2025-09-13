@@ -11,6 +11,10 @@ uses
   VirtualTrees,
   UniqueInstance;
 
+resourcestring
+  cStrLocal = ' (local)';
+
+
 type
 
   { TModuleMain }
@@ -115,9 +119,6 @@ uses
   uFormJsonView,
   uFormOptions,
   uFormMain;
-
-resourcestring
-  rsLocal = ' (local)';
 
 { TModuleMain }
 
@@ -314,6 +315,7 @@ var
   OnlineCount: integer;
   OnlineList: string;
   DeviceName: string;
+  DeviceAddr: string;
 const
   MaxItemsInHint = 5;
 begin
@@ -353,8 +355,9 @@ begin
           if OnlineCount <= MaxItemsInHint then
           begin
             DeviceName := i.Data.Value.Name;
-            if IsLocalIP(i.Data.Value.Address) then
-              DeviceName := DeviceName + rsLocal;
+            DeviceAddr := i.Data.Value.Address;
+            if IsLocalIP(DeviceAddr) then
+              DeviceName := DeviceName + cStrLocal;
             OnlineList := OnlineList + DeviceName + #13;
           end;
         end;

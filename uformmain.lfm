@@ -9,6 +9,7 @@ object frmMain: TfrmMain
   DesignTimePPI = 120
   Menu = ModuleMain.MainMenu1
   Position = poDefaultPosOnly
+  LCLVersion = '4.2.0.0'
   OnCreate = FormCreate
   OnDestroy = FormDestroy
   OnWindowStateChange = FormWindowStateChange
@@ -118,7 +119,7 @@ object frmMain: TfrmMain
         item
           MinWidth = 150
           Position = 0
-          Width = 150
+          Width = 158
         end>
       Header.Options = [hoAutoResize, hoColumnResize, hoDrag]
       HintMode = hmHint

@@ -1,481 +1,624 @@
-unit AsyncHttp;
-//todo: non lock read from multiple open socket
+unit AsyncHTTP;
 
 {$mode objfpc}{$H+}
 
 interface
 
 uses
-  httpsend,
-  syncobjs,
-  gqueue,
-  Classes, SysUtils;
+  Classes, SysUtils, SyncObjs, fphttpclient, ghashmap, HashMapStr, gqueue;
 
 type
-  { THttpQueryBase }
+  // Operation status for CheckOperation
+  TOperationState = (
+    osNotFound,   // Operation not found (never existed or already cleaned up)
+    osQueued,     // Operation enqueued and waiting in queue
+    osProcessing, // Operation picked up by worker and being processed
+    osDone        // Operation finished, callback is pending/not yet cleaned up
+  );
 
-  THttpQueryBase = class
+  // Internal kind of event to invoke in main thread
+  TInvokeEventKind = (
+    iekNone,
+    iekOpened,
+    iekSuccess,
+    iekError
+  );
+
+  // Forward declaration
+  TAsyncHTTP = class;
+  THttpRequest = class;
+
+  // Callback signature
+  CallbackFunction = procedure(Request: THttpRequest) of object;
+
+  // Request object passed to user callback
+  THttpRequest = class
   public
-    Session: THTTPSend;
-    Method: string;
-    Url: string;
-    Headers: string;
-    // data for 'post' method
-    Data: string;
-    //user, password
-    Status: integer;
-    // readed data
+    // HTTP response status code (0 if not available due to error)
+    Status: Integer;
+    // Response stream containing server data (position reset to 0 before callback)
     Response: TMemoryStream;
-    // timeout
-    ConnectTimeout: dword;
-    // connected flag (operation in progress)
-    Connected: boolean;
-    InWorkFlagPtr: PBoolean;
-    procedure SetRequestHeader(name: string; value: string);
-
+    // True if connection and request succeeded, false otherwise
+    Connected: Boolean;
+    // Request URL for reference
+    Url: string;
+    // HTTP method (GET/POST/...) for reference
+    Method: string;
+    // Operation state for this request lifecycle
+    State: TOperationState;
+    // Raw HTTP headers to be applied before sending
+    HeadersRaw: string;
+    // Optional request body for POST/other methods
+    Data: string;
+    // User callback to be invoked in main thread
+    Callback: CallbackFunction;
+    // Optional operation name for external tracking
+    OperationName: string;
     constructor Create;
     destructor Destroy; override;
   end;
 
-  THttpQueryEvent = procedure (Query: THttpQueryBase) of object;
+  // Simple event signature
+  TEventHandler = procedure(Sender: TObject) of object;
 
-  {
-    UNSENT = 0; // начальное состояние
-    OPENED = 1; // вызван open
-    HEADERS_RECEIVED = 2; // получены заголовки
-    LOADING = 3; // загружается тело (получен очередной пакет данных)
-    DONE = 4; // запрос завершён
-  }
-  THttpQueryState = (httpLoading=3, httpDone=4, httpError=5);
+  // Dictionary mapping operation name to request instance
+  TDictHttpRequest = specialize THashMap<string, THttpRequest, THashFuncString>;
 
-  THttpQuery = class;
+  // FIFO queue for requests
+  TQueueHttpRequest = specialize TQueue<THttpRequest>;
 
-  THttpCallbackEvent = procedure (Query: THttpQuery) of object;
+  // Worker thread processing queued HTTP requests
 
-  THttpQuery = class(THttpQueryBase)
+  { TRequestWorkerThread }
+
+  TRequestWorkerThread = class(TThread)
+  private
+    FOwner: TAsyncHTTP;
+    FInvokeCallbackRequest: THttpRequest;
+    FInvokeCallbackProc: CallbackFunction;
+    FInvokeKind: TInvokeEventKind;
+    procedure DoInvokeCallback;
+    procedure DoInvokeEvents;
+    procedure ProcessRequest(ARequest: THttpRequest; Client: TFPHTTPClient = nil); virtual;
+  protected
+    procedure Execute; override;
   public
-    {
-      Opened – запрос начат.
-      progress – браузер получил очередной пакет данных, можно прочитать текущие полученные данные в responseText.
-      abort – запрос был отменён вызовом xhr.abort().
-      error – произошла ошибка.
-      load – запрос был успешно (без ошибок) завершён.
-      timeout – запрос был прекращён по таймауту.
-      loadend – запрос был завершён (успешно или неуспешно)
-    }
-    Callback: THttpCallbackEvent;
-    Opened: THttpQueryEvent;
-    Done: THttpQueryEvent;
-    Error: THttpQueryEvent;
-    ReadyState: THttpQueryState;
-    procedure HttpRequest();
-    procedure HttpRequestEnded(); virtual;
+    constructor Create(Owner: TAsyncHTTP);
   end;
+
+  // HTTP client that never raises on HTTP response codes
+  TQuietHTTPClient = class(TFPHTTPClient)
+  protected
+    function CheckResponseCode(ACode: Integer; const AllowedResponseCodes: array of Integer): Boolean; override;
+  end;
+
+  // Main class exposed to users
 
   { TAsyncHTTP }
 
-  TQueueHttpQuery = specialize TQueue<THttpQuery>;
-
-  { THttpQueryForThreadHTTP }
-
-  THttpEvent = procedure (Query: THttpQueryBase) of object;
-
-  THttpQueryForThreadHTTP = class(THttpQuery)
-    procedure HttpRequestEnded(); override;
-    procedure SelfDestroy(DataPtr: IntPtr);
-  end;
-
-  TAsyncHTTP = class(TThread)
+  TAsyncHTTP = class
+  private
+    FConnectTimeout: Integer;
+    FQueue: TQueueHttpRequest;
+    FQueueLock: TCriticalSection;
+    FQueueEvent: TEvent;
+    FWorker: TRequestWorkerThread;
+    FNamedRequestsDict: TDictHttpRequest;
+    FNamedRequestsLock: TCriticalSection;
+    FOnOpened: TEventHandler;
+    FOnLoadDone: TEventHandler;
+    FOnError: TEventHandler;
+    FRetryCount: Integer;
+    FIOTimeout: Integer;
+    FTerminated: Boolean;
+    FKeepConnection: Boolean;
+    procedure EnqueueRequest(const ARequest: THttpRequest);
+    function GetRequestByName(const OperationName: string): THttpRequest;
+    procedure AddRequestName(const ARequest: THttpRequest);
+    procedure RemoveRequestName(const OperationName: string);
   protected
-    QueryList: TQueueHttpQuery;
-    CritQueryList: TCriticalSection;
-    EventWaitWork: TEventObject;
-
-    procedure Execute; override;
-
-    procedure DoLoadDone(Query: THttpQueryBase);
-    procedure DoOpened(Query: THttpQueryBase);
-    procedure DoError(Query: THttpQueryBase);
-
+    // Factory method for HTTP client instance
+    function CreateHttpClient: TFPHTTPClient; virtual;
+    // Configure HTTP client based on timeouts and request-specific headers/body hints
+    procedure ConfigureHttpClient(AClient: TFPHTTPClient; const ARequest: THttpRequest); virtual;
+    // Cleanup HTTP client between requests/attempts (preparing for reuse)
+    procedure CleanupHttpClient(AClient: TFPHTTPClient); virtual;
+    // Factory for worker thread (allows customization in descendants)
+    function CreateWorkerThread: TRequestWorkerThread; virtual;
   public
-    OnOpened: THttpEvent;
-    OnLoadDone: THttpEvent;
-    OnError: THttpEvent;
-    ConnectTimeout: LongInt;
+    constructor Create;
+    destructor Destroy; override;
 
-    // call from other threads.
-    // `Callback` call in caller ('main') thread (not in this thread!).
-    // 'Callback' call the main thread. Main thread must have "Form" or just call "CheckSynchronize".
-    procedure HttpMethod(Method: string; const URL: string; Callback: THttpCallbackEvent; AddHeaders: string = '';
-      const Data: string = ''; InWorkFlagPtr: PBoolean = nil);
+    procedure Get(url: string;
+      callback: CallbackFunction;
+      headers: string = '';
+      operationName: string = '');
 
-    // call from other threads.
-    procedure Get(const URL: string; Callback: THttpCallbackEvent; AddHeaders: string = '';
-      InWorkFlagPtr: PBoolean = nil);
+    procedure Post(url: string;
+      data: string; callback:
+      CallbackFunction;
+      headers: string = '';
+      operationName: string = '');
 
-    // call from other threads.
-    procedure Post(const URL: string; const Data: string;
-      Callback: THttpCallbackEvent; AddHeaders: string = '';
-      InWorkFlagPtr: PBoolean = nil);
+    procedure HttpMethod(
+      method: string;
+      url: string;
+      callback: CallbackFunction;
+      headers: string = '';
+      data: string = '';
+      operationName: string = '');
 
-    // call from other threads.
+    // Graceful shutdown
     procedure Terminate;
 
-    procedure AfterConstruction; override;
-    destructor Destroy; override;
-  end;
+    // Check operation status by name
+    function RequestInQueue(const OperationName: string): Boolean;
 
-  { TFakeAsyncHTTP }
-
-  TFakeAsyncHTTP = class(TObject)
-  protected
-    procedure DoLoadDone(Query: THttpQueryBase);
-    procedure DoOpened(Query: THttpQueryBase);
-    procedure DoError(Query: THttpQueryBase);
-  public
-    OnOpened: THttpEvent;
-    OnLoadDone: THttpEvent;
-    OnError: THttpEvent;
-    ConnectTimeout: LongInt;
-
-    constructor Create(CreateSuspended: Boolean;
-                       const StackSize: SizeUInt = DefaultStackSize);
-
-    procedure HttpMethod(Method: string; const URL: string; Callback: THttpCallbackEvent; AddHeaders: string = '';
-      const Data: string = ''; InWorkFlagPtr: PBoolean = nil);
-
-    procedure Get(const URL: string; Callback: THttpCallbackEvent; AddHeaders: string = '';
-      InWorkFlagPtr: PBoolean = nil);
-
-    procedure Post(const URL: string; const Data: string;
-      Callback: THttpCallbackEvent; AddHeaders: string = '';
-      InWorkFlagPtr: PBoolean = nil);
-
-    // call from other threads.
-    procedure Terminate;
-
-    destructor Destroy; override;
+    // Properties
+    property ConnectTimeout: Integer read FConnectTimeout write FConnectTimeout;
+    property IOTimeout: Integer read FIOTimeout write FIOTimeout;
+    property RetryCount: Integer read FRetryCount write FRetryCount;
+    // When true, reuse one HTTP client (keep-alive) within the worker thread
+    property KeepConnection: Boolean read FKeepConnection write FKeepConnection;
+    property OnOpened: TEventHandler read FOnOpened write FOnOpened;
+    property OnLoadDone: TEventHandler read FOnLoadDone write FOnLoadDone;
+    property OnError: TEventHandler read FOnError write FOnError;
   end;
 
 implementation
 
-uses
-  Forms, Controls, Graphics, Dialogs, StdCtrls, synautil,
-  ExtCtrls;
+{ TQuietHTTPClient }
 
-{ TFakeAsyncHTTP }
-
-procedure TFakeAsyncHTTP.DoLoadDone(Query: THttpQueryBase);
-var q: THttpQueryForThreadHTTP absolute Query;
+function TQuietHTTPClient.CheckResponseCode(ACode: Integer; const AllowedResponseCodes: array of Integer): Boolean;
 begin
-  if q.Callback <> nil then
-    q.Callback(q);
+  // Always treat any HTTP response code as acceptable to prevent exceptions.
+  Result := True;
 end;
 
-procedure TFakeAsyncHTTP.DoOpened(Query: THttpQueryBase);
+{ TAsyncHTTP - virtual factory/configuration }
+
+function TAsyncHTTP.CreateHttpClient: TFPHTTPClient;
 begin
-  if OnOpened<>nil then
-    OnOpened(Query);
+  // Create client that does not raise on non-2xx/3xx codes
+  Result := TQuietHTTPClient.Create(nil);
 end;
 
-procedure TFakeAsyncHTTP.DoError(Query: THttpQueryBase);
-var q: THttpQueryForThreadHTTP absolute Query;
+procedure TAsyncHTTP.ConfigureHttpClient(AClient: TFPHTTPClient; const ARequest: THttpRequest);
+  procedure ApplyHeaders(AClientInner: TFPHTTPClient; const HeadersRaw: string);
+  var
+    lines: TStringList;
+    i, p: Integer;
+    line, key, value: string;
+  begin
+    if HeadersRaw = '' then Exit;
+    lines := TStringList.Create;
+    try
+      lines.Text := HeadersRaw;
+      for i := 0 to lines.Count - 1 do
+      begin
+        line := Trim(lines[i]);
+        if line = '' then Continue;
+        p := Pos(':', line);
+        if p <= 0 then Continue;
+        key := Trim(Copy(line, 1, p - 1));
+        value := Trim(Copy(line, p + 1, Length(line)));
+        if (key <> '') then
+          AClientInner.AddHeader(key, value);
+      end;
+    finally
+      lines.Free;
+    end;
+  end;
 begin
-  if q.Callback <> nil then
-    q.Callback(q);
+  // AClient.AddHeader('Connection', 'close');
+  AClient.AllowRedirect := True;
+  AClient.KeepConnection := self.KeepConnection;
+  
+  if Self.FConnectTimeout > 0 then
+    AClient.ConnectTimeout := Self.FConnectTimeout;
+  if Self.FIOTimeout > 0 then
+    AClient.IOTimeout := Self.FIOTimeout
+  else if Self.FConnectTimeout > 0 then
+    AClient.IOTimeout := Self.FConnectTimeout;
+  ApplyHeaders(AClient, ARequest.HeadersRaw);
 end;
 
-constructor TFakeAsyncHTTP.Create(CreateSuspended: Boolean;
-  const StackSize: SizeUInt);
+procedure TAsyncHTTP.CleanupHttpClient(AClient: TFPHTTPClient);
 begin
-  ConnectTimeout:=100;
+  // Reset per-request state to prepare for reuse.
+  // Note: keep baseline defaults (Connection/Redirect/KeepConnection) intact.
+  AClient.RequestHeaders.Clear;
+  AClient.Cookies.Clear;
+  AClient.RequestBody := nil;
+  // Timeouts will be re-applied in ConfigureHttpClient before use.
 end;
 
-procedure TFakeAsyncHTTP.HttpMethod(Method: string; const URL: string;
-  Callback: THttpCallbackEvent; AddHeaders: string; const Data: string;
-  InWorkFlagPtr: PBoolean);
-var q: THttpQuery;
+function TAsyncHTTP.CreateWorkerThread: TRequestWorkerThread;
 begin
-  q := THttpQuery.Create();
-  q.ConnectTimeout:=ConnectTimeout;
-  q.Method:=Method;
-  q.Url:=URL;
-  q.Data:=Data;
-  q.Headers:=AddHeaders;
-  if InWorkFlagPtr<>nil then
-    q.InWorkFlagPtr:=InWorkFlagPtr;
-  q.Done:=@DoLoadDone;
-  q.Error:=@DoError;
-  q.Opened:=@DoOpened;
-  q.Callback:=Callback;
-
-  // network stun!
-  q.HttpRequest();
-
-  FreeAndNil(q);
+  Result := TRequestWorkerThread.Create(Self);
 end;
 
-procedure TFakeAsyncHTTP.Get(const URL: string; Callback: THttpCallbackEvent;
-  AddHeaders: string; InWorkFlagPtr: PBoolean);
+{ THttpRequest }
+
+constructor THttpRequest.Create;
 begin
-  HttpMethod('GET', Url, Callback, AddHeaders, '', InWorkFlagPtr);
+  inherited Create;
+  Self.Status := 0;
+  Self.Response := nil;
+  Self.Connected := False;
+  Self.State := osNotFound;
 end;
 
-procedure TFakeAsyncHTTP.Post(const URL: string; const Data: string;
-  Callback: THttpCallbackEvent; AddHeaders: string; InWorkFlagPtr: PBoolean);
+destructor THttpRequest.Destroy;
 begin
-  HttpMethod('POST', Url, Callback, AddHeaders, Data, InWorkFlagPtr);
-end;
-
-procedure TFakeAsyncHTTP.Terminate;
-begin
-  // Empty
-end;
-
-destructor TFakeAsyncHTTP.Destroy;
-begin
-
+  FreeAndNil(Self.Response);
   inherited Destroy;
 end;
 
-{ THttpQueryForThreadHTTP }
+{ TRequestWorkerThread }
 
-procedure THttpQueryForThreadHTTP.HttpRequestEnded();
+constructor TRequestWorkerThread.Create(Owner: TAsyncHTTP);
 begin
-  //todo: bug! read in SelfDestroy
-  Application.QueueAsyncCall(@SelfDestroy, IntPtr(Self));
+  inherited Create(True);
+  Self.FreeOnTerminate := False;
+  Self.FOwner := Owner;
+  Self.FInvokeCallbackRequest := nil;
+  Self.FInvokeCallbackProc := nil;
+  Self.FInvokeKind := iekNone;
+  Self.Start;
 end;
 
-procedure THttpQueryForThreadHTTP.SelfDestroy(DataPtr: IntPtr);
+procedure TRequestWorkerThread.DoInvokeEvents;
 begin
-  //todo: всеравно ловлю AV - в сложных/неудачных случаях
-  //  нужно финальный вызов callback делать через "прокси" процедуру,
-  //  которая по завершении гарантированно будет разрушать обьект.
-  //  потомучто просто скидывать вызов в "стек асинхронных вызовов" это неправильно,
-  //  формально говоря никто не обящает сохранения последовательности выполнения.
-  // free item
-  THttpQuery(DataPtr).Free();
-end;
-
-{ THttpQuery }
-
-procedure THttpQuery.HttpRequestEnded();
-begin
-
-end;
-
-procedure THttpQuery.HttpRequest();
-var repeat_count: Integer;
-begin
-  Session := THTTPSend.Create;
-  try
-    if ConnectTimeout <> 0 then
-      Session.Timeout:=ConnectTimeout;
-    Session.KeepAlive:=false;
-
-    if Opened<>nil then
-      Opened(self);
-    if Headers<>'' then
-      Session.Headers.AddText(Headers);
-    Headers:='';
-    if Data<>'' then
-      WriteStrToStream(Session.Document, Data);
-    Data := '';
-
-    for repeat_count:=1 to 5 do
-    begin
-      Connected := Session.HTTPMethod(Method, Url);
-      if (not Connected) and (Session.Sock.LastError = 10060) then
-        continue;
-      break;
-    end;
-    Status := Session.ResultCode;
-    if Connected then
-    begin
-      //HTTP.Sock.OnStatus:=...; - OnProgress
-      if Response=nil then
-        Response := TMemoryStream.Create();
-      if Session.Document.Size > 0 then
-      begin
-        Response.LoadFromStream(Session.Document);
-        Response.Position:=0;
-      end;
-      ReadyState:=httpDone;
-      if Done<>nil then
-        Done(self);
-    end else
-    begin
-      ReadyState:=httpError;
-      if Error<>nil then
-        Error(self);
-    end;
-  finally
-    FreeAndNil(Session);
-    if InWorkFlagPtr<>nil then
-      InWorkFlagPtr^:=false;
-    HttpRequestEnded();
+  // Execute requested events in the main thread
+  case Self.FInvokeKind of
+    iekOpened:
+      if Assigned(Self.FOwner.FOnOpened) then
+        Self.FOwner.FOnOpened(Self.FOwner);
+    iekSuccess:
+      if Assigned(Self.FOwner.FOnLoadDone) then
+        Self.FOwner.FOnLoadDone(Self.FOwner);
+    iekError:
+      if Assigned(Self.FOwner.FOnError) then
+        Self.FOwner.FOnError(Self.FOwner);
+  else
+    ;
   end;
 end;
 
-{ THttpQueryBase }
-
-procedure THttpQueryBase.SetRequestHeader(name: string; value: string);
+procedure TRequestWorkerThread.DoInvokeCallback;
 begin
-  Session.Headers.Add(name+': '+value);
+  // Execute callback in the main/UI thread
+  if Assigned(Self.FInvokeCallbackProc) and Assigned(Self.FInvokeCallbackRequest) then
+    Self.FInvokeCallbackProc(Self.FInvokeCallbackRequest);
 end;
 
-constructor THttpQueryBase.Create;
+procedure TRequestWorkerThread.Execute;
+var
+  req: THttpRequest;
+  sharedClient: TFPHTTPClient;
 begin
-  ConnectTimeout := 0;
-  Response := TMemoryStream.Create();
+  sharedClient := nil;
+  while not Self.Terminated do
+  begin
+    // Wait until there is work or termination
+    Self.FOwner.FQueueEvent.WaitFor(INFINITE);
+    if Self.Terminated then Break;
+
+    // Pop and process all available requests
+    while True do
+    begin
+      if Self.Terminated then Break;
+      req := nil;
+      Self.FOwner.FQueueLock.Acquire;
+      try
+        if Self.FOwner.FQueue.Size() > 0 then
+        begin
+          req := Self.FOwner.FQueue.Front();
+          Self.FOwner.FQueue.Pop();
+        end;
+      finally
+        Self.FOwner.FQueueLock.Release;
+      end;
+
+      if req = nil then Break;
+
+      if Self.FOwner.FKeepConnection then
+      begin
+        if sharedClient = nil then
+          sharedClient := Self.FOwner.CreateHttpClient;
+        Self.ProcessRequest(req, sharedClient);
+      end else
+      begin
+        Self.ProcessRequest(req, nil);
+      end;
+    end;
+  end;
+
+  // Cleanup shared client if used
+  if sharedClient <> nil then
+    sharedClient.Free;
 end;
 
-destructor THttpQueryBase.Destroy;
+procedure TRequestWorkerThread.ProcessRequest(ARequest: THttpRequest;
+  Client: TFPHTTPClient);
+var
+  attempt: Integer;
+  succeeded: Boolean;
+  body: TStream;
+  clientNeedFree: Boolean;
 begin
-  if Response<>nil then
-    Response.Free();
-  inherited Destroy;
+  // Mark started and fire OnOpened on the main thread
+  Self.FInvokeKind := iekOpened;
+  Self.Synchronize(@DoInvokeEvents);
+
+  succeeded := False;
+  ARequest.Method := UpperCase(ARequest.Method);
+  ARequest.State := osProcessing;
+
+  clientNeedFree := False;
+  if Client = nil then
+  begin
+    Client := Self.FOwner.CreateHttpClient;
+    clientNeedFree := True;
+  end
+  else
+    Self.FOwner.CleanupHttpClient(Client);
+
+  try
+    Self.FOwner.ConfigureHttpClient(Client, ARequest);
+
+    for attempt := 0 to Self.FOwner.FRetryCount do
+    begin
+      if ARequest.Response = nil then
+        ARequest.Response := TMemoryStream.Create
+      else
+        ARequest.Response.Size := 0;
+      ARequest.Response.Position := 0;
+
+      try
+        if ARequest.Method = 'GET' then
+          Client.Get(ARequest.Url, ARequest.Response)
+        else if ARequest.Method = 'POST' then
+        begin
+          body := nil;
+          if ARequest.Data <> '' then
+          begin
+            body := TStringStream.Create(ARequest.Data);
+            Client.RequestBody := body;
+            Client.RequestBody.Position := 0;
+          end;
+          try
+            Client.Post(ARequest.Url, ARequest.Response);
+          finally
+            Client.RequestBody := nil;
+            FreeAndNil(body);
+          end;
+        end
+        else
+        begin
+          // Generic HTTP method
+          body := nil;
+          if ARequest.Data <> '' then
+          begin
+            body := TStringStream.Create(ARequest.Data);
+            Client.RequestBody := body;
+            Client.RequestBody.Position := 0;
+          end;
+          try
+            Client.HTTPMethod(ARequest.Method, ARequest.Url, ARequest.Response, []);
+          finally
+            Client.RequestBody := nil;
+            FreeAndNil(body);
+          end;
+        end;
+
+        ARequest.Status := Client.ResponseStatusCode;
+        ARequest.Connected := (ARequest.Status >= 200) and (ARequest.Status < 400);
+        if ARequest.Connected then
+        begin
+          succeeded := True;
+          Break;
+        end;
+      except
+        // On any exception, retry if attempts remain
+        on E: Exception do
+        begin
+          ARequest.Connected := False;
+          ARequest.Status := 0;
+        end;
+      end;
+    end;
+  finally
+    if clientNeedFree then
+      Client.Free;
+  end;
+
+  // Mark as done before invoking callback; after callback we will remove operation
+  ARequest.State := osDone;
+
+  // Fire success/error event in main thread
+  if succeeded then
+    Self.FInvokeKind := iekSuccess
+  else
+    Self.FInvokeKind := iekError;
+  Self.Synchronize(@DoInvokeEvents);
+
+  // Prepare and invoke the user callback in main thread
+  ARequest.Response.Position := 0;
+  Self.FInvokeCallbackRequest := ARequest;
+  Self.FInvokeCallbackProc := ARequest.Callback;
+  Self.Synchronize(@DoInvokeCallback);
+
+  // After callback returns, cleanup
+  Self.FOwner.RemoveRequestName(ARequest.OperationName);
+  FreeAndNil(ARequest);
 end;
 
 { TAsyncHTTP }
 
-procedure TAsyncHTTP.DoOpened(Query: THttpQueryBase);
+constructor TAsyncHTTP.Create;
 begin
-  if OnOpened<>nil then
-    OnOpened(Query);
-end;
-
-procedure TAsyncHTTP.DoLoadDone(Query: THttpQueryBase);
-var q: THttpQueryForThreadHTTP absolute Query;
-begin
-  //off: q := THttpQueryForThreadHTTP(Query); - use 'absolute' keyword.
-
-  if q.Callback <> nil then
-    Application.QueueAsyncCall(TDataEvent(q.Callback), IntPtr(q));
-end;
-
-procedure TAsyncHTTP.DoError(Query: THttpQueryBase);
-var q: THttpQueryForThreadHTTP absolute Query;
-begin
-  if q.Callback <> nil then
-    Application.QueueAsyncCall(TDataEvent(q.Callback), IntPtr(q));
-end;
-
-procedure TAsyncHTTP.HttpMethod(Method: string; const URL: string;
-  Callback: THttpCallbackEvent; AddHeaders: string; const Data: string;
-  InWorkFlagPtr: PBoolean);
-var q: THttpQueryForThreadHTTP;
-begin
-  if not Terminated then
-  begin
-    if InWorkFlagPtr<>nil then
-      InWorkFlagPtr^:=true;
-    q := THttpQueryForThreadHTTP.Create();
-    q.Method:=Method;
-    q.Url:=URL;
-    q.Data:=Data;
-    q.Headers:=AddHeaders;
-    if InWorkFlagPtr<>nil then
-      q.InWorkFlagPtr:=InWorkFlagPtr;
-    q.Done:=@DoLoadDone;
-    q.Error:=@DoError;
-    q.Opened:=@DoOpened;
-    q.Callback:=Callback;
-
-    CritQueryList.Enter();
-    QueryList.Push(q);
-    CritQueryList.Leave();
-
-    EventWaitWork.SetEvent();
-  end;
-end;
-
-procedure TAsyncHTTP.Execute;
-var
-  q: THttpQuery;
-begin
-  // program init:
-  CritQueryList := TCriticalSection.Create();
-  QueryList:= TQueueHttpQuery.Create();
-  EventWaitWork:= TEventObject.Create(nil, False, False, '');
-
-  try
-
-    // main loop
-    while not Terminated do
-    begin
-      q := nil;
-
-      CritQueryList.Enter(); // <<
-      if QueryList.Size() > 0 then
-      begin
-        q := QueryList.Front();
-        QueryList.Pop();
-      end;
-      CritQueryList.Leave(); // >>
-
-      if q <> nil then
-      begin
-        // network stun!
-        q.HttpRequest();
-        //note: About 'q'. Can't run 'free' here - async callback will happen later.
-        //note: About 'q'. Item not needed destroy - he used 'SelfDestroy' procedure.
-      end;
-
-      EventWaitWork.WaitFor(INFINITE);
-    end;
-
-  finally
-    // program end:
-
-    // clear QueryList
-    CritQueryList.Enter(); // <<
-    while QueryList.Size() > 0 do
-    begin
-      q := QueryList.Front();
-      QueryList.Pop();
-      FreeAndNil(q);
-    end;
-    CritQueryList.Leave(); // >>
-
-    FreeAndNil(CritQueryList);
-    FreeAndNil(QueryList);
-    FreeAndNil(EventWaitWork);
-  end;
+  inherited Create;
+  Self.FConnectTimeout := 0;
+  Self.FRetryCount := 1; // Simple automatic retry on failure
+  Self.FIOTimeout := 0;
+  Self.FTerminated := False;
+  Self.FKeepConnection := False;
+  Self.FQueue := TQueueHttpRequest.Create;
+  Self.FQueueLock := TCriticalSection.Create;
+  // Auto-reset event, initially non-signaled
+  Self.FQueueEvent := TEvent.Create(nil, False, False, '');
+  Self.FNamedRequestsDict := TDictHttpRequest.Create;
+  Self.FNamedRequestsLock := TCriticalSection.Create;
+  Self.FWorker := Self.CreateWorkerThread;
 end;
 
 destructor TAsyncHTTP.Destroy;
 begin
-  if not Terminated then
-    Terminate();
+  Self.Terminate;
   inherited Destroy;
 end;
 
-procedure TAsyncHTTP.Get(const URL: string; Callback: THttpCallbackEvent;
-  AddHeaders: string; InWorkFlagPtr: PBoolean);
+procedure TAsyncHTTP.EnqueueRequest(const ARequest: THttpRequest);
 begin
-  HttpMethod('GET', Url, Callback, AddHeaders, '', InWorkFlagPtr);
+  // Map operation name to request if provided
+  if ARequest.OperationName <> '' then
+    Self.AddRequestName(ARequest);
+
+  Self.FQueueLock.Acquire;
+  try
+    Self.FQueue.Push(ARequest);
+    // Do not free ARequest here; ownership passes to the queue/worker
+  finally
+    Self.FQueueLock.Release;
+  end;
+  // Wake worker
+  Self.FQueueEvent.SetEvent;
 end;
 
-procedure TAsyncHTTP.Post(const URL: string; const Data: string; Callback: THttpCallbackEvent;
-  AddHeaders: string; InWorkFlagPtr: PBoolean);
+function TAsyncHTTP.GetRequestByName(const OperationName: string): THttpRequest;
+var
+  req: THttpRequest;
 begin
-  HttpMethod('POST', Url, Callback, AddHeaders, Data, InWorkFlagPtr);
+  Result := nil;
+  if OperationName = '' then Exit;
+  Self.FNamedRequestsLock.Acquire;
+  try
+    if Self.FNamedRequestsDict.GetValue(OperationName, req) then
+      Result := req
+    else
+      Result := nil;
+  finally
+    Self.FNamedRequestsLock.Release;
+  end;
+end;
+
+procedure TAsyncHTTP.AddRequestName(const ARequest: THttpRequest);
+begin
+  if (ARequest = nil) or (ARequest.OperationName = '') then Exit;
+  Self.FNamedRequestsLock.Acquire;
+  try
+    Self.FNamedRequestsDict[ARequest.OperationName] := ARequest;
+  finally
+    Self.FNamedRequestsLock.Release;
+  end;
+end;
+
+procedure TAsyncHTTP.RemoveRequestName(const OperationName: string);
+begin
+  if OperationName = '' then Exit;
+  Self.FNamedRequestsLock.Acquire;
+  try
+    Self.FNamedRequestsDict.delete(OperationName);
+  finally
+    Self.FNamedRequestsLock.Release;
+  end;
+end;
+
+procedure TAsyncHTTP.Get(url: string; callback: CallbackFunction; headers: string; operationName: string);
+var
+  req: THttpRequest;
+begin
+  req := THttpRequest.Create;
+  req.Method := 'GET';
+  req.Url := url;
+  req.HeadersRaw := headers;
+  req.Data := '';
+  req.Callback := callback;
+  req.OperationName := operationName;
+  Self.EnqueueRequest(req);
+end;
+
+procedure TAsyncHTTP.Post(url: string; data: string; callback: CallbackFunction; headers: string; operationName: string);
+var
+  req: THttpRequest;
+begin
+  req := THttpRequest.Create;
+  req.Method := 'POST';
+  req.Url := url;
+  req.HeadersRaw := headers;
+  req.Data := data;
+  req.Callback := callback;
+  req.OperationName := operationName;
+  Self.EnqueueRequest(req);
+end;
+
+procedure TAsyncHTTP.HttpMethod(method: string; url: string; callback: CallbackFunction; headers: string; data: string; operationName: string);
+var
+  req: THttpRequest;
+begin
+  req := THttpRequest.Create;
+  req.Method := UpperCase(Trim(method));
+  if req.Method = '' then req.Method := 'GET';
+  req.Url := url;
+  req.HeadersRaw := headers;
+  req.Data := data;
+  req.Callback := callback;
+  req.OperationName := operationName;
+  Self.EnqueueRequest(req);
 end;
 
 procedure TAsyncHTTP.Terminate;
+var
+  req: THttpRequest;
 begin
-  inherited; //note: <- FTerminated := True;
-  // wake up and get out!
-  if EventWaitWork <> nil then
-    EventWaitWork.SetEvent();
+  if Self.FTerminated then Exit;
+  Self.FTerminated := True;
+  
+  if Assigned(Self.FWorker) then
+  begin
+    Self.FWorker.Terminate;
+    if Assigned(Self.FQueueEvent) then
+      Self.FQueueEvent.SetEvent;
+    Self.FWorker.WaitFor;
+    FreeAndNil(Self.FWorker);
+  end;
+
+  Self.FQueueLock.Acquire;
+  try
+    while (Self.FQueue.Size() > 0) do
+    begin
+      req := Self.FQueue.Front();
+      Self.FQueue.Pop();
+      FreeAndNil(req);
+    end;
+  finally
+    Self.FQueueLock.Release;
+  end;
+
+  FreeAndNil(Self.FQueueEvent);
+  FreeAndNil(Self.FQueueLock);
+  FreeAndNil(Self.FNamedRequestsLock);
+  FreeAndNil(Self.FNamedRequestsDict);
+  FreeAndNil(Self.FQueue);
 end;
 
-procedure TAsyncHTTP.AfterConstruction;
+function TAsyncHTTP.RequestInQueue(const OperationName: string): Boolean;
 begin
-  inherited AfterConstruction;
-  ConnectTimeout:=100;
+  Result := GetRequestByName(OperationName) <> nil;
 end;
 
 end.
+
 

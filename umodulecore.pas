@@ -247,6 +247,9 @@ begin
   if Pos(':', IP) > 0 then
   begin
     // Simple IPv6 checks
+
+    if LeftStr(IP, 1) = '[' then
+      Delete(IP, 1, 1);
     
     // Check for ::1 (localhost)
     if (IP = '::1') then

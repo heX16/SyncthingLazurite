@@ -111,6 +111,14 @@ msgstr ""
 msgid "edAPIKey"
 msgstr ""
 
+#: tfrmoptions.edapikey.editlabel.hint
+msgid ""
+"Goto:\n"
+"Settings -> Common -> API Key\n"
+"\n"
+"API Key example: xzMwbz6rDUuAv9tjVSbqfVMNta4kPWss"
+msgstr ""
+
 #: tfrmoptions.edpathtoconfigdir.editlabel.caption
 msgid "edPathToConfigDir"
 msgstr ""
@@ -205,7 +213,8 @@ msgstr ""
 msgid "Offline"
 msgstr ""
 
-#: umodulemain.rslocal
+#: umodulemain.cstrlocal
+msgctxt "umodulemain.cstrlocal"
 msgid " (local)"
 msgstr ""
 

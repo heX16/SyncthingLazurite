@@ -170,7 +170,11 @@ begin
     if (not item.Connected) and (DaysBetween(item.LastSeen, Now()) < 31*6) then
       HintText :=  HintText + #13 + cOffline + ': ' + IntToStr(DaysBetween(item.LastSeen, Now())) + ' ' + cDays;
     if item.Connected then
+    begin
       HintText :=  HintText + #13 + cAddress + ': ' + item.Address;
+      if IsLocalIP(item.Address) then
+         HintText := HintText + cStrLocal;
+    end;
   end;
 end;
 
