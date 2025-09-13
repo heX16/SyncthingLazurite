@@ -99,7 +99,6 @@ type
     ActionList: TActionList;
     ProcessSyncthing: TProcessUTF8;
     ProcessSupport: TProcessUTF8;
-    TimerCheckState: TTimer;
     TimerAfterStartCheck: TTimer;
     TimerPause: TTimer;
     TimerInit: TTimer;
@@ -118,7 +117,6 @@ type
 
     procedure DataModuleDestroy(Sender: TObject);
     procedure TimerAfterStartCheckTimer(Sender: TObject);
-    procedure TimerCheckStateTimer(Sender: TObject);
 
     procedure TimerInitTimer(Sender: TObject);
     procedure TimerPauseTimer(Sender: TObject);
@@ -208,6 +206,9 @@ type
 
     function SendJSON(const RESTPath: string; const DataForSend: TStrings = nil): Boolean;
 
+    // TODO: WIP - api
+    procedure API_Get(api: string; callback: THttpRequestCallbackFunction);
+    procedure API_Post(api: string; data: string; callback: THttpRequestCallbackFunction);
   end;
 
 var
@@ -588,6 +589,21 @@ begin
   finally
     HTTP.Free;
   end;
+end;
+
+procedure TCore.API_Get(api: string; callback: THttpRequestCallbackFunction);
+begin
+  Core.aiohttp.Get(
+    Core.SyncthigServer+'rest/'+api, callback,
+    '', api);
+end;
+
+procedure TCore.API_Post(api: string; data: string;
+  callback: THttpRequestCallbackFunction);
+begin
+  Core.aiohttp.Post(
+    Core.SyncthigServer+'rest/'+api, data, callback,
+    '', api);
 end;
 
 procedure TCore.aiohttpAddHeader(Request: THttpRequest; Sender: TObject);
@@ -1016,10 +1032,6 @@ begin
   end;
 end;
 
-procedure TCore.TimerCheckStateTimer(Sender: TObject);
-begin
-  //
-end;
 
 procedure TCore.Init();
 var d:TDevInfo;

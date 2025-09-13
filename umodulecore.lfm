@@ -128,10 +128,4 @@ object Core: TCore
     Left = 244
     Top = 144
   end
-  object TimerCheckState: TTimer
-    Interval = 10000
-    OnTimer = TimerCheckStateTimer
-    Left = 244
-    Top = 208
-  end
 end

@@ -131,30 +131,47 @@ var
   j2: TJSONData;
   e: TJSONEnum;
   s: UTF8String;
+  info: UTF8String;
 begin
-  //TODO: BUG 2022. AV. здесь падает. - дальше вызов FFFF происходит. че такое, хз...
+  JData := nil;
+  info := '';
+
   if HttpRequestToJson(Request, JData) then
   try
     for e in JData do
     begin
-      //todo: httpEvents WIP!!!
+
       j := e.Value as TJSONObject;
-      Core.EventsLastId := j.Get('globalID', 0);
-      s := IntToStr(Core.EventsLastId) +' '+ j.Get('type', '');
+
+      Core.EventsLastId := j.Get('id', 0);
+      
       j2 := j.FindPath('data.folder');
       if j2<>nil then
-        s := s + ' folder: "' + j2.AsString + '"' else
-        s := s + ' // ' + j.AsJSON;
+      begin
+        info := 'folder:' + j2.AsString;
+      end
+      else
+      begin
+        info := 'json_dump:' + j.AsJSON;
+      end;
+
+      s := Format('id:%d;  type:%s  name:%s  %s', [
+        Core.EventsLastId, 
+        j.Get('type', ''),
+        j.Get('name', ''),
+        info
+      ]);
+
       frmMain.listEvents.Lines.Insert(0, s);
+
+      while frmMain.listEvents.Lines.Count > 100 do
+        frmMain.listEvents.Lines.Delete(frmMain.listEvents.Lines.Count-1);
 
       //TODO: frmMain.listEvents.CaretPos - must by slide. code not working...
       frmMain.listEvents.CaretPos.SetLocation(Point(0, frmMain.listEvents.Lines.Count-1));
 
-      while frmMain.listEvents.Lines.Count > 100 do
-        frmMain.listEvents.Lines.Delete(frmMain.listEvents.Lines.Count-1);
     end;
-    //ParseEvents...
-    //...EventsLastId:=...
+
   finally
     FreeAndNil(JData);
   end;
@@ -239,10 +256,10 @@ begin
   if frmMain.edConsole.Visible then
   begin
     frmMain.edConsole.Visible := false;
-    frmMain.Splitter1.Visible := false;
+    frmMain.SplitterBottom1.Visible := false;
   end else
   begin
-    frmMain.Splitter1.Visible := true;
+    frmMain.SplitterBottom1.Visible := true;
     frmMain.edConsole.Visible := true;
   end;
 end;
@@ -252,10 +269,10 @@ begin
   if frmMain.grpEvents.Visible then
   begin
     frmMain.grpEvents.Visible := false;
-    frmMain.Splitter3.Visible := false;
+    frmMain.SplitterBottom2.Visible := false;
   end else
   begin
-    frmMain.Splitter3.Visible := true;
+    frmMain.SplitterBottom2.Visible := true;
     frmMain.grpEvents.Visible := true;
   end;
 end;
