@@ -25,6 +25,10 @@ msgstr ""
 msgid "actStartAndConnect"
 msgstr ""
 
+#: tcore.actstartorconnect.caption
+msgid "actStartOrConnect"
+msgstr ""
+
 #: tcore.actstop.caption
 msgid "actStop"
 msgstr ""

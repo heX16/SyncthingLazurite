@@ -51,6 +51,7 @@ type
   //todo: extract real core code to 'model'(or 'control') and 'utils'
   TCore = class(TDataModule)
     actConnect: TAction;
+    actStartOrConnect: TAction;
     actUpdateData: TAction;
     actStopAndExit: TAction;
     actInit: TAction;
@@ -74,6 +75,7 @@ type
     TimerUpdate: TTimer;
     procedure actConnectExecute(Sender: TObject);
     procedure actInitExecute(Sender: TObject);
+    procedure actStartOrConnectExecute(Sender: TObject);
     procedure actStopAndExitExecute(Sender: TObject);
     procedure actReloadConfigExecute(Sender: TObject);
     procedure actRestartExecute(Sender: TObject);
@@ -130,8 +132,6 @@ type
     //TODO: WIP!
     State: TCoreState;
 
-    // flag - syncthing is work
-    IsOnline: boolean;
     // flag - checked 'syncthing is work'
     OnlineTested: boolean;
 
@@ -192,6 +192,11 @@ type
 
     function MakeOnlineHint(): string;
 
+    // Returns true if current state implies Syncthing is online/working
+    function Online(): boolean;
+    // Returns true if FSM is in a transitional state
+    function InTransition(): boolean;
+
     procedure ReadStdOutput(Proc: TProcessUTF8; AddProc: TAddConsoleLine; var TextChank: UTF8String);
     procedure AddStringToConsole(Str: UTF8String);
 
@@ -229,6 +234,29 @@ uses
   jsonscanner;
 
 {$R *.lfm}
+
+function TCore.Online(): boolean;
+begin
+  // Minimal logic: online only when fully working
+  Result := (self.State = stWork);
+end;
+
+function TCore.InTransition(): boolean;
+begin
+  case self.State of
+    stLaunching,
+    stLaunchingWait,
+    stConnectOrStart,
+    stShutdownAndStart,
+    stShutdownAndStartWait,
+    stStopping,
+    stStoppingWait,
+    stDisconnectingGUI:
+      Result := true;
+  else
+    Result := false;
+  end;
+end;
 
 function JsonStrToDateTime(Str: AnsiString; out dt: TDateTime): boolean;
 var re: TRegExpr;
@@ -589,26 +617,25 @@ begin
       //todo: check ping result
       if Request.Status <> 200 then
       begin
-        if IsOnline then
+        if self.State <> stStopped then
         begin
-          IsOnline := false;
+          self.State := stStopped;
           EventOffline();
         end;
       end else
       begin
-        if not IsOnline then
+        if self.State <> stWork then
         begin
-          IsOnline := true;
+          self.State := stWork;
           EventOnline();
         end;
       end;
     end else
     begin
-      if IsOnline then
+      if self.State <> stStopped then
       begin
-        IsOnline := false;
+        self.State := stStopped;
         EventOffline();
-        frmMain.shStatusCircle.Brush.Color:=clRed;
       end;
     end;
 end;
@@ -810,6 +837,8 @@ begin
   // если процесс не запущен тогда запускаем его
   if not ProcessSyncthing.Running then
   begin
+    // we are launching a new process
+    self.State := stLaunching;
     FillSyncthingExecPath();
     ProcessSyncthing.Execute();
     TimerAfterStartCheck.Enabled:=True;
@@ -818,11 +847,19 @@ begin
       FillSupportExecPath();
       ProcessSupport.Execute();
     end;
+  end
+  else
+  begin
+    // TODO: process is already running - ...???...
   end;
 end;
 
 procedure TCore.Stop();
 begin
+  // move state to stopping, final state will be set by httpCheckOnline
+  self.State := stStopping;
+  // stop long-polling while stopping
+  StopLongPolling();
   //todo: WIP!!!! - чет не заработал POST метод...
   //todo: OLD:
   SendJSON('rest/system/shutdown');
@@ -843,6 +880,8 @@ begin
   // TODO: add `Core.State` check (in future...)
   if not self.Terminated then
   begin
+    // allow long polling only when stable online and not in transition
+    if self.InTransition() or (not self.Online()) then Exit;
     if not self.aiohttpLongPolling.RequestInQueue('polling') then
     begin
       rest := 'events'+'?'+
@@ -1006,7 +1045,7 @@ begin
   if OnlineTested then
   begin
     TimerStartOnStart.Enabled:=false;
-    if not IsOnline then
+    if not Online() then
       StartAndConnect();
   end;
 end;
@@ -1051,6 +1090,11 @@ begin
   //frmMain.LanguageChanged();
 end;
 
+procedure TCore.actStartOrConnectExecute(Sender: TObject);
+begin
+  // TODO: WIP...
+end;
+
 procedure TCore.actConnectExecute(Sender: TObject);
 begin
   TimerCheckOnline.Enabled:=true;
@@ -1079,7 +1123,7 @@ end;
 
 procedure TCore.actUpdateDataExecute(Sender: TObject);
 begin
-  if self.IsOnline then
+  if self.Online() then
   begin
     actReloadConfig.Execute();
 
@@ -1093,7 +1137,7 @@ begin
       self.API_Get('stats/device', @self.httpUpdateDeviceStat);
   end;
 
-  if self.IsOnline then
+  if self.Online() then
     ModuleMain.TrayIcon.Hint := Core.MakeOnlineHint()
   else
     ModuleMain.TrayIcon.Hint := '';
@@ -1124,7 +1168,8 @@ end;
 procedure TCore.TimerEventListenTimer(Sender: TObject);
 begin
   self.TimerEventListen.Enabled:=false;
-  self.StartLongPolling();
+  if (not self.InTransition()) and self.Online() then
+    self.StartLongPolling();
 end;
 
 procedure TCore.TimerEventProcessTimer(Sender: TObject);
@@ -1163,8 +1208,6 @@ begin
 
   MapFolderInfo := TMapFolderInfo.Create();
   ListFolderInfo := TStringList.Create();
-
-  IsOnline := false;
 
   aiohttp := TAsyncHTTP.Create;
   aiohttp.ConnectTimeout:=1000;
@@ -1245,11 +1288,15 @@ procedure TCore.EventOnline();
 begin
   frmMain.shStatusCircle.Brush.Color:=clGreen;
   actUpdateData.Execute();
+  // start listening events when we became online
+  self.TimerEventListen.Enabled:=true;
 end;
 
 procedure TCore.EventOffline();
 begin
   frmMain.shStatusCircle.Brush.Color:=clPurple;
+  // stop listening events when offline
+  self.TimerEventListen.Enabled:=false;
 end;
 
 function TCore.ListDev_GetText(NodeIndex: Cardinal): String;

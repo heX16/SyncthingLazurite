@@ -55,11 +55,6 @@ object Core: TCore
   object ActionList: TActionList
     Left = 368
     Top = 20
-    object actStartAndConnect: TAction
-      Category = 'Core'
-      Caption = 'actStartAndConnect'
-      OnExecute = actStartAndConnectExecute
-    end
     object actStopAndExit: TAction
       Category = 'GUI'
       Caption = 'actStopAndExit'
@@ -75,15 +70,25 @@ object Core: TCore
       Caption = 'actUpdateData'
       OnExecute = actUpdateDataExecute
     end
-    object actConnect: TAction
+    object actStartOrConnect: TAction
       Category = 'Core'
-      Caption = 'actConnect'
-      OnExecute = actConnectExecute
+      Caption = 'actStartOrConnect'
+      OnExecute = actStartOrConnectExecute
+    end
+    object actStartAndConnect: TAction
+      Category = 'Core'
+      Caption = 'actStartAndConnect'
+      OnExecute = actStartAndConnectExecute
     end
     object actStop: TAction
       Category = 'Core'
       Caption = 'actStop'
       OnExecute = actStopExecute
+    end
+    object actConnect: TAction
+      Category = 'Core'
+      Caption = 'actConnect'
+      OnExecute = actConnectExecute
     end
     object actRestart: TAction
       Category = 'Core'
