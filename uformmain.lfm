@@ -185,17 +185,14 @@ object frmMain: TfrmMain
     ClientHeight = 87
     ClientWidth = 547
     TabOrder = 6
-    object listEvents: TMemo
+    object listEvents: TListBox
       Left = 0
       Height = 87
       Top = 0
       Width = 547
       Align = alClient
-      MaxLength = 512
-      ReadOnly = True
-      ScrollBars = ssAutoBoth
+      ItemHeight = 0
       TabOrder = 0
-      WordWrap = False
     end
   end
   object SplitterEventsBottom: TSplitter

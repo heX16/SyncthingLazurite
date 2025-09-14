@@ -4,7 +4,7 @@ object Core: TCore
   Height = 406
   HorizontalOffset = 793
   VerticalOffset = 171
-  Width = 431
+  Width = 602
   PPI = 120
   object ProcessSyncthing: TProcessUTF8
     PipeBufferSize = 16384
@@ -53,8 +53,8 @@ object Core: TCore
     Top = 144
   end
   object ActionList: TActionList
-    Left = 244
-    Top = 80
+    Left = 368
+    Top = 20
     object actStart: TAction
       Category = 'Core'
       Caption = 'actStart'
@@ -146,5 +146,11 @@ object Core: TCore
     OnTimer = TimerEventListenTimer
     Left = 244
     Top = 336
+  end
+  object TimerUpdate: TTimer
+    Interval = 5000
+    OnTimer = TimerUpdateTimer
+    Left = 244
+    Top = 88
   end
 end

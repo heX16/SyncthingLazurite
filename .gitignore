@@ -14,3 +14,4 @@ syncthing folder.lnk
 /rest_api_doc/*
 /doc/**
 *.dbg
+/other/*

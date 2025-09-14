@@ -68,7 +68,7 @@ type
     grpDevices: TGroupBox;
     IniPropStoragePos: TIniPropStorage;
     lbExcDetected: TLabel;
-    listEvents: TMemo;
+    listEvents: TListBox;
     Panel1: TPanel;
     shStatusCircle: TShape;
     SplitterBottom1: TSplitter;

@@ -69,6 +69,7 @@ type
     TimerPing: TTimer;
     TimerReadStdOutput: TTimer;
     TimerStartOnStart: TTimer;
+    TimerUpdate: TTimer;
     procedure actInitExecute(Sender: TObject);
     procedure actStopAndExitExecute(Sender: TObject);
     procedure actPauseExecute(Sender: TObject);
@@ -89,6 +90,7 @@ type
     procedure TimerStartOnStartTimer(Sender: TObject);
     procedure TimerPingTimer(Sender: TObject);
     procedure TimerReadStdOutputTimer(Sender: TObject);
+    procedure TimerUpdateTimer(Sender: TObject);
   private
     OutputChankStr: UTF8String;
 
@@ -760,6 +762,10 @@ procedure TCore.StartLongPolling();
 var
   rest: string;
 begin
+  // Ref:
+  // https://docs.syncthing.net/rest/events-get.html
+
+
   // TODO: add `Core.State` check (in future...)
   if not self.Terminated then
   begin
@@ -778,9 +784,36 @@ begin
 end;
 
 procedure TCore.EventProcess(event: TJSONObject);
+var
+  j2: TJSONData;
+  s, info: UTF8String;
 begin
-  // WIP
-  frmMain.listEvents.Lines.Insert(0, event.Get('type', '(no type)'));
+  // https://docs.syncthing.net/dev/events.html#event-types
+
+  info := '';
+  j2 := event.FindPath('data.folder');
+  if j2 <> nil then
+  begin
+    info := 'folder:' + j2.AsString;
+  end
+  else
+  begin
+    info := 'json_dump:' + event.AsJSON;
+  end;
+
+  s := Format('id:%d;  type:%s  name:%s  %s', [
+    event.Get('id', 0),
+    event.Get('type', ''),
+    event.Get('name', ''),
+    info
+  ]);
+
+  frmMain.listEvents.Items.Insert(0, s);
+
+  while frmMain.listEvents.Items.Count > 100 do
+    frmMain.listEvents.Items.Delete(frmMain.listEvents.Items.Count-1);
+
+  frmMain.listEvents.ItemIndex := frmMain.listEvents.Items.Count-1;
 end;
 
 procedure TCore.ReadStdOutput(Proc: TProcessUTF8;
@@ -828,6 +861,13 @@ end;
 procedure TCore.TimerReadStdOutputTimer(Sender: TObject);
 begin
   ReadStdOutput(ProcessSyncthing, @AddStringToConsole, OutputChankStr);
+end;
+
+procedure TCore.TimerUpdateTimer(Sender: TObject);
+begin
+  // WIP
+  //todo: move to Core - перенести код сюда
+
 end;
 
 procedure TCore.TimerInitTimer(Sender: TObject);

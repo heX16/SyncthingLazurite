@@ -31,7 +31,7 @@
       <UseVersionInfo Value="True"/>
       <AutoIncrementBuild Value="True"/>
       <MinorVersionNr Value="20"/>
-      <BuildNr Value="94"/>
+      <BuildNr Value="97"/>
     </VersionInfo>
     <BuildModes Count="4">
       <Item1 Name="Debug" Default="True"/>
@@ -145,7 +145,6 @@
               <DebugInfoType Value="dsDwarf2Set"/>
               <UseHeaptrc Value="True"/>
               <StripSymbols Value="True"/>
-              <UseExternalDbgSyms Value="True"/>
             </Debugging>
             <LinkSmart Value="True"/>
             <Options>
@@ -324,7 +323,7 @@
     </Other>
   </CompilerOptions>
   <Debugging>
-    <Exceptions Count="4">
+    <Exceptions Count="5">
       <Item1>
         <Name Value="EAbort"/>
       </Item1>
@@ -337,6 +336,9 @@
       <Item4>
         <Name Value="EJSONParser"/>
       </Item4>
+      <Item5>
+        <Name Value="EHTTPClient"/>
+      </Item5>
     </Exceptions>
   </Debugging>
 </CONFIG>

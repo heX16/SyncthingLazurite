@@ -83,11 +83,6 @@ type
     procedure TimerUpdateTimer(Sender: TObject);
     procedure TrayIconDblClick(Sender: TObject);
   private
-    // https://docs.syncthing.net/rest/events-get.html
-    // https://docs.syncthing.net/dev/events.html#event-types
-    // LocalChangeDetected,RemoteChangeDetected
-    procedure httpEvents(Request: THttpRequest);
-
     procedure httpUpdateDeviceStat(Request: THttpRequest);
     procedure httpUpdateFolderStat(Request: THttpRequest);
   public
@@ -123,66 +118,7 @@ begin
   frmMain.SetFocus();
 end;
 
-procedure TModuleMain.httpEvents(Request: THttpRequest);
-var
-  JData: TJSONData;
-  j: TJSONObject;
-  j2: TJSONData;
-  e: TJSONEnum;
-  s: UTF8String;
-  info: UTF8String;
-begin
-  JData := nil;
-  info := '';
-
-  if HttpRequestToJson(Request, JData) then
-  try
-    (*for e in JData do
-    begin
-      (*
-      2025-09-14:
-      Данные попрежнему повреждаются!
-      Dump:
-      id:604;  type:DownloadProgid:603;  type:StateChanged  name:  folder:sync_zone
-      id:602;  type:StateChanged  name:  folder:sync_zone
-      *)
-
-      j := e.Value as TJSONObject;
-
-      Core.EventsLastId := j.Get('id', 0);
-      
-      j2 := j.FindPath('data.folder');
-      if j2<>nil then
-      begin
-        info := 'folder:' + j2.AsString;
-      end
-      else
-      begin
-        info := 'json_dump:' + j.AsJSON;
-      end;
-
-      s := Format('id:%d;  type:%s  name:%s  %s', [
-        Core.EventsLastId, 
-        j.Get('type', ''),
-        j.Get('name', ''),
-        info
-      ]);
-
-      frmMain.listEvents.Lines.Insert(0, s);
-
-      while frmMain.listEvents.Lines.Count > 100 do
-        frmMain.listEvents.Lines.Delete(frmMain.listEvents.Lines.Count-1);
-
-      //TODO: frmMain.listEvents.CaretPos - must by slide. code not working...
-      frmMain.listEvents.CaretPos.SetLocation(Point(0, frmMain.listEvents.Lines.Count-1));
-
-    end;
-    *)
-  finally
-    FreeAndNil(JData);
-  end;
-end;
-
+// todo: move to Core
 procedure TModuleMain.httpUpdateDeviceStat(Request: THttpRequest);
 var
   JData: TJSONData;
@@ -191,7 +127,6 @@ var
   dt: TDateTime;
   d: TDevInfo;
 begin
-  //todo: httpUpdateDeviceStat - move to Core!
   if HttpRequestToJson(Request, JData) then
   try
     // enum all device
@@ -216,20 +151,15 @@ begin
   end;
 end;
 
+// todo: move to Core
 procedure TModuleMain.httpUpdateFolderStat(Request: THttpRequest);
 var
   JData: TJSONData;
-  //ij: TJSONEnum;
+  ij: TJSONEnum;
 begin
-  //todo: httpUpdateDevice - move to Core!
   if HttpRequestToJson(Request, JData) then
   try
-    {
-    frmMain.FoldersItems.Clear();
-    for ij in JData do
-      frmMain.FoldersItems.Add(ij.Key);
-    frmMain.treeFolders.RootNodeCount:=JData.Count;
-    }
+    // TODO: WIP...
   finally
     JData.Free();
   end;
@@ -327,6 +257,7 @@ procedure TModuleMain.DataModuleCreate(Sender: TObject);
 begin
 end;
 
+// TODO: Move to core
 procedure TModuleMain.TimerUpdateTimer(Sender: TObject);
 var
   i: Core.MapDevInfo.TIterator;
@@ -344,24 +275,8 @@ begin
   if Core.IsOnline and not Core.aiohttp.RequestInQueue('stats/folder') then
     Core.API_Get('stats/folder', @httpUpdateFolderStat);
 
-  //todo: уменьшить кол-во обращений
   if Core.IsOnline and not Core.aiohttp.RequestInQueue('stats/device') then
     Core.API_Get('stats/device', @httpUpdateDeviceStat);
-
-  (*
-  try
-    //TODO: BUG 2022. AV. - здесь падает. отсюда начинается вызов проблемной цепочки.
-    if Core.IsOnline and not Core.aiohttp.RequestInQueue('events') then
-      Core.API_Get('events'+'?'+
-        'since='+IntToStr(Core.EventsLastId)+'&'+
-        'limit='+IntToStr(10)+'&'+
-        'timeout='+IntToStr(0),
-        @httpEvents);
-  except
-    //TODO: BUG 2022. AV. поставил заглушку. посмотрим...
-    frmMain.lbExcDetected.Visible:=true;
-  end;
-  *)
 
   i := Core.MapDevInfo.Iterator();
   OnlineCount := 0;
