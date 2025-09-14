@@ -47,7 +47,7 @@ type
 
 const
   // Typed constant containing all endpoint ids
-  SyncthingEndpointIdList: array[] of TSyncthingEndpointId = (
+  SyncthingEndpointIdList: array of TSyncthingEndpointId = (
     epConfig,
     epSystemConnections,
     epStatsDevice,
@@ -90,29 +90,24 @@ type
     FOnTreeChanged: TTreeChangedEvent;
     FOnBeforeTreeModify: TBeforeAfterTreeModifyEvent;
     FOnAfterTreeModify: TBeforeAfterTreeModifyEvent;
-    FEndpointCallbacks: array[TSyncthingEndpointId] of THttpRequestCallbackFunction;
     // Internal helpers
     procedure HttpAddHeader(Request: THttpRequest; Sender: TObject);
     procedure EventsDisconnected(Request: THttpRequest; Sender: TObject);
     function ParseJson(Request: THttpRequest; out Json: TJSONData): boolean;
     procedure SetAtPath(var RootObj: TJSONObject; const JsonPath: UTF8String; NewData: TJSONData);
     // REST callbacks
-    !!! rename to CB_CheckOnline
-    procedure CB_Ping(Request: THttpRequest);
-
-    !!!: я думаю все эти функции можно унифицировать до одной функции.
-    procedure CB_SystemConfig(Request: THttpRequest);
-    procedure CB_SystemConnections(Request: THttpRequest);
-    procedure CB_StatsDevice(Request: THttpRequest);
-    procedure CB_StatsFolder(Request: THttpRequest);
-    procedure CB_SystemStatus(Request: THttpRequest);
-    procedure CB_SystemVersion(Request: THttpRequest);
+    procedure CB_CheckOnline(Request: THttpRequest);
+    procedure CB_HandleEndpoint(Request: THttpRequest);
     // Events callbacks
     procedure CB_Events(Request: THttpRequest);
     // REST helper
     procedure API_Get(const Api: UTF8String; Callback: THttpRequestCallbackFunction; const QueueKey: UTF8String = '');
     // Build endpoints table
     procedure InitEndpointTable;
+    // Maps endpoint id to callback handler
+    function SyncthingEndpointCallback(Id: TSyncthingEndpointId): THttpRequestCallbackFunction; virtual;
+    // Maps endpoint id to JSON storage path (root path to replace)
+    function SyncthingEndpointJsonPath(Id: TSyncthingEndpointId): UTF8String; virtual;
 
   protected
     { Builds base server URL from host/port and scheme }
@@ -242,6 +237,11 @@ begin
   end;
 end;
 
+function TSyncthingApiV2.SyncthingEndpointJsonPath(Id: TSyncthingEndpointId): UTF8String;
+begin
+  Result := SyncthingEndpointURI(Id);
+end;
+
 { TSyncthingApiV2 }
 
 constructor TSyncthingApiV2.Create(AOwner: TComponent);
@@ -347,44 +347,56 @@ begin
 end;
 
 procedure TSyncthingApiV2.PerformInitialSync;
-begin !!!
-  // Iterate endpoints (global) and use per-endpoint callbacks from object
-  API_Get(SyncthingEndpointURI(epConfig), @CB_SystemConfig, 'config');
-  API_Get(SyncthingEndpointURI(epSystemConnections), @CB_SystemConnections, 'system/connections');
-  API_Get(SyncthingEndpointURI(epStatsDevice), @CB_StatsDevice, 'stats/device');
-  API_Get(SyncthingEndpointURI(epStatsFolder), @CB_StatsFolder, 'stats/folder');
-  API_Get(SyncthingEndpointURI(epSystemStatus), @CB_SystemStatus, 'system/status');
-  API_Get(SyncthingEndpointURI(epSystemVersion), @CB_SystemVersion, 'system/version');
+var
+  ep: TSyncthingEndpointId;
+begin
+  // Iterate endpoints and call unified handler; pass JSON path via UserString
+  for ep in SyncthingEndpointIdList do
+    API_Get(SyncthingEndpointURI(ep), @CB_HandleEndpoint, SyncthingEndpointJsonPath(ep));
 end;
 
 procedure TSyncthingApiV2.LoadSystemConfig;
 begin
-  API_Get('config', @CB_SystemConfig, 'config');
+  API_Get('config', @CB_HandleEndpoint, 'config');
 end;
 
 procedure TSyncthingApiV2.LoadSystemConnections;
 begin
-  API_Get('system/connections', @CB_SystemConnections, 'system/connections');
+  API_Get('system/connections', @CB_HandleEndpoint, 'system/connections');
 end;
 
 procedure TSyncthingApiV2.LoadStatsDevice;
 begin
-  API_Get('stats/device', @CB_StatsDevice, 'stats/device');
+  API_Get('stats/device', @CB_HandleEndpoint, 'stats/device');
 end;
 
 procedure TSyncthingApiV2.LoadStatsFolder;
 begin
-  API_Get('stats/folder', @CB_StatsFolder, 'stats/folder');
+  API_Get('stats/folder', @CB_HandleEndpoint, 'stats/folder');
 end;
 
 procedure TSyncthingApiV2.LoadSystemStatus;
 begin
-  API_Get('system/status', @CB_SystemStatus, 'system/status');
+  API_Get('system/status', @CB_HandleEndpoint, 'system/status');
 end;
 
 procedure TSyncthingApiV2.LoadSystemVersion;
 begin
-  API_Get('system/version', @CB_SystemVersion, 'system/version');
+  API_Get('system/version', @CB_HandleEndpoint, 'system/version');
+end;
+
+procedure TSyncthingApiV2.CB_HandleEndpoint(Request: THttpRequest);
+var
+  j: TJSONData;
+begin
+  if (Request <> nil) then
+  begin
+    if Request.UserString = '' then Exit;
+    if ParseJson(Request, j) then
+    begin
+      ReplaceRootBranch(Request.UserString, j);
+    end;
+  end;
 end;
 
 procedure TSyncthingApiV2.StartLongPolling;
@@ -477,7 +489,7 @@ begin
 end;
 
 procedure TSyncthingApiV2.NotifyTreeChanged(const Path: UTF8String);
-begin !!!
+begin
   if Assigned(FOnTreeChanged) then
     FOnTreeChanged(Self, Path);
 end;
@@ -489,10 +501,12 @@ begin
   if Assigned(FOnBeforeConnect) then
     FOnBeforeConnect(Self);
 
-  FSM_Process();:
-    BuildServerURL;
-    ConfigureHttpClients;
-    API_Get('system/ping', @CB_Ping, 'system/ping');
+  FSM_Process();
+
+  // TODO: MOVE TO FSM_Process();
+  BuildServerURL;
+  ConfigureHttpClients;
+  API_Get('system/ping', @CB_CheckOnline, 'system/ping');
 end;
 
 procedure TSyncthingApiV2.Disconnect;
@@ -502,9 +516,11 @@ begin
   if Assigned(FOnBeforeDisconnect) then
     FOnBeforeDisconnect(Self);
 
-  FSM_Process();:
-    StopLongPolling;
-    FState := ssOffline;
+  FSM_Process();
+
+  // TODO: MOVE TO FSM_Process();
+  StopLongPolling;
+  FState := ssOffline;
 
   if Assigned(FOnDisconnectedByUser) then
     FOnDisconnectedByUser(Self);
@@ -515,12 +531,12 @@ begin
   FHost := Host;
   FPort := Port;
   FUseTLS := UseTLS;
-  FAPIKey := Key; !!!
   BuildServerURL;
 end;
 
 procedure TSyncthingApiV2.SetAPIKey(const Key: UTF8STRING);
-begin!!!
+begin
+  FAPIKey := Key;
 end;
 
 procedure TSyncthingApiV2.SetLongPollingRestartInterval(Seconds: Integer);
@@ -664,7 +680,7 @@ begin
   end;
 end;
 
-procedure TSyncthingApiV2.API_Get(const Api: UTF8String; Callback: THttpRequestCallbackFunction; const QueueKey: UTF8String);
+procedure TSyncthingApiV2.API_Get(const Api: UTF8String; Callback: THttpRequestCallbackFunction; const QueueKey: UTF8String = '');
 var
   key: UTF8String;
   plainKey: UTF8String;
@@ -678,26 +694,41 @@ begin
   key := QueueKey;
   if key = '' then
     key := Api;
+  // Use API path without query as queue key
   plainKey := key;
   qPos := Pos('?', plainKey);
   !!! больше того. мне кажется чистить plainKey тоже не обязательно - пусть ключ будет более унильным если это требуется
   if qPos > 0 then
     plainKey := Copy(plainKey, 1, qPos - 1);
-  FHTTP.Get(FServerURL + 'rest/' + Api, Callback, '', plainKey);
+  FHTTP.Get(
+    url := FServerURL + 'rest/' + Api,
+    callback := Callback,
+    headers := '',
+    operationName := plainKey,
+    userObject := nil,
+    userString := key
+  );
 end;
 
 procedure TSyncthingApiV2.InitEndpointTable;
 begin
-  // Map enum to callback functions; endpoints themselves are global in SyncthingEndpointsURI
-  FEndpointCallbacks[epConfig] := @CB_SystemConfig;
-  FEndpointCallbacks[epSystemConnections] := @CB_SystemConnections;
-  FEndpointCallbacks[epStatsDevice] := @CB_StatsDevice;
-  FEndpointCallbacks[epStatsFolder] := @CB_StatsFolder;
-  FEndpointCallbacks[epSystemStatus] := @CB_SystemStatus;
-  FEndpointCallbacks[epSystemVersion] := @CB_SystemVersion;
+  // Currently not needed since we resolve callback via SyncthingEndpointCallback
 end;
 
-procedure TSyncthingApiV2.CB_Ping(Request: THttpRequest);
+function TSyncthingApiV2.SyncthingEndpointCallback(Id: TSyncthingEndpointId): THttpRequestCallbackFunction;
+begin
+  case Id of
+    epConfig:            Exit(@CB_SystemConfig);
+    epSystemConnections: Exit(@CB_SystemConnections);
+    epStatsDevice:       Exit(@CB_StatsDevice);
+    epStatsFolder:       Exit(@CB_StatsFolder);
+    epSystemStatus:      Exit(@CB_SystemStatus);
+    epSystemVersion:     Exit(@CB_SystemVersion);
+  end;
+  Exit(nil);
+end;
+
+procedure TSyncthingApiV2.CB_CheckOnline(Request: THttpRequest);
 begin
   if (Request <> nil) and (Request.Status = 200) and (Request.Connected) then
   begin

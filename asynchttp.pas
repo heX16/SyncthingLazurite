@@ -5,7 +5,7 @@ unit AsyncHTTP;
 interface
 
 uses
-  Classes, SysUtils, SyncObjs, fphttpclient, ghashmap, HashMapStr, gqueue;
+  Classes, SysUtils, SyncObjs, fphttpclient, ghashmap, HashMapStr, gdeque;
 
 type
   // Operation status for CheckOperation
@@ -71,8 +71,8 @@ type
   // Dictionary mapping operation name to request instance
   TDictHttpRequest = specialize THashMap<string, THttpRequest, THashFuncString>;
 
-  // FIFO queue for requests
-  TQueueHttpRequest = specialize TQueue<THttpRequest>;
+  // FIFO deque for requests
+  TDequeHttpRequest = specialize TDeque<THttpRequest>;
 
   // Worker thread processing queued HTTP requests
 
@@ -112,7 +112,7 @@ type
   TAsyncHTTP = class
   private
     FConnectTimeout: Integer;
-    FQueue: TQueueHttpRequest;
+    FQueue: TDequeHttpRequest;
     FQueueLock: TCriticalSection;
     FQueueEvent: TEvent;
     FWorker: TRequestWorkerThread;
@@ -131,10 +131,12 @@ type
     FCurrentClientLock: TCriticalSection;
     // True when a request has been opened and not yet completed
     FIsConnectionOpen: Boolean;
-    procedure EnqueueRequest(const ARequest: THttpRequest);
+    procedure EnqueueRequest(const ARequest: THttpRequest; const ClearDuplicates: Boolean = False);
     function GetRequestByName(const OperationName: string): THttpRequest;
     procedure AddRequestName(const ARequest: THttpRequest);
     procedure RemoveRequestName(const OperationName: string);
+    // Remove queued requests matching the given operation name
+    procedure CleanQueueByOperationName(const OperationName: string);
   protected
     // Factory method for HTTP client instance
     function CreateHttpClient: TFPHTTPClient; virtual;
@@ -153,7 +155,8 @@ type
       headers: string = '';
       operationName: string = '';
       userObject: TObject = nil;
-      userString: string = '');
+      userString: string = '';
+      clearDuplicates: Boolean = False);
 
     procedure Post(url: string;
       data: string; callback:
@@ -161,7 +164,8 @@ type
       headers: string = '';
       operationName: string = '';
       userObject: TObject = nil;
-      userString: string = '');
+      userString: string = '';
+      clearDuplicates: Boolean = False);
 
     procedure HttpMethod(
       method: string;
@@ -171,7 +175,8 @@ type
       data: string = '';
       operationName: string = '';
       userObject: TObject = nil;
-      userString: string = '');
+      userString: string = '';
+      clearDuplicates: Boolean = False);
 
     // Graceful shutdown
     procedure Terminate;
@@ -362,12 +367,16 @@ begin
 
       Self.FOwner.FQueueLock.Acquire;
       try
+        // Skip nil entries at the front, if any
+        while (Self.FOwner.FQueue.Size() > 0) and (Self.FOwner.FQueue.Front() = nil) do
+          Self.FOwner.FQueue.PopFront();
+          
         if Self.FOwner.FQueue.Size() > 0 then
         begin
           req := Self.FOwner.FQueue.Front();
           req_old_state := req.State;
           req.State := osProcessing;
-          Self.FOwner.FQueue.Pop();
+          Self.FOwner.FQueue.PopFront();
         end;
       finally
         Self.FOwner.FQueueLock.Release;
@@ -569,7 +578,7 @@ begin
   Self.FIOTimeout := 0;
   Self.FTerminated := False;
   Self.FKeepConnection := False;
-  Self.FQueue := TQueueHttpRequest.Create;
+  Self.FQueue := TDequeHttpRequest.Create;
   Self.FQueueLock := TCriticalSection.Create;
   // Auto-reset event, initially non-signaled
   Self.FQueueEvent := TEvent.Create(nil, False, False, '');
@@ -586,8 +595,12 @@ begin
   inherited Destroy;
 end;
 
-procedure TAsyncHTTP.EnqueueRequest(const ARequest: THttpRequest);
+procedure TAsyncHTTP.EnqueueRequest(const ARequest: THttpRequest; const ClearDuplicates: Boolean);
 begin
+  // Optionally remove queued duplicates first
+  if ClearDuplicates and (ARequest.OperationName <> '') then
+    Self.CleanQueueByOperationName(ARequest.OperationName);
+
   // Map operation name to request if provided
   if ARequest.OperationName <> '' then
     Self.AddRequestName(ARequest);
@@ -595,7 +608,7 @@ begin
   Self.FQueueLock.Acquire;
   try
     ARequest.State := osQueued;
-    Self.FQueue.Push(ARequest);
+    Self.FQueue.PushBack(ARequest);
     // Do not free ARequest here; ownership passes to the queue/worker
   finally
     Self.FQueueLock.Release;
@@ -643,7 +656,34 @@ begin
   end;
 end;
 
-procedure TAsyncHTTP.Get(url: string; callback: THttpRequestCallbackFunction; headers: string; operationName: string; userObject: TObject; userString: string);
+procedure TAsyncHTTP.CleanQueueByOperationName(const OperationName: string);
+var
+  i: SizeUInt;
+  req: THttpRequest;
+begin
+  if OperationName = '' then Exit;
+
+  // Remove name from mapping; it will be re-added for a new request
+  RemoveRequestName(OperationName);
+
+  // Free in-place all matching queued requests and set slots to nil
+  Self.FQueueLock.Acquire;
+  try
+    for i := 0 to Self.FQueue.Size() - 1 do
+    begin
+      req := Self.FQueue.Items[i];
+      if (req <> nil) and (req.OperationName = OperationName) and (req.State = osQueued) then
+      begin
+        FreeAndNil(req);
+        Self.FQueue.Items[i] := nil;
+      end;
+    end;
+  finally
+    Self.FQueueLock.Release;
+  end;
+end;
+
+procedure TAsyncHTTP.Get(url: string; callback: THttpRequestCallbackFunction; headers: string; operationName: string; userObject: TObject; userString: string; clearDuplicates: Boolean);
 var
   req: THttpRequest;
 begin
@@ -656,10 +696,10 @@ begin
   req.OperationName := operationName;
   req.UserObject := userObject;
   req.UserString := userString;
-  Self.EnqueueRequest(req);
+  Self.EnqueueRequest(req, clearDuplicates);
 end;
 
-procedure TAsyncHTTP.Post(url: string; data: string; callback: THttpRequestCallbackFunction; headers: string; operationName: string; userObject: TObject; userString: string);
+procedure TAsyncHTTP.Post(url: string; data: string; callback: THttpRequestCallbackFunction; headers: string; operationName: string; userObject: TObject; userString: string; clearDuplicates: Boolean);
 var
   req: THttpRequest;
 begin
@@ -672,10 +712,10 @@ begin
   req.OperationName := operationName;
   req.UserObject := userObject;
   req.UserString := userString;
-  Self.EnqueueRequest(req);
+  Self.EnqueueRequest(req, clearDuplicates);
 end;
 
-procedure TAsyncHTTP.HttpMethod(method: string; url: string; callback: THttpRequestCallbackFunction; headers: string; data: string; operationName: string; userObject: TObject; userString: string);
+procedure TAsyncHTTP.HttpMethod(method: string; url: string; callback: THttpRequestCallbackFunction; headers: string; data: string; operationName: string; userObject: TObject; userString: string; clearDuplicates: Boolean);
 var
   req: THttpRequest;
 begin
@@ -689,7 +729,7 @@ begin
   req.OperationName := operationName;
   req.UserObject := userObject;
   req.UserString := userString;
-  Self.EnqueueRequest(req);
+  Self.EnqueueRequest(req, clearDuplicates);
 end;
 
 procedure TAsyncHTTP.Terminate;
@@ -725,8 +765,8 @@ begin
     while (Self.FQueue.Size() > 0) do
     begin
       req := Self.FQueue.Front();
-      Self.FQueue.Pop();
-      if req.State = osQueued then
+      Self.FQueue.PopFront();
+      if Assigned(req) and (req.State = osQueued) then
         FreeAndNil(req);
     end;
   finally
