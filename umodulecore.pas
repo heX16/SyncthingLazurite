@@ -48,6 +48,7 @@ type
 
   //todo: extract real core code to 'model'(or 'control') and 'utils'
   TCore = class(TDataModule)
+    actUpdateData: TAction;
     actStopAndExit: TAction;
     actInit: TAction;
     actReloadConfig: TAction;
@@ -79,6 +80,7 @@ type
     procedure actStartExecute(Sender: TObject);
     procedure actStopExecute(Sender: TObject);
     procedure actTerminateExecute(Sender: TObject);
+    procedure actUpdateDataExecute(Sender: TObject);
 
     procedure DataModuleDestroy(Sender: TObject);
     procedure TimerAfterStartCheckTimer(Sender: TObject);
@@ -98,10 +100,20 @@ type
     procedure aiohttpAddHeader(Request: THttpRequest; Sender: TObject);
 
   public
+    (*
     // read devices and folders config
+    TODO: /rest/system/config (DEPRECATED)
+    GET /rest/system/config (DEPRECATED)
+    https://docs.syncthing.net/dev/rest.html#system-endpoints
+    Deprecated since version v1.12.0:
+    This endpoint still works as before but is deprecated.
+    Use /rest/config instead.
+    *)
     procedure httpReadConfig(Request: THttpRequest);
 
     procedure httpUpdateConnections(Request: THttpRequest);
+    procedure httpUpdateDeviceStat(Request: THttpRequest);
+    procedure httpUpdateFolderStat(Request: THttpRequest);
 
     procedure httpPing(Request: THttpRequest);
 
@@ -176,6 +188,8 @@ type
     procedure StartLongPolling();
     procedure EventProcess(event: TJSONObject); virtual;
 
+    function MakeOnlineHint(): string;
+
     procedure ReadStdOutput(Proc: TProcessUTF8; AddProc: TAddConsoleLine; var TextChank: UTF8String);
     procedure AddStringToConsole(Str: UTF8String);
 
@@ -201,6 +215,7 @@ uses
   LCLTranslator, // i18n
   uFormOptions,
   uFormMain,
+  uModuleMain,
   httpsend, {Synacode,}
   synautil,
   Graphics,
@@ -499,6 +514,54 @@ begin
   end;
 end;
 
+procedure TCore.httpUpdateDeviceStat(Request: THttpRequest);
+var
+  JData: TJSONData;
+  ij: TJSONEnum;
+  s: ansistring;
+  dt: TDateTime;
+  d: TDevInfo;
+begin
+  // Moved from uModuleMain -> Core
+  if HttpRequestToJson(Request, JData) then
+  try
+    // enum all device
+    for ij in JData do
+    begin
+      // find in device list.
+      if self.MapDevInfo.GetValue(ij.Key, d) then
+      begin
+        // update data
+        if ij.Value.FindPath('lastSeen')<>nil then
+        begin
+          s := ij.Value.GetPath('lastSeen').AsString;
+          if JsonStrToDateTime(s, dt) then
+            d.LastSeen:=dt;
+        end;
+        //todo: use 'mutable' ptr
+        // write to map
+        self.MapDevInfo[ij.Key] := d;
+      end;
+    end;
+  finally
+    FreeAndNil(JData);
+  end;
+end;
+
+procedure TCore.httpUpdateFolderStat(Request: THttpRequest);
+var
+  JData: TJSONData;
+  //ij: TJSONEnum;
+begin
+  // Moved from uModuleMain -> Core
+  if HttpRequestToJson(Request, JData) then
+  try
+    // TODO: WIP...
+  finally
+    JData.Free();
+  end;
+end;
+
 procedure TCore.TimerPingTimer(Sender: TObject);
 begin
   if not Terminated then begin
@@ -769,17 +832,20 @@ begin
   // TODO: add `Core.State` check (in future...)
   if not self.Terminated then
   begin
-    rest := 'events'+'?'+
-            'since='+IntToStr(self.EventsLastId)+'&'+
-            'limit='+IntToStr(10)+'&'+
-            'timeout='+IntToStr(60);
+    if not self.aiohttpLongPolling.RequestInQueue('polling') then
+    begin
+      rest := 'events'+'?'+
+              'since='+IntToStr(self.EventsLastId)+'&'+
+              'limit='+IntToStr(10)+'&'+
+              'timeout='+IntToStr(60);
 
-    self.aiohttpLongPolling.Get(
-      self.SyncthigServer+'rest/' + rest,
-      @httpLongPolling,
-      '',
-      'polling'
-    );
+      self.aiohttpLongPolling.Get(
+        self.SyncthigServer+'rest/' + rest,
+        @httpLongPolling,
+        '',
+        'polling'
+      );
+    end;
   end;
 end;
 
@@ -865,9 +931,45 @@ end;
 
 procedure TCore.TimerUpdateTimer(Sender: TObject);
 begin
-  // WIP
-  //todo: move to Core - перенести код сюда
+  self.TimerUpdate.Enabled:=false;
+  actUpdateData.Execute();
+end;
 
+function TCore.MakeOnlineHint(): string;
+var
+  i: Core.MapDevInfo.TIterator;
+  OnlineCount: integer;
+  OnlineList: string;
+  DeviceName: string;
+  DeviceAddr: string;
+const
+  MaxItemsInHint = 5;
+begin
+  i := self.MapDevInfo.Iterator();
+  OnlineCount := 0;
+  OnlineList := '';
+  if i <> nil then
+    try
+      repeat
+        if i.GetMutable()^.Connected then begin
+          inc(OnlineCount);
+          if OnlineCount <= MaxItemsInHint then
+          begin
+            DeviceName := i.Data.Value.Name;
+            DeviceAddr := i.Data.Value.Address;
+            if IsLocalIP(DeviceAddr) then
+              DeviceName := DeviceName + ' (local)';
+            OnlineList := OnlineList + DeviceName + #13;
+          end;
+        end;
+      until not i.Next;
+    finally
+      FreeAndNil(i);
+    end;
+  if OnlineCount > MaxItemsInHint then
+    OnlineList := OnlineList + '...' + #13;
+
+  Result := 'Online ' + IntToStr(OnlineCount) + ' devices:' + #13 + OnlineList;
 end;
 
 procedure TCore.TimerInitTimer(Sender: TObject);
@@ -924,12 +1026,7 @@ end;
 
 procedure TCore.actReloadConfigExecute(Sender: TObject);
 begin
-  // TODO: /rest/system/config (DEPRECATED)
-  // GET /rest/system/config (DEPRECATED)
-  // https://docs.syncthing.net/dev/rest.html#system-endpoints
-  // Deprecated since version v1.12.0:
-  // This endpoint still works as before but is deprecated.
-  // Use /rest/config instead.
+  // TODO: depricated!
   self.API_Get('system/config', @httpReadConfig);
 end;
 
@@ -966,6 +1063,28 @@ procedure TCore.actTerminateExecute(Sender: TObject);
 begin
   ProcessSupport.Terminate(0);
   ProcessSyncthing.Terminate(0);
+end;
+
+procedure TCore.actUpdateDataExecute(Sender: TObject);
+begin
+  if self.IsOnline then
+  begin
+    actReloadConfig.Execute();
+
+    if not self.aiohttp.RequestInQueue('system/connections') then
+      self.API_Get('system/connections', @self.httpUpdateConnections);
+
+    if not self.aiohttp.RequestInQueue('stats/folder') then
+      self.API_Get('stats/folder', @self.httpUpdateFolderStat);
+
+    if not self.aiohttp.RequestInQueue('stats/device') then
+      self.API_Get('stats/device', @self.httpUpdateDeviceStat);
+  end;
+
+  if self.IsOnline then
+    ModuleMain.TrayIcon.Hint := Core.MakeOnlineHint()
+  else
+    ModuleMain.TrayIcon.Hint := '';
 end;
 
 procedure TCore.DataModuleDestroy(Sender: TObject);
@@ -1016,6 +1135,9 @@ begin
       FreeAndNil(ev);
     end;
   end;
+
+  // TODO: WIP...
+  self.TimerUpdate.Enabled:=true;
 end;
 
 
@@ -1109,7 +1231,7 @@ end;
 procedure TCore.EventOnline();
 begin
   frmMain.shStatusCircle.Brush.Color:=clGreen;
-  actReloadConfig.Execute();
+  actUpdateData.Execute();
 end;
 
 procedure TCore.EventOffline();

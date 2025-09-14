@@ -100,6 +100,11 @@ object Core: TCore
       Caption = 'actReloadConfig'
       OnExecute = actReloadConfigExecute
     end
+    object actUpdateData: TAction
+      Category = 'GUI'
+      Caption = 'actUpdateData'
+      OnExecute = actUpdateDataExecute
+    end
   end
   object TimerInit: TTimer
     Interval = 10
@@ -125,32 +130,33 @@ object Core: TCore
     Enabled = False
     Interval = 100
     OnTimer = TimerAfterStartCheckTimer
-    Left = 244
-    Top = 144
+    Left = 496
+    Top = 48
   end
   object TimerEventProcess: TTimer
     Enabled = False
     Interval = 100
     OnTimer = TimerEventProcessTimer
-    Left = 244
-    Top = 208
+    Left = 296
+    Top = 192
   end
   object TimerEventCheckTimeout: TTimer
     Enabled = False
     Interval = 65000
-    Left = 244
-    Top = 272
+    Left = 296
+    Top = 312
   end
   object TimerEventListen: TTimer
     Interval = 100
     OnTimer = TimerEventListenTimer
-    Left = 244
-    Top = 336
+    Left = 296
+    Top = 136
   end
   object TimerUpdate: TTimer
-    Interval = 5000
+    Enabled = False
+    Interval = 100
     OnTimer = TimerUpdateTimer
-    Left = 244
-    Top = 88
+    Left = 296
+    Top = 248
   end
 end

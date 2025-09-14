@@ -37,6 +37,10 @@ msgstr ""
 msgid "actTerminate"
 msgstr ""
 
+#: tcore.actupdatedata.caption
+msgid "actUpdateData"
+msgstr ""
+
 #: tfrmabout.caption
 msgid "About"
 msgstr ""

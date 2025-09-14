@@ -952,7 +952,6 @@ object ModuleMain: TModuleMain
   end
   object TimerUpdate: TTimer
     Interval = 5000
-    OnTimer = TimerUpdateTimer
     Left = 40
     Top = 256
   end

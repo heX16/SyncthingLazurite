@@ -80,11 +80,8 @@ type
     procedure actSetStateRunExecute(Sender: TObject);
     procedure actSetStateStopExecute(Sender: TObject);
     procedure DataModuleCreate(Sender: TObject);
-    procedure TimerUpdateTimer(Sender: TObject);
     procedure TrayIconDblClick(Sender: TObject);
   private
-    procedure httpUpdateDeviceStat(Request: THttpRequest);
-    procedure httpUpdateFolderStat(Request: THttpRequest);
   public
 
   end;
@@ -116,53 +113,6 @@ begin
   frmMain.WindowState := wsNormal;
   frmMain.Show();
   frmMain.SetFocus();
-end;
-
-// todo: move to Core
-procedure TModuleMain.httpUpdateDeviceStat(Request: THttpRequest);
-var
-  JData: TJSONData;
-  ij: TJSONEnum;
-  s: ansistring;
-  dt: TDateTime;
-  d: TDevInfo;
-begin
-  if HttpRequestToJson(Request, JData) then
-  try
-    // enum all device
-    for ij in JData do
-    begin
-      // find in device list.
-      if Core.MapDevInfo.GetValue(ij.Key, d) then
-      begin
-        // update data
-        if ij.Value.FindPath('lastSeen')<>nil then
-        begin
-          s := ij.Value.GetPath('lastSeen').AsString;
-          if JsonStrToDateTime(s, dt) then
-            d.LastSeen:=dt;
-        end;
-        //todo: use 'mutable' ptr
-        Core.MapDevInfo[ij.Key] := d;
-      end;
-    end;
-  finally
-    FreeAndNil(JData);
-  end;
-end;
-
-// todo: move to Core
-procedure TModuleMain.httpUpdateFolderStat(Request: THttpRequest);
-var
-  JData: TJSONData;
-  ij: TJSONEnum;
-begin
-  if HttpRequestToJson(Request, JData) then
-  try
-    // TODO: WIP...
-  finally
-    JData.Free();
-  end;
 end;
 
 procedure TModuleMain.actShowOptionsExecute(Sender: TObject);
@@ -242,6 +192,7 @@ begin
   if (Core.State = stStopped) or (Core.State = stStopping) then
   begin
     Core.State := stLaunching;
+    // TODO: WIP
   end;
 end;
 
@@ -250,58 +201,12 @@ begin
   if (Core.State = stWork) or (Core.State = stLaunching) then
   begin
     Core.State := stStopping;
+    // TODO: WIP
   end;
 end;
 
 procedure TModuleMain.DataModuleCreate(Sender: TObject);
 begin
-end;
-
-// TODO: Move to core
-procedure TModuleMain.TimerUpdateTimer(Sender: TObject);
-var
-  i: Core.MapDevInfo.TIterator;
-  OnlineCount: integer;
-  OnlineList: string;
-  DeviceName: string;
-  DeviceAddr: string;
-const
-  MaxItemsInHint = 5;
-begin
-
-  if Core.IsOnline and not Core.aiohttp.RequestInQueue('system/connections') then
-    Core.API_Get('system/connections', @Core.httpUpdateConnections);
-
-  if Core.IsOnline and not Core.aiohttp.RequestInQueue('stats/folder') then
-    Core.API_Get('stats/folder', @httpUpdateFolderStat);
-
-  if Core.IsOnline and not Core.aiohttp.RequestInQueue('stats/device') then
-    Core.API_Get('stats/device', @httpUpdateDeviceStat);
-
-  i := Core.MapDevInfo.Iterator();
-  OnlineCount := 0;
-  OnlineList := '';
-  if i <> nil then
-    try
-      repeat
-        if i.GetMutable()^.Connected then begin
-          inc(OnlineCount);
-          if OnlineCount <= MaxItemsInHint then
-          begin
-            DeviceName := i.Data.Value.Name;
-            DeviceAddr := i.Data.Value.Address;
-            if IsLocalIP(DeviceAddr) then
-              DeviceName := DeviceName + cStrLocal;
-            OnlineList := OnlineList + DeviceName + #13;
-          end;
-        end;
-      until not i.Next;
-    finally
-      FreeAndNil(i);
-    end;
-  if OnlineCount > MaxItemsInHint then
-    OnlineList := OnlineList + '...' + #13;
-  TrayIcon.Hint:='Online ' + IntToStr(OnlineCount) + ' devices:' + #13 + OnlineList;
 end;
 
 end.
