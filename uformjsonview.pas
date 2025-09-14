@@ -8,22 +8,37 @@ uses
   uModuleCore,
   AsyncHttp, fpjson,
   Classes, SysUtils, Forms, Controls, StdCtrls,
-  ExtCtrls, ComCtrls;
+  ExtCtrls, ComCtrls, Menus;
 
 type
 
   { TfrmJSONView }
 
   TfrmJSONView = class(TForm)
+    btnHintUpd: TButton;
     edJSONView: TMemo;
-    listGetAPI: TListBox;
+    imgJSON: TImageList;
+    edHintFieldsList: TLabeledEdit;
+    listEndpoints: TListBox;
+    MainMenu: TMainMenu;
+    mnShowHintPanel: TMenuItem;
+    mnCollapseAll: TMenuItem;
+    mnExpandAll: TMenuItem;
+    panelHintFieldsList: TPanel;
     Splitter2: TSplitter;
     Splitter3: TSplitter;
     treeJsonData: TTreeView;
+    procedure btnHintUpdClick(Sender: TObject);
+    procedure FormCreate(Sender: TObject);
+    procedure FormDestroy(Sender: TObject);
     procedure listGetAPIClick(Sender: TObject);
+    procedure mnShowHintPanelClick(Sender: TObject);
   private
 
   public
+    hintList: TStringList;
+    endpoint: string;
+
     procedure httpGetAPItoTree(Request: THttpRequest);
     procedure ShowJSONDocument(TV: TTreeView; DataSource: TJSONData;
       Compact: boolean = False; SortObjectMembers: boolean = False);
@@ -38,6 +53,7 @@ var
 implementation
 
 uses
+  Dialogs,
   jsonparser, jsonscanner;
 
 {$R *.lfm}
@@ -45,31 +61,61 @@ uses
 procedure TfrmJSONView.httpGetAPItoTree(Request: THttpRequest);
 var
   JData: TJSONData;
+  i: integer;
+var
+  node: TTreeNode;
 begin
   if HttpRequestToJson(Request, JData) then
   try
     edJSONView.Text := JData.FormatJSON();
-    ShowJSONDocument(treeJsonData, JData, True);
-    treeJsonData.FullExpand();
+    ShowJSONDocument(Self.treeJsonData, JData, True);
+
+    // treeJsonData.FullExpand();
+    Self.treeJsonData.FullCollapse();
+
+    node := Self.treeJsonData.Items.GetFirstNode;
+    if node <> nil then
+    begin
+      node.Expand(False);
+      while Assigned(node) do
+      begin
+        // enum only root nodes
+        node := node.GetNextSibling;
+        if node <> nil then
+        begin
+          node.Expand(False);
+        end;
+      end;
+    end;
+
   finally
     JData.Free();
   end;
 end;
 
+// Returns image type code for a given TJSONtype
+function JSONTypeToImageIndex(const Value: TJSONtype): Integer;
+begin
+  case Value of
+    jtUnknown: Result := -1;
+    jtNumber:  Result := 8;
+    jtString:  Result := 9;
+    jtBoolean: Result := 7;
+    jtNull:    Result := 6;
+    jtArray:   Result := 17;
+    jtObject:  Result := 16;
+  else
+    Result := -1;
+  end;
+end;
+
 procedure TfrmJSONView.ShowJSONData(TV: TTreeView; AParent: TTreeNode;
   Data: TJSONData; Compact: boolean; SortObjectMembers: boolean);
-
-const
-  ImageTypeMap: array[TJSONtype] of integer =
-    //      jtUnknown, jtNumber, jtString, jtBoolean, jtNull, jtArray, jtObject
-    (-1, 8, 9, 7, 6, 5, 4);
-
 var
   N, N2: TTreeNode;
   I: integer;
   D: TJSONData;
   S: TStringList;
-
 begin
   if not Assigned(Data) then
     exit;
@@ -100,8 +146,8 @@ begin
         begin
           N2 := TV.Items.AddChild(N, S[i]);
           D := TJSONData(S.Objects[i]);
-          N2.ImageIndex := ImageTypeMap[D.JSONType];
-          N2.SelectedIndex := ImageTypeMap[D.JSONType];
+          N2.ImageIndex := JSONTypeToImageIndex(D.JSONType);
+          N2.SelectedIndex := JSONTypeToImageIndex(D.JSONType);
           // recursion! ->
           ShowJSONData(TV, N2, D, Compact, SortObjectMembers);
         end
@@ -116,41 +162,57 @@ begin
       //if (Data.JSONType=jtString) then C:='"'+C+'"';
   end;
 
-  N.ImageIndex := ImageTypeMap[Data.JSONType];
-  N.SelectedIndex := ImageTypeMap[Data.JSONType];
+  N.ImageIndex := JSONTypeToImageIndex(Data.JSONType);
+  N.SelectedIndex := JSONTypeToImageIndex(Data.JSONType);
   N.Data := Data;
 end;
 
 procedure TfrmJSONView.listGetAPIClick(Sender: TObject);
-var endpoint: string;
 begin
-  if listGetAPI.ItemIndex>=0 then
+  if listEndpoints.ItemIndex>=0 then
   begin
-    endpoint := listGetAPI.Items[listGetAPI.ItemIndex];
+    self.endpoint := Trim(listEndpoints.Items[listEndpoints.ItemIndex]);
 
     // Remove everything after " (" including the bracket and space
-    if Pos(' (', endpoint) > 0 then
-      endpoint := Copy(endpoint, 1, Pos(' (', endpoint) - 1);
+    if Pos(' (', self.endpoint) > 0 then
+      self.endpoint := Copy(self.endpoint, 1, Pos(' (', self.endpoint) - 1);
 
-    Core.API_Get(endpoint, @httpGetAPItoTree);
+    Core.API_Get(self.endpoint, @httpGetAPItoTree);
   end;
+end;
+
+procedure TfrmJSONView.btnHintUpdClick(Sender: TObject);
+begin
+  // WIP...!!!!!!!!!!!!!!!!!!!!!!
+end;
+
+procedure TfrmJSONView.FormCreate(Sender: TObject);
+begin
+  //WIP
+end;
+
+procedure TfrmJSONView.FormDestroy(Sender: TObject);
+begin
+  //WIP
+end;
+
+procedure TfrmJSONView.mnShowHintPanelClick(Sender: TObject);
+begin
+  panelHintFieldsList.Visible := not panelHintFieldsList.Visible;
 end;
 
 procedure TfrmJSONView.ShowJSONDocument(TV: TTreeView; DataSource: TJSONData;
   Compact: boolean; SortObjectMembers: boolean);
+var  
+  i: Integer;
 begin
   with TV.Items do
   begin
     BeginUpdate;
     try
       TV.Items.Clear;
+
       ShowJSONData(TV, nil, DataSource, Compact, SortObjectMembers);
-      with TV do
-        if (Items.Count > 0) and Assigned(Items[0]) then
-        begin
-          Items[0].Expand(False);
-          Selected := Items[0];
-        end;
     finally
       EndUpdate;
     end;

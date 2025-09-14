@@ -32,7 +32,6 @@ type
     actShowOptions: TAction;
     ActionListGUI: TActionList;
     ImageTrayIcons: TImageList;
-    imgJSON: TImageList;
     imgTreeViewIcon: TImageList;
     MainMenu1: TMainMenu;
     MenuItem1: TMenuItem;
@@ -213,7 +212,7 @@ end;
 procedure TModuleMain.httpUpdateFolderStat(Request: THttpRequest);
 var
   JData: TJSONData;
-  ij: TJSONEnum;
+  //ij: TJSONEnum;
 begin
   //todo: httpUpdateDevice - move to Core!
   if HttpRequestToJson(Request, JData) then

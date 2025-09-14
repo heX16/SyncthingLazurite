@@ -62,8 +62,28 @@ msgstr ""
 msgid "Author of localization: -"
 msgstr ""
 
+#: tfrmjsonview.btnhintupd.caption
+msgid "Update"
+msgstr ""
+
 #: tfrmjsonview.caption
 msgid "frmJSONView"
+msgstr ""
+
+#: tfrmjsonview.edhintfieldslist.editlabel.caption
+msgid "edHintFieldsList"
+msgstr ""
+
+#: tfrmjsonview.mncollapseall.caption
+msgid "mnCollapseAll"
+msgstr ""
+
+#: tfrmjsonview.mnexpandall.caption
+msgid "mnExpandAll"
+msgstr ""
+
+#: tfrmjsonview.mnshowhintpanel.caption
+msgid "mnShowHintPanel"
 msgstr ""
 
 #: tfrmmain.caption
