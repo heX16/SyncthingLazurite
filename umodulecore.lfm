@@ -102,7 +102,7 @@ object Core: TCore
     end
   end
   object TimerInit: TTimer
-    Interval = 1
+    Interval = 10
     OnTimer = TimerInitTimer
     Left = 70
     Top = 208
@@ -127,5 +127,24 @@ object Core: TCore
     OnTimer = TimerAfterStartCheckTimer
     Left = 244
     Top = 144
+  end
+  object TimerEventProcess: TTimer
+    Enabled = False
+    Interval = 100
+    OnTimer = TimerEventProcessTimer
+    Left = 244
+    Top = 208
+  end
+  object TimerEventCheckTimeout: TTimer
+    Enabled = False
+    Interval = 65000
+    Left = 244
+    Top = 272
+  end
+  object TimerEventListen: TTimer
+    Interval = 100
+    OnTimer = TimerEventListenTimer
+    Left = 244
+    Top = 336
   end
 end

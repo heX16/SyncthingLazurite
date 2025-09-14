@@ -88,7 +88,7 @@ procedure TfrmJSONView.TimerUpdateTreeViewTimer(Sender: TObject);
 begin
   Self.TimerUpdateTreeView.Enabled:=false;
   if Self.json = nil then
-    Self.json := TJSONData.Create;
+    Self.json := TJSONObject.Create;
 
   edJSONView.Text := Self.json.FormatJSON();
   ShowJSONDocument(Self.treeJsonData, Self.json, True);

@@ -14,7 +14,6 @@ uses
 resourcestring
   cStrLocal = ' (local)';
 
-
 type
 
   { TModuleMain }
@@ -110,6 +109,7 @@ uses
   uModuleCore,
   Forms,
   FormAbout,
+  uSyncthingTypes,
   uFormJsonView,
   uFormOptions,
   uFormMain;
@@ -137,8 +137,15 @@ begin
 
   if HttpRequestToJson(Request, JData) then
   try
-    for e in JData do
+    (*for e in JData do
     begin
+      (*
+      2025-09-14:
+      Данные попрежнему повреждаются!
+      Dump:
+      id:604;  type:DownloadProgid:603;  type:StateChanged  name:  folder:sync_zone
+      id:602;  type:StateChanged  name:  folder:sync_zone
+      *)
 
       j := e.Value as TJSONObject;
 
@@ -170,7 +177,7 @@ begin
       frmMain.listEvents.CaretPos.SetLocation(Point(0, frmMain.listEvents.Lines.Count-1));
 
     end;
-
+    *)
   finally
     FreeAndNil(JData);
   end;
@@ -268,10 +275,10 @@ begin
   if frmMain.grpEvents.Visible then
   begin
     frmMain.grpEvents.Visible := false;
-    frmMain.SplitterBottom2.Visible := false;
+    frmMain.SplitterEventsBottom.Visible := false;
   end else
   begin
-    frmMain.SplitterBottom2.Visible := true;
+    frmMain.SplitterEventsBottom.Visible := true;
     frmMain.grpEvents.Visible := true;
   end;
 end;
@@ -341,6 +348,7 @@ begin
   if Core.IsOnline and not Core.aiohttp.RequestInQueue('stats/device') then
     Core.API_Get('stats/device', @httpUpdateDeviceStat);
 
+  (*
   try
     //TODO: BUG 2022. AV. - здесь падает. отсюда начинается вызов проблемной цепочки.
     if Core.IsOnline and not Core.aiohttp.RequestInQueue('events') then
@@ -353,8 +361,7 @@ begin
     //TODO: BUG 2022. AV. поставил заглушку. посмотрим...
     frmMain.lbExcDetected.Visible:=true;
   end;
-
-
+  *)
 
   i := Core.MapDevInfo.Iterator();
   OnlineCount := 0;

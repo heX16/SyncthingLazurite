@@ -5,55 +5,15 @@
 interface
 
 uses
-  Dialogs,
   AsyncHttp,
+  uSyncthingTypes,
+  Dialogs,
   fpjson,
   XMLRead, DOM,
-  ghashmap,
-  HashMapStr,
-  LazFileUtils, LazUTF8,
+  LazUTF8,
   Classes, SysUtils, UTF8Process, ExtCtrls, ActnList, Forms;
 
-
 type
-  { TDevInfo }
-  TDevId = ansistring;
-  TFolderId = ansistring;
-
-  // device info 'record'
-  TDevInfo = class
-    Json: TJSONObject;
-    Id: string;
-    Name: string;
-    Address: string;
-    Connected: boolean;
-    Paused: boolean;
-    LastSeen: TDateTime;
-
-    constructor Create(SetJson: TJSONObject);
-    destructor Destroy(); override;
-    procedure Update(NewJson: TJSONObject); virtual;
-  end;
-
-
-  { TFolderInfo }
-
-  // folders info 'record'
-  TFolderInfo = class
-    Json: TJSONObject;
-    Name: string;
-    Id: string;
-    Path: string;
-
-    constructor Create(SetJson: TJSONObject);
-    destructor Destroy(); override;
-    procedure Update(NewJson: TJSONObject); virtual;
-    function DirectoryExists(): Boolean;
-  end;
-
-  TMapDevInfo = specialize THashMap<TDevId, TDevInfo, THashFuncString>;
-  TMapFolderInfo = specialize THashMap<TFolderId, TFolderInfo, THashFuncString>;
-
   TCoreState = (
     stUnknown,
     // execute fault
@@ -79,6 +39,7 @@ type
     // wait stopping ack
     stStoppingWait);
 
+
 type
 
   TAddConsoleLine = procedure (Line: UTF8String) of object;
@@ -99,6 +60,9 @@ type
     ActionList: TActionList;
     ProcessSyncthing: TProcessUTF8;
     ProcessSupport: TProcessUTF8;
+    TimerEventListen: TTimer;
+    TimerEventCheckTimeout: TTimer;
+    TimerEventProcess: TTimer;
     TimerAfterStartCheck: TTimer;
     TimerPause: TTimer;
     TimerInit: TTimer;
@@ -117,6 +81,8 @@ type
 
     procedure DataModuleDestroy(Sender: TObject);
     procedure TimerAfterStartCheckTimer(Sender: TObject);
+    procedure TimerEventListenTimer(Sender: TObject);
+    procedure TimerEventProcessTimer(Sender: TObject);
 
     procedure TimerInitTimer(Sender: TObject);
     procedure TimerPauseTimer(Sender: TObject);
@@ -138,6 +104,8 @@ type
     procedure httpPing(Request: THttpRequest);
 
     procedure httpGetVer(Request: THttpRequest);
+
+    procedure httpLongPolling(Request: THttpRequest);
   public
 
     // Flag that core is inited
@@ -158,7 +126,9 @@ type
     aiohttp: TAsyncHTTP;
 
     // REST API pooling
-    aiohttpLongPooling: TAsyncHTTP;
+    aiohttpLongPolling: TAsyncHTTP;
+
+    EventQueue: TSyncthingEventQueue;
 
     Version: string;
 
@@ -201,6 +171,8 @@ type
     procedure Start();
     procedure Stop();
 
+    procedure StartLongPolling();
+
     procedure ReadStdOutput(Proc: TProcessUTF8; AddProc: TAddConsoleLine; var TextChank: UTF8String);
     procedure AddStringToConsole(Str: UTF8String);
 
@@ -223,7 +195,6 @@ function IsLocalIP(IP: string): boolean;
 implementation
 
 uses
-  CRC,
   LCLTranslator, // i18n
   uFormOptions,
   uFormMain,
@@ -231,6 +202,7 @@ uses
   synautil,
   Graphics,
   LConvEncoding,
+  LazFileUtils,
   RegExpr, // ParseJsonDateTime
   dateutils, // ParseJsonDateTime
   jsonparser,
@@ -266,7 +238,7 @@ end;
 
 function IsLocalIP(IP: string): boolean;
 var
-  B1, B2, B3, B4: byte;
+  B1, B2: byte;
   Parts: array[0..3] of string;
   PartCount: integer;
   i: integer;
@@ -344,8 +316,8 @@ begin
   // Convert to bytes
   B1 := StrToInt(Parts[0]);
   B2 := StrToInt(Parts[1]);
-  B3 := StrToInt(Parts[2]);
-  B4 := StrToInt(Parts[3]);
+  // B3 := StrToInt(Parts[2]);
+  // B4 := StrToInt(Parts[3]);
   
   // Check IPv4 private/local ranges
   // 127.0.0.0/8 (localhost)
@@ -378,7 +350,7 @@ var
 begin
   Result := false;
   Json := nil;
-  if Request.Connected then
+  if (Request <> nil) then
   begin
     try
       if (Request.Response <> nil) and (Request.Response.Size>0) then
@@ -401,167 +373,6 @@ begin
       if JN<>nil then
         JN.Free();
     end;
-  end;
-end;
-
-{ TFolderInfo }
-
-constructor TFolderInfo.Create(SetJson: TJSONObject);
-begin
-  (*
-    "id" : "config",
-    "label" : "config",
-    "filesystemType" : "basic",
-    "path" : "D:\\Sync\\config",
-    "type" : "sendreceive",
-    "devices" : [
-      {
-        "deviceID" : "XXXXXXX-VDBWOAW-QHBNBHY-2UUEL22-S4LICVU-LA6JRMO-GBR5NRG-XXXXXXX",
-        "introducedBy" : ""
-      },
-      {
-        "deviceID" : "XXXXXXX-YAT62H7-SAN2ZID-DHSFKAV-YKYCQAQ-DMCDM5K-DC67FGP-XXXXXXX",
-        "introducedBy" : ""
-      }
-    ],
-    "rescanIntervalS" : 3600,
-    "fsWatcherEnabled" : true,
-    "fsWatcherDelayS" : 10,
-    "ignorePerms" : false,
-    "autoNormalize" : true,
-    "minDiskFree" : {
-      "value" : 1,
-      "unit" : "%"
-    },
-    "versioning" : {
-      "type" : "",
-      "params" : {}
-    },
-    "copiers" : 0,
-    "pullerMaxPendingKiB" : 0,
-    "hashers" : 0,
-    "order" : "random",
-    "ignoreDelete" : false,
-    "scanProgressIntervalS" : 0,
-    "pullerPauseS" : 0,
-    "maxConflicts" : 10,
-    "disableSparseFiles" : false,
-    "disableTempIndexes" : false,
-    "paused" : false,
-    "weakHashThresholdPct" : 25,
-    "markerName" : ".stfolder",
-    "copyOwnershipFromParent" : false
-  *)
-
-  inherited Create();
-  Json:=nil;
-  Update(SetJson);
-end;
-
-destructor TFolderInfo.Destroy();
-begin
-  Name:='';
-  Id:='';
-  if Json<>nil then
-    FreeAndNil(Json);
-  inherited;
-end;
-
-procedure TFolderInfo.Update(NewJson: TJSONObject);
-begin
-  Name:='';
-  Id:='';
-  if Json<>nil then
-    FreeAndNil(Json);
-
-  if NewJson<>nil then begin
-    // create copy of json tree
-    Json := NewJson.Clone() as TJSONObject;
-    Name:=Json.Get('label', 'ERROR');
-    Id:=Json.Get('id', 'ERROR');
-    if Name='' then
-      Name:=Id;
-    Path:=Json.Get('path', '');
-  end;
-end;
-
-function TFolderInfo.DirectoryExists: Boolean;
-var Info: TSearchRec;
-begin
-  Result := DirectoryExistsUTF8(self.Path);
-  if Result then
-  begin
-    try
-      If FindFirstUTF8('*', faAnyFile, Info)=0
-      then
-        FindCloseUTF8(Info)
-      else
-        Result := false;
-    except
-      on EFileNotFoundException do Result := false;
-      on EDirectoryNotFoundException do Result := false;
-    end;
-  end;
-end;
-
-{ TDevInfo }
-
-constructor TDevInfo.Create(SetJson: TJSONObject);
-begin
-(*
-  "deviceID" : "XXXXXXX-7W6T5GU-Q7F4UB4-XXXXXXX-2NZFCAR-TONYMDU-JRCX67A-XXXXXXX",
-  "name" : "heX home PC",
-  "addresses" : [
-    "dynamic",
-    "tcp://hex.xxx.com:123",
-    "tcp://192.168.1.123:123"
-  ],
-  "compression" : "always",
-  "certName" : "",
-  "introducer" : false,
-  "skipIntroductionRemovals" : false,
-  "introducedBy" : "",
-  "paused" : false,
-  "allowedNetworks" : [
-  ],
-  "autoAcceptFolders" : false,
-  "maxSendKbps" : 0,
-  "maxRecvKbps" : 0,
-  "ignoredFolders" : [
-  ],
-  "pendingFolders" : [
-  ],
-  "maxRequestKiB" : 0
-*)
-  Inherited Create();
-  Update(SetJson);
-end;
-
-destructor TDevInfo.Destroy();
-begin
-  Name:='';
-  Id:='';
-  if Json<>nil then
-    FreeAndNil(Json);
-  inherited;
-end;
-
-procedure TDevInfo.Update(NewJson: TJSONObject);
-begin
-  Name:='';
-  Id:='';
-  if Json<>nil then
-    FreeAndNil(Json);
-
-  if NewJson<>nil then begin
-    // create copy of json tree
-    Json := NewJson.Clone() as TJSONObject;
-    Name:=Json.Get('name', 'ERROR');
-
-    Id:=Json.Get('deviceID', 'ERROR');
-    Paused:=Json.Get('paused', False);
-    if Name='' then
-      Name:=Id;
   end;
 end;
 
@@ -600,8 +411,8 @@ begin
   if Pos('?', api) > 0 then
     queueKey := Copy(api, 1, Pos('?', api) - 1);
 
-  Core.aiohttp.Get(
-    Core.SyncthigServer+'rest/'+api, callback,
+  self.aiohttp.Get(
+    self.SyncthigServer+'rest/'+api, callback,
     '', queueKey);
 end;
 
@@ -615,8 +426,8 @@ begin
   if Pos('?', api) > 0 then
     queueKey := Copy(api, 1, Pos('?', api) - 1);
 
-  Core.aiohttp.Post(
-    Core.SyncthigServer+'rest/'+api, data, callback,
+  self.aiohttp.Post(
+    self.SyncthigServer+'rest/'+api, data, callback,
     '', queueKey);
 end;
 
@@ -660,7 +471,7 @@ begin
     for ij in j2 do
     begin
       // find in device list.
-      if Core.MapDevInfo.GetValue(ij.Key, d) then
+      if self.MapDevInfo.GetValue(ij.Key, d) then
       begin
         // update data
         d.Connected:=ij.Value.GetPath('connected').AsBoolean;
@@ -668,7 +479,7 @@ begin
         d.Address:=ij.Value.GetPath('address').AsString;
         //todo: use 'mutable' ptr
         // write to map
-        Core.MapDevInfo[ij.Key] := d;
+        self.MapDevInfo[ij.Key] := d;
       end;
     end;
     frmMain.treeDevices.RootNodeCount:=j2.Count;
@@ -733,6 +544,62 @@ begin
   finally
     FreeAndNil(j);
   end;
+end;
+
+procedure TCore.httpLongPolling(Request: THttpRequest);
+var
+  JData: TJSONData;
+  a: TJSONArray;
+  j: TJSONObject;
+  e: TJSONData;
+  i: integer;
+  id: integer;
+  added: Boolean;
+begin
+  added := false;
+  JData := nil;
+  if HttpRequestToJson(Request, JData) then
+  begin
+    try
+      if JData is TJSONArray then
+      begin
+        a := JData as TJSONArray;
+
+        for i:=0 to a.Count-1 do
+        begin
+          // remove this object from `JData` tree.
+          // now, this is my object, and i am responsible for free the memory.
+          e := a.Extract(i);
+
+          if (e is TJSONObject) then
+          begin
+            j := e as TJSONObject;
+            id := j.Get('id', -1);
+            if (id >= 0) then
+            begin
+              // valid event, update and send to queue
+              self.EventsLastId := id;
+
+              // TODO: add thread safety   !!!!!!!!!!!!!!!!!!!!
+              self.EventQueue.Push(j);
+              added := true;
+            end;
+          end else
+          begin
+            // invalid record - just burn it
+            FreeAndNil(e);
+          end;
+         end;
+      end;
+    finally
+      FreeAndNil(JData);
+    end;
+  end;
+
+  if added then
+    Self.TimerEventProcess.Enabled:=true;
+
+  self.TimerEventListen.Enabled:=true;
 end;
 
 //todo: TEMP!!!!!!!!!
@@ -880,6 +747,27 @@ begin
   //ProcessSyncthing.Terminate(0);
 end;
 
+procedure TCore.StartLongPolling();
+var
+  rest: string;
+begin
+  // TODO: add `Core.State` check (in future...)
+  if not self.Terminated then
+  begin
+    rest := 'events'+'?'+
+            'since='+IntToStr(self.EventsLastId)+'&'+
+            'limit='+IntToStr(10)+'&'+
+            'timeout='+IntToStr(60);
+
+    self.aiohttpLongPolling.Get(
+      self.SyncthigServer+'rest/' + rest,
+      @httpLongPolling,
+      '',
+      'polling'
+    );
+  end;
+end;
+
 procedure TCore.ReadStdOutput(Proc: TProcessUTF8;
   AddProc: TAddConsoleLine; var TextChank: UTF8String);
 var
@@ -992,7 +880,7 @@ end;
 
 procedure TCore.actInitExecute(Sender: TObject);
 begin
-  Core.Init();
+  self.Init();
 
   //todo: i18n move to module main
   {strs:=TStringList.Create;
@@ -1047,16 +935,26 @@ begin
   end;
 end;
 
+procedure TCore.TimerEventListenTimer(Sender: TObject);
+begin
+  self.TimerEventListen.Enabled:=false;
+  self.StartLongPolling();
+end;
+
+procedure TCore.TimerEventProcessTimer(Sender: TObject);
+begin
+  self.TimerEventProcess.Enabled:=false;
+  //
+end;
+
 
 procedure TCore.Init();
-var d:TDevInfo;
 begin
-  //todo: WIP: INIT
-
-  Core.State := stUnknown;
+  self.State := stUnknown;
 
   MapDevInfo := TMapDevInfo.Create();
   ListDevInfo := TStringList.Create();
+  EventQueue := uSyncthingTypes.TSyncthingEventQueue.Create();
 
   MapFolderInfo := TMapFolderInfo.Create();
   ListFolderInfo := TStringList.Create();
@@ -1067,8 +965,16 @@ begin
   aiohttp.ConnectTimeout:=1000;
   aiohttp.RetryCount:=1;
   aiohttp.IOTimeout:=1000;
-  aiohttp.KeepConnection:=false;
+  aiohttp.KeepConnection:=true;
   aiohttp.OnOpened:=@aiohttpAddHeader;
+
+  aiohttpLongPolling := TAsyncHTTP.Create;
+  aiohttpLongPolling.ConnectTimeout:=1000;
+  aiohttpLongPolling.RetryCount:=0;
+  aiohttpLongPolling.IOTimeout:=61000;
+  aiohttpLongPolling.KeepConnection:=true;
+  aiohttpLongPolling.OnOpened:=@aiohttpAddHeader;
+
 
   SyncthigHost:='127.0.0.1';
   SyncthigPort:=8384;
@@ -1097,6 +1003,7 @@ begin
 
   FreeAndNil(ListFolderInfo);
   FreeAndNil(ListDevInfo);
+  FreeAndNil(EventQueue);
 
   //todo: FUTURE. for i in MapFolderInfo do i.Free(); - https://bugs.freepascal.org/view.php?id=35940
   i := MapFolderInfo.Iterator();
@@ -1137,7 +1044,7 @@ end;
 
 function TCore.ListDev_GetText(NodeIndex: Cardinal): String;
 begin
-  if Core.Inited and
+  if self.Inited and
      (NodeIndex < Self.ListDevInfo.Count)
   then
     ListDev_GetText := Self.MapDevInfo[Self.ListDevInfo[NodeIndex]].Name

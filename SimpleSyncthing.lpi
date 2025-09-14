@@ -31,7 +31,7 @@
       <UseVersionInfo Value="True"/>
       <AutoIncrementBuild Value="True"/>
       <MinorVersionNr Value="20"/>
-      <BuildNr Value="90"/>
+      <BuildNr Value="92"/>
     </VersionInfo>
     <BuildModes Count="3">
       <Item1 Name="Debug" Default="True"/>
@@ -145,7 +145,7 @@
         <PackageName Value="LCL"/>
       </Item7>
     </RequiredPackages>
-    <Units Count="10">
+    <Units Count="11">
       <Unit0>
         <Filename Value="SimpleSyncthing.lpr"/>
         <IsPartOfProject Value="True"/>
@@ -212,6 +212,11 @@
         <ResourceBaseClass Value="Form"/>
         <UnitName Value="FormAbout"/>
       </Unit9>
+      <Unit10>
+        <Filename Value="usyncthingtypes.pas"/>
+        <IsPartOfProject Value="True"/>
+        <UnitName Value="uSyncthingTypes"/>
+      </Unit10>
     </Units>
   </ProjectOptions>
   <CompilerOptions>

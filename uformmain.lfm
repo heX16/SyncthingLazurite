@@ -86,6 +86,7 @@ object frmMain: TfrmMain
     ParentFont = False
     ScrollBars = ssAutoBoth
     TabOrder = 1
+    Visible = False
     WordWrap = False
   end
   object SplitterBottom1: TSplitter
@@ -96,6 +97,7 @@ object frmMain: TfrmMain
     Width = 551
     Align = alBottom
     ResizeAnchor = akBottom
+    Visible = False
   end
   object grpDevices: TGroupBox
     Left = 0
@@ -183,7 +185,6 @@ object frmMain: TfrmMain
     ClientHeight = 87
     ClientWidth = 547
     TabOrder = 6
-    Visible = False
     object listEvents: TMemo
       Left = 0
       Height = 87
@@ -197,7 +198,7 @@ object frmMain: TfrmMain
       WordWrap = False
     end
   end
-  object SplitterBottom2: TSplitter
+  object SplitterEventsBottom: TSplitter
     Cursor = crVSplit
     Left = 0
     Height = 6
@@ -205,7 +206,6 @@ object frmMain: TfrmMain
     Width = 551
     Align = alBottom
     ResizeAnchor = akBottom
-    Visible = False
   end
   object btnShowWeb: TButton
     Left = 72

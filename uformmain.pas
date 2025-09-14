@@ -73,7 +73,7 @@ type
     shStatusCircle: TShape;
     SplitterBottom1: TSplitter;
     SplitterLeft: TSplitter;
-    SplitterBottom2: TSplitter;
+    SplitterEventsBottom: TSplitter;
     treeFolders: TVirtualStringTree;
     treeDevices: TVirtualStringTree;
     procedure btnStartClick(Sender: TObject);
@@ -116,6 +116,7 @@ implementation
 
 uses
   dateutils,
+  uSyncthingTypes,
   uModuleMain;
 
 {$R *.lfm}
