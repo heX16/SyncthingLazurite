@@ -47,10 +47,10 @@ object Core: TCore
   end
   object TimerPing: TTimer
     Enabled = False
-    Interval = 5000
+    Interval = 500
     OnTimer = TimerPingTimer
-    Left = 70
-    Top = 144
+    Left = 472
+    Top = 192
   end
   object ActionList: TActionList
     Left = 368
@@ -74,11 +74,6 @@ object Core: TCore
       Category = 'GUI'
       Caption = 'actStopAndExit'
       OnExecute = actStopAndExitExecute
-    end
-    object actPause: TAction
-      Category = 'Core'
-      Caption = 'actPause'
-      OnExecute = actPauseExecute
     end
     object actTerminate: TAction
       Category = 'Core'
@@ -110,14 +105,7 @@ object Core: TCore
     Interval = 10
     OnTimer = TimerInitTimer
     Left = 70
-    Top = 208
-  end
-  object TimerPause: TTimer
-    Enabled = False
-    Interval = 60000
-    OnTimer = TimerPauseTimer
-    Left = 70
-    Top = 272
+    Top = 152
   end
   object TimerStartOnStart: TTimer
     Enabled = False
@@ -130,8 +118,8 @@ object Core: TCore
     Enabled = False
     Interval = 100
     OnTimer = TimerAfterStartCheckTimer
-    Left = 496
-    Top = 48
+    Left = 472
+    Top = 248
   end
   object TimerEventProcess: TTimer
     Enabled = False

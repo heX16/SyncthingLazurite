@@ -21,7 +21,8 @@ type
     iekNone,
     iekOpened,
     iekSuccess,
-    iekError
+    iekError,
+    iekDisconnected
   );
 
   // Forward declaration
@@ -115,6 +116,7 @@ type
     FOnOpened: TAsyncHttpRequestEvent;
     FOnLoadDone: TAsyncHttpRequestEvent;
     FOnError: TAsyncHttpRequestEvent;
+    FOnDisconnected: TAsyncHttpRequestEvent;
     FRetryCount: Integer;
     FIOTimeout: Integer;
     FTerminated: Boolean;
@@ -122,6 +124,8 @@ type
     // Track current in-flight client for hard abort
     FCurrentClient: TAbortableHTTPClient;
     FCurrentClientLock: TCriticalSection;
+    // True when a request has been opened and not yet completed
+    FIsConnectionOpen: Boolean;
     procedure EnqueueRequest(const ARequest: THttpRequest);
     function GetRequestByName(const OperationName: string): THttpRequest;
     procedure AddRequestName(const ARequest: THttpRequest);
@@ -161,6 +165,9 @@ type
     // Graceful shutdown
     procedure Terminate;
 
+    // Abort only the current in-flight connection (if any), without destroying the object
+    procedure AbortActiveConnection;
+
     // Check operation status by name
     function RequestInQueue(const OperationName: string): Boolean;
 
@@ -173,6 +180,10 @@ type
     property OnOpened: TAsyncHttpRequestEvent read FOnOpened write FOnOpened;
     property OnLoadDone: TAsyncHttpRequestEvent read FOnLoadDone write FOnLoadDone;
     property OnError: TAsyncHttpRequestEvent read FOnError write FOnError;
+    // Fired when low-level connection was interrupted and no HTTP status code received
+    property OnDisconnected: TAsyncHttpRequestEvent read FOnDisconnected write FOnDisconnected;
+    // True if a request is currently opened and in-flight
+    property IsConnectionOpen: Boolean read FIsConnectionOpen;
   end;
 
 implementation
@@ -300,6 +311,9 @@ begin
     iekError:
       if Assigned(Self.FOwner.FOnError) then
         Self.FOwner.FOnError(Self.FInvokeRequest, Self.FOwner);
+    iekDisconnected:
+      if Assigned(Self.FOwner.FOnDisconnected) then
+        Self.FOwner.FOnDisconnected(Self.FInvokeRequest, Self.FOwner);
   else
     ;
   end;
@@ -371,6 +385,7 @@ begin
   Self.FInvokeKind := iekOpened;
   Self.FInvokeRequest := ARequest;
   Self.Synchronize(@DoInvokeEvents);
+  Self.FOwner.FIsConnectionOpen := True;
 
   succeeded := False;
   ARequest.Method := UpperCase(ARequest.Method);
@@ -499,9 +514,16 @@ begin
   if succeeded then
     Self.FInvokeKind := iekSuccess
   else
-    Self.FInvokeKind := iekError;
+  begin
+    // If there is no HTTP status and not connected, classify as disconnection
+    if (ARequest.Status = 0) and (not ARequest.Connected) then
+      Self.FInvokeKind := iekDisconnected
+    else
+      Self.FInvokeKind := iekError;
+  end;
   Self.FInvokeRequest := ARequest;
   Self.Synchronize(@DoInvokeEvents);
+  Self.FOwner.FIsConnectionOpen := False;
 
   // Prepare and invoke the user callback in main thread
   ARequest.Response.Position := 0;
@@ -686,6 +708,21 @@ begin
   FreeAndNil(Self.FNamedRequestsDict);
   FreeAndNil(Self.FQueue);
   FreeAndNil(Self.FCurrentClientLock);
+end;
+
+procedure TAsyncHTTP.AbortActiveConnection;
+begin
+  // Abort active client/socket if present
+  if Assigned(Self.FCurrentClientLock) then
+  begin
+    Self.FCurrentClientLock.Acquire;
+    try
+      if Assigned(Self.FCurrentClient) then
+        Self.FCurrentClient.AbortRequest;
+    finally
+      Self.FCurrentClientLock.Release;
+    end;
+  end;
 end;
 
 function TAsyncHTTP.RequestInQueue(const OperationName: string): Boolean;

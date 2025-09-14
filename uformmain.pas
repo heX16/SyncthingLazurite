@@ -126,7 +126,7 @@ uses
 
 procedure TfrmMain.btnStartClick(Sender: TObject);
 begin
-  Core.Start();
+  Core.StartAndConnect();
 end;
 
 procedure TfrmMain.btnStopClick(Sender: TObject);

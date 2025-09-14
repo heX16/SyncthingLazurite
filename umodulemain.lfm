@@ -894,7 +894,7 @@ object ModuleMain: TModuleMain
       Action = Core.actRestart
     end
     object MenuItem22: TMenuItem
-      Action = Core.actPause
+      Caption = 'actPause'
     end
     object N1: TMenuItem
       Caption = '-'
@@ -964,7 +964,7 @@ object ModuleMain: TModuleMain
         Action = Core.actStart
       end
       object MenuItem4: TMenuItem
-        Action = Core.actPause
+        Caption = 'actPause'
       end
       object MenuItem2: TMenuItem
         Action = Core.actRestart

@@ -22,13 +22,15 @@ type
     stConnectOrStart,
     // syncthing disabled
     stStopped,
+    // GUI will paused, wait disconnecting the long polling
+    stDisconnectingGUI,
     // syncthinc still working, but GUI paused
     stDisconnectedGUI,
     // execute syncthinc app
     stLaunching,
     // wait ack from syncthinc app
     stLaunchingWait,
-    // syncthinc working, GUI working
+    // online - syncthinc working, GUI working
     stWork,
     // shutdown and start (restart)
     stShutdownAndStart,
@@ -52,7 +54,6 @@ type
     actStopAndExit: TAction;
     actInit: TAction;
     actReloadConfig: TAction;
-    actPause: TAction;
     actRunSupportProc: TAction;
     actTerminate: TAction;
     actRestart: TAction;
@@ -65,7 +66,6 @@ type
     TimerEventCheckTimeout: TTimer;
     TimerEventProcess: TTimer;
     TimerAfterStartCheck: TTimer;
-    TimerPause: TTimer;
     TimerInit: TTimer;
     TimerPing: TTimer;
     TimerReadStdOutput: TTimer;
@@ -73,7 +73,6 @@ type
     TimerUpdate: TTimer;
     procedure actInitExecute(Sender: TObject);
     procedure actStopAndExitExecute(Sender: TObject);
-    procedure actPauseExecute(Sender: TObject);
     procedure actReloadConfigExecute(Sender: TObject);
     procedure actRestartExecute(Sender: TObject);
     procedure actRunSupportProcExecute(Sender: TObject);
@@ -88,7 +87,6 @@ type
     procedure TimerEventProcessTimer(Sender: TObject);
 
     procedure TimerInitTimer(Sender: TObject);
-    procedure TimerPauseTimer(Sender: TObject);
     procedure TimerStartOnStartTimer(Sender: TObject);
     procedure TimerPingTimer(Sender: TObject);
     procedure TimerReadStdOutputTimer(Sender: TObject);
@@ -98,6 +96,7 @@ type
 
     // call from other thread!
     procedure aiohttpAddHeader(Request: THttpRequest; Sender: TObject);
+    procedure aiohttpLongPollingDisconnected(Request: THttpRequest; Sender: TObject);
 
   public
     (*
@@ -182,10 +181,11 @@ type
     procedure FillSupportExecPath();
     procedure UpdateSyncthingVersion();
 
-    procedure Start();
+    procedure StartAndConnect();
     procedure Stop();
 
     procedure StartLongPolling();
+    procedure StopLongPolling();
     procedure EventProcess(event: TJSONObject); virtual;
 
     function MakeOnlineHint(): string;
@@ -467,6 +467,12 @@ begin
   end;
 end;
 
+procedure TCore.aiohttpLongPollingDisconnected(Request: THttpRequest; Sender: TObject);
+begin
+  //TODO: check `state`
+  self.TimerPing.Enabled:=true;
+end;
+
 procedure TCore.httpReadConfig(Request: THttpRequest);
 var j: TJSONData;
 begin
@@ -564,12 +570,10 @@ end;
 
 procedure TCore.TimerPingTimer(Sender: TObject);
 begin
+  TimerPing.Enabled:=false;
   if not Terminated then begin
     if not aiohttp.RequestInQueue('system/ping') then
       API_Get('system/ping', @httpPing);
-    if not IsOnline then
-      TimerPing.Interval:=1000 else
-      TimerPing.Interval:=5000;
   end;
 end;
 
@@ -793,7 +797,7 @@ begin
     end;
 end;
 
-procedure TCore.Start();
+procedure TCore.StartAndConnect();
 begin
   //TODO: добавить поддержку "подключения" к уже запущенному процессу (без консоли разумеется)
   // если процесс не запущен тогда запускаем его
@@ -847,6 +851,15 @@ begin
       );
     end;
   end;
+end;
+
+procedure TCore.StopLongPolling();
+begin
+  // Abort only current long-poll request; do not free aiohttpLongPolling
+  if Assigned(self.aiohttpLongPolling) then
+    self.aiohttpLongPolling.AbortActiveConnection();
+  // Also stop immediate relaunch until explicitly restarted
+  self.TimerEventListen.Enabled:=false;
 end;
 
 procedure TCore.EventProcess(event: TJSONObject);
@@ -981,19 +994,13 @@ begin
   end;
 end;
 
-procedure TCore.TimerPauseTimer(Sender: TObject);
-begin
-  TimerPause.Enabled:=false;
-  actStart.Execute();
-end;
-
 procedure TCore.TimerStartOnStartTimer(Sender: TObject);
 begin
   if OnlineTested then
   begin
     TimerStartOnStart.Enabled:=false;
     if not IsOnline then
-      Start();
+      StartAndConnect();
   end;
 end;
 
@@ -1015,13 +1022,6 @@ procedure TCore.actStopAndExitExecute(Sender: TObject);
 begin
   actStop.Execute();
   Application.Terminate();
-end;
-
-procedure TCore.actPauseExecute(Sender: TObject);
-begin
-  actStop.Execute();
-  TimerPause.Enabled:=false;
-  TimerPause.Enabled:=true;
 end;
 
 procedure TCore.actReloadConfigExecute(Sender: TObject);
@@ -1051,7 +1051,7 @@ end;
 
 procedure TCore.actStartExecute(Sender: TObject);
 begin
-  Start();
+  StartAndConnect();
 end;
 
 procedure TCore.actStopExecute(Sender: TObject);
@@ -1167,6 +1167,7 @@ begin
   aiohttpLongPolling.IOTimeout:=61000;
   aiohttpLongPolling.KeepConnection:=true;
   aiohttpLongPolling.OnOpened:=@aiohttpAddHeader;
+  aiohttpLongPolling.OnDisconnected:=@aiohttpLongPollingDisconnected;
 
 
   SyncthigHost:='127.0.0.1';
@@ -1178,7 +1179,7 @@ begin
   APIKey:=ReadAPIKeyFromCfg();
 
   TimerStartOnStart.Enabled:=frmOptions.chRunSyncOnStart.Checked;
-  TimerPing.Enabled:=true;
+  TimerPing.Enabled:=frmOptions.chRunSyncOnStart.Checked;
 
   Inited := true;
 end;

@@ -5,10 +5,6 @@ msgstr "Content-Type: text/plain; charset=UTF-8"
 msgid "actInit"
 msgstr ""
 
-#: tcore.actpause.caption
-msgid "actPause"
-msgstr ""
-
 #: tcore.actreloadconfig.caption
 msgid "actReloadConfig"
 msgstr ""
@@ -219,6 +215,16 @@ msgstr ""
 
 #: tmodulemain.actshowweb.caption
 msgid "actShowWeb"
+msgstr ""
+
+#: tmodulemain.menuitem22.caption
+msgctxt "tmodulemain.menuitem22.caption"
+msgid "actPause"
+msgstr ""
+
+#: tmodulemain.menuitem4.caption
+msgctxt "tmodulemain.menuitem4.caption"
+msgid "actPause"
 msgstr ""
 
 #: tmodulemain.mnserver.caption
