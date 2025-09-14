@@ -111,6 +111,18 @@ begin
   end;
 end;
 
+// Formats JSON value into compact inline string for hint display
+function JSONValueToInlineText(const Value: TJSONData): string;
+begin
+  case Value.JSONType of
+    jtNull:    Result := 'Null';
+    jtArray:   Result := '[...]';
+    jtObject:  Result := '{...}';
+  else
+    Result := Value.AsString;
+  end;
+end;
+
 procedure JSONDataAddToTreeView(TV: TTreeView; AParent: TTreeNode;
   Data: TJSONData; Compact: boolean; SortObjectMembers: boolean);
 var
@@ -189,8 +201,41 @@ end;
 
 procedure JSONDataAddToTreeView_OnAddingNode(TV: TTreeView; AParent: TTreeNode;
   ACurrent: TTreeNode; Data: TJSONData);
+var
+  Obj: TJSONObject;
+  i, idx: Integer;
+  hintName, appended, valueTxt: string;
+  valData: TJSONData;
 begin
-
+  // Append hint values to object nodes label if their fields are listed in hintList
+  if (Data <> nil)
+    and (Data.JSONType = jtObject)
+    and Assigned(ACurrent)
+    and (ACurrent.Text <> '')
+    and Assigned(frmJSONView)
+    and Assigned(frmJSONView.hintList)
+    and (frmJSONView.hintList.Count > 0) then
+  begin
+    Obj := TJSONObject(Data);
+    appended := '';
+    for i := 0 to frmJSONView.hintList.Count - 1 do
+    begin
+      hintName := Trim(frmJSONView.hintList[i]);
+      if hintName = '' then
+        Continue;
+      idx := Obj.IndexOfName(hintName);
+      if idx >= 0 then
+      begin
+        valData := Obj.Items[idx];
+        valueTxt := JSONValueToInlineText(valData);
+        if appended <> '' then
+          appended := appended + ', ';
+        appended := appended + hintName + ':' + valueTxt;
+      end;
+    end;
+    if appended <> '' then
+      ACurrent.Text := ACurrent.Text + ' (' + appended + ')';
+  end;
 end;
 
 procedure TfrmJSONView.listGetAPIClick(Sender: TObject);
@@ -208,18 +253,51 @@ begin
 end;
 
 procedure TfrmJSONView.btnHintUpdClick(Sender: TObject);
+var
+  tokens: TStringList;
+  j: Integer;
+  s: string;
 begin
-  // WIP...!!!!!!!!!!!!!!!!!!!!!!
+  if hintList = nil then
+    hintList := TStringList.Create;
+
+  hintList.BeginUpdate;
+  try
+    hintList.Clear;
+    // Parse comma-separated field names from the edit control
+    tokens := TStringList.Create;
+    try
+      tokens.StrictDelimiter := True;
+      tokens.Delimiter := ',';
+      tokens.DelimitedText := edHintFieldsList.Text;
+      tokens.CaseSensitive := True;
+      tokens.Duplicates := dupIgnore;
+      // Normalize and copy non-empty tokens
+      for j := 0 to tokens.Count - 1 do
+      begin
+        s := Trim(tokens[j]);
+        if s <> '' then
+          hintList.Add(s);
+      end;
+    finally
+      tokens.Free;
+    end;
+  finally
+    hintList.EndUpdate;
+  end;
+
+  // Re-render the JSON tree to apply hint annotations
+  ShowJSONDocument(Self.treeJsonData, Self.json, True);
 end;
 
 procedure TfrmJSONView.FormCreate(Sender: TObject);
 begin
-  //WIP
+  hintList := TStringList.Create; // Holds hint field names provided by the user
 end;
 
 procedure TfrmJSONView.FormDestroy(Sender: TObject);
 begin
-  //WIP
+  FreeAndNil(hintList);
 end;
 
 procedure TfrmJSONView.mnShowHintPanelClick(Sender: TObject);

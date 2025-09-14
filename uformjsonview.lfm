@@ -161,6 +161,7 @@ object frmJSONView: TfrmJSONView
       Height = 28
       Top = 1
       Width = 48
+      Anchors = [akTop, akRight]
       Caption = 'Update'
       TabOrder = 1
       OnClick = btnHintUpdClick
