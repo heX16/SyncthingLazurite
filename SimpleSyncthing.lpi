@@ -31,9 +31,9 @@
       <UseVersionInfo Value="True"/>
       <AutoIncrementBuild Value="True"/>
       <MinorVersionNr Value="20"/>
-      <BuildNr Value="92"/>
+      <BuildNr Value="94"/>
     </VersionInfo>
-    <BuildModes Count="3">
+    <BuildModes Count="4">
       <Item1 Name="Debug" Default="True"/>
       <Item2 Name="Release_Wnd">
         <CompilerOptions>
@@ -112,6 +112,61 @@
           </Other>
         </CompilerOptions>
       </Item3>
+      <Item4 Name="Debug_Wnd">
+        <CompilerOptions>
+          <Version Value="11"/>
+          <PathDelim Value="\"/>
+          <Target>
+            <Filename Value="SimpleSyncthing"/>
+          </Target>
+          <SearchPaths>
+            <IncludeFiles Value="$(ProjOutDir)"/>
+            <UnitOutputDirectory Value="$Env(Temp)\tmp\lazarus\SimpleSyncthing\$(TargetCPU)-$(TargetOS)"/>
+          </SearchPaths>
+          <Parsing>
+            <SyntaxOptions>
+              <IncludeAssertionCode Value="True"/>
+            </SyntaxOptions>
+          </Parsing>
+          <CodeGeneration>
+            <SmartLinkUnit Value="True"/>
+            <Checks>
+              <IOChecks Value="True"/>
+              <RangeChecks Value="True"/>
+              <StackChecks Value="True"/>
+            </Checks>
+            <VerifyObjMethodCallValidity Value="True"/>
+            <Optimizations>
+              <OptimizationLevel Value="3"/>
+            </Optimizations>
+          </CodeGeneration>
+          <Linking>
+            <Debugging>
+              <DebugInfoType Value="dsDwarf2Set"/>
+              <UseHeaptrc Value="True"/>
+              <StripSymbols Value="True"/>
+              <UseExternalDbgSyms Value="True"/>
+            </Debugging>
+            <LinkSmart Value="True"/>
+            <Options>
+              <Win32>
+                <GraphicApplication Value="True"/>
+              </Win32>
+            </Options>
+          </Linking>
+          <Other>
+            <CompilerMessages>
+              <IgnoredMessages idx6058="True"/>
+            </CompilerMessages>
+            <CustomOptions Value="-dUseCThreads
+-dDEBUG"/>
+            <OtherDefines Count="2">
+              <Define0 Value="UseCThreads"/>
+              <Define1 Value="DEBUG"/>
+            </OtherDefines>
+          </Other>
+        </CompilerOptions>
+      </Item4>
     </BuildModes>
     <PublishOptions>
       <Version Value="2"/>
@@ -269,7 +324,7 @@
     </Other>
   </CompilerOptions>
   <Debugging>
-    <Exceptions Count="3">
+    <Exceptions Count="4">
       <Item1>
         <Name Value="EAbort"/>
       </Item1>
@@ -279,6 +334,9 @@
       <Item3>
         <Name Value="EFOpenError"/>
       </Item3>
+      <Item4>
+        <Name Value="EJSONParser"/>
+      </Item4>
     </Exceptions>
   </Debugging>
 </CONFIG>

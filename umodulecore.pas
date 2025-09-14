@@ -172,6 +172,7 @@ type
     procedure Stop();
 
     procedure StartLongPolling();
+    procedure EventProcess(event: TJSONObject); virtual;
 
     procedure ReadStdOutput(Proc: TProcessUTF8; AddProc: TAddConsoleLine; var TextChank: UTF8String);
     procedure AddStringToConsole(Str: UTF8String);
@@ -347,31 +348,38 @@ function HttpRequestToJson(Request: THttpRequest; out Json: TJSONData): boolean;
 var
   JN: TJSONParser;
   JData: TJSONData;
+  MS: TMemoryStream;
 begin
   Result := false;
   Json := nil;
-  if (Request <> nil) then
+  if (Request = nil) then Exit;
+  if Request.Status = 499 then Exit;
+
+  if (Request.Response <> nil) and (Request.Response.Size > 0) then
   begin
+    JN := nil;
+    MS := TMemoryStream.Create;
     try
-      if (Request.Response <> nil) and (Request.Response.Size>0) then
+      // Copy response into a local stream to decouple from Request.Response
+      Request.Response.Position := 0;
+      MS.CopyFrom(Request.Response, Request.Response.Size);
+      MS.Position := 0;
+
+      JN := TJSONParser.Create(MS, [joUTF8]);
+      try
+        JData := JN.Parse();
+      except
+        on EJSONParser do JData := nil;
+      end;
+      if JData <> nil then
       begin
-        JData:=nil;
-        JN := nil;
-        JN := TJSONParser.Create(Request.Response, [joUTF8]);
-        try
-          JData := JN.Parse();
-        except
-          on EJSONParser do JData := nil;
-        end;
-        if JData <> nil then
-        begin
-          Json := JData;
-          Result := true;
-        end;
+        Json := JData;
+        Result := true;
       end;
     finally
-      if JN<>nil then
+      if JN <> nil then
         JN.Free();
+      MS.Free;
     end;
   end;
 end;
@@ -565,11 +573,12 @@ begin
       begin
         a := JData as TJSONArray;
 
-        for i:=0 to a.Count-1 do
+        // Extract objects safely without skipping by always taking index 0
+        while a.Count > 0 do
         begin
           // remove this object from `JData` tree.
           // now, this is my object, and i am responsible for free the memory.
-          e := a.Extract(i);
+          e := a.Extract(0);
 
           if (e is TJSONObject) then
           begin
@@ -589,7 +598,7 @@ begin
             // invalid record - just burn it
             FreeAndNil(e);
           end;
-         end;
+        end;
       end;
     finally
       FreeAndNil(JData);
@@ -768,6 +777,12 @@ begin
   end;
 end;
 
+procedure TCore.EventProcess(event: TJSONObject);
+begin
+  // WIP
+  frmMain.listEvents.Lines.Insert(0, event.Get('type', '(no type)'));
+end;
+
 procedure TCore.ReadStdOutput(Proc: TProcessUTF8;
   AddProc: TAddConsoleLine; var TextChank: UTF8String);
 var
@@ -942,9 +957,25 @@ begin
 end;
 
 procedure TCore.TimerEventProcessTimer(Sender: TObject);
+var
+  ev: TJSONObject;
 begin
   self.TimerEventProcess.Enabled:=false;
-  //
+
+  // Process all queued events
+  while (self.EventQueue.Size() > 0) do
+  begin
+    // Take ownership and remove from queue
+    ev := self.EventQueue.Front();
+    self.EventQueue.Pop();
+    try
+      // Dispatch event to processor
+      self.EventProcess(ev);
+    finally
+      // Free event JSON after processing
+      FreeAndNil(ev);
+    end;
+  end;
 end;
 
 
@@ -998,8 +1029,12 @@ begin
   Inited := false;
 
   Terminated := true;
+  // Stop timers related to long-poll and general activity
   TimerPing.Enabled:=false;
+  TimerEventListen.Enabled:=false;
+  TimerEventProcess.Enabled:=false;
   FreeAndNil(aiohttp);
+  FreeAndNil(aiohttpLongPolling);
 
   FreeAndNil(ListFolderInfo);
   FreeAndNil(ListDevInfo);

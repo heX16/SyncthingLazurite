@@ -93,6 +93,12 @@ type
     function CheckResponseCode(ACode: Integer; const AllowedResponseCodes: array of Integer): Boolean; override;
   end;
 
+  // Abortable HTTP client to allow forcing socket close from outside
+  TAbortableHTTPClient = class(TQuietHTTPClient)
+  public
+    procedure AbortRequest; virtual;
+  end;
+
   // Main class exposed to users
 
   { TAsyncHTTP }
@@ -113,6 +119,9 @@ type
     FIOTimeout: Integer;
     FTerminated: Boolean;
     FKeepConnection: Boolean;
+    // Track current in-flight client for hard abort
+    FCurrentClient: TAbortableHTTPClient;
+    FCurrentClientLock: TCriticalSection;
     procedure EnqueueRequest(const ARequest: THttpRequest);
     function GetRequestByName(const OperationName: string): THttpRequest;
     procedure AddRequestName(const ARequest: THttpRequest);
@@ -176,12 +185,21 @@ begin
   Result := True;
 end;
 
+{ TAbortableHTTPClient }
+
+procedure TAbortableHTTPClient.AbortRequest;
+begin
+  // Force disconnect to break any blocking read/write and flag terminated
+  DisconnectFromServer;
+  Terminate;
+end;
+
 { TAsyncHTTP - virtual factory/configuration }
 
 function TAsyncHTTP.CreateHttpClient: TFPHTTPClient;
 begin
   // Create client that does not raise on non-2xx/3xx codes
-  Result := TQuietHTTPClient.Create(nil);
+  Result := TAbortableHTTPClient.Create(nil);
 end;
 
 procedure TAsyncHTTP.ConfigureHttpClient(AClient: TFPHTTPClient; const ARequest: THttpRequest);
@@ -370,6 +388,17 @@ begin
   try
     Self.FOwner.ConfigureHttpClient(Client, ARequest);
 
+    // Expose current client for external abort
+    if Client is TAbortableHTTPClient then
+    begin
+      Self.FOwner.FCurrentClientLock.Acquire;
+      try
+        Self.FOwner.FCurrentClient := TAbortableHTTPClient(Client);
+      finally
+        Self.FOwner.FCurrentClientLock.Release;
+      end;
+    end;
+
     for attempt := 0 to Self.FOwner.FRetryCount do
     begin
       if ARequest.Response = nil then
@@ -423,7 +452,23 @@ begin
           Break;
         end;
       except
-        // On any exception, retry if attempts remain
+        // Explicitly classify HTTP client errors caused by abort/terminate
+        on E: EHTTPClient do
+        begin
+          ARequest.Connected := False;
+          if (Client.Terminated or Self.FOwner.FTerminated) and
+             (CompareText(E.Message, 'Error reading data from socket') = 0) then
+          begin
+            // Treat as client-cancelled request
+            ARequest.Status := 499; // Client Closed Request (non-standard)
+            Break; // don't retry on intentional abort
+          end
+          else
+          begin
+            ARequest.Status := 0; // unknown HTTP error, allow retry
+          end;
+        end;
+        // Other exceptions: mark as failure and allow retry attempts
         on E: Exception do
         begin
           ARequest.Connected := False;
@@ -432,6 +477,17 @@ begin
       end;
     end;
   finally
+    // Clear current client reference
+    if Client is TAbortableHTTPClient then
+    begin
+      Self.FOwner.FCurrentClientLock.Acquire;
+      try
+        if Self.FOwner.FCurrentClient = Client then
+          Self.FOwner.FCurrentClient := nil;
+      finally
+        Self.FOwner.FCurrentClientLock.Release;
+      end;
+    end;
     if clientNeedFree then
       Client.Free;
   end;
@@ -475,6 +531,8 @@ begin
   Self.FNamedRequestsDict := TDictHttpRequest.Create;
   Self.FNamedRequestsLock := TCriticalSection.Create;
   Self.FWorker := Self.CreateWorkerThread;
+  Self.FCurrentClient := nil;
+  Self.FCurrentClientLock := TCriticalSection.Create;
 end;
 
 destructor TAsyncHTTP.Destroy;
@@ -589,6 +647,18 @@ begin
   if Self.FTerminated then Exit;
   Self.FTerminated := True;
   
+  // Abort active client/socket ASAP
+  if Assigned(Self.FCurrentClientLock) then
+  begin
+    Self.FCurrentClientLock.Acquire;
+    try
+      if Assigned(Self.FCurrentClient) then
+        Self.FCurrentClient.AbortRequest;
+    finally
+      Self.FCurrentClientLock.Release;
+    end;
+  end;
+
   if Assigned(Self.FWorker) then
   begin
     Self.FWorker.Terminate;
@@ -615,6 +685,7 @@ begin
   FreeAndNil(Self.FNamedRequestsLock);
   FreeAndNil(Self.FNamedRequestsDict);
   FreeAndNil(Self.FQueue);
+  FreeAndNil(Self.FCurrentClientLock);
 end;
 
 function TAsyncHTTP.RequestInQueue(const OperationName: string): Boolean;
