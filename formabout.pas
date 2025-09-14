@@ -92,7 +92,7 @@ var
   j: TJSONData;
   versionStr: string;
 begin
-  if Core.IsOnline then
+  if Core.Online() then
   begin
     if HttpRequestToJson(Request, j) then
   try
