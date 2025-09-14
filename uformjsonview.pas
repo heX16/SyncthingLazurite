@@ -66,7 +66,7 @@ implementation
 
 uses
   Dialogs,
-  jsonparser, jsonscanner;
+  jsonparser, jsonscanner, StrUtils;
 
 {$R *.lfm}
 
@@ -212,8 +212,6 @@ begin
     and (Data.JSONType = jtObject)
     and Assigned(ACurrent)
     and (ACurrent.Text <> '')
-    and Assigned(frmJSONView)
-    and Assigned(frmJSONView.hintList)
     and (frmJSONView.hintList.Count > 0) then
   begin
     Obj := TJSONObject(Data);
@@ -254,36 +252,21 @@ end;
 
 procedure TfrmJSONView.btnHintUpdClick(Sender: TObject);
 var
-  tokens: TStringList;
-  j: Integer;
-  s: string;
+  parts: specialize TArray<String>;
+  s,s_for: string;
 begin
-  if hintList = nil then
-    hintList := TStringList.Create;
+  hintList.Clear;
 
-  hintList.BeginUpdate;
-  try
-    hintList.Clear;
-    // Parse comma-separated field names from the edit control
-    tokens := TStringList.Create;
-    try
-      tokens.StrictDelimiter := True;
-      tokens.Delimiter := ',';
-      tokens.DelimitedText := edHintFieldsList.Text;
-      tokens.CaseSensitive := True;
-      tokens.Duplicates := dupIgnore;
-      // Normalize and copy non-empty tokens
-      for j := 0 to tokens.Count - 1 do
-      begin
-        s := Trim(tokens[j]);
-        if s <> '' then
-          hintList.Add(s);
-      end;
-    finally
-      tokens.Free;
-    end;
-  finally
-    hintList.EndUpdate;
+  // Split by comma into dynamic array
+  parts := SplitString(edHintFieldsList.Text, ',');
+
+  // Normalize and copy non-empty, unique tokens
+  for s_for in parts do
+  begin
+    s := Trim(s_for);
+    if s <> '' then
+      if hintList.IndexOf(s) < 0 then
+        hintList.Add(s);
   end;
 
   // Re-render the JSON tree to apply hint annotations
@@ -292,12 +275,14 @@ end;
 
 procedure TfrmJSONView.FormCreate(Sender: TObject);
 begin
-  hintList := TStringList.Create; // Holds hint field names provided by the user
+  hintList := TStringList.Create;
+  json := nil;
 end;
 
 procedure TfrmJSONView.FormDestroy(Sender: TObject);
 begin
   FreeAndNil(hintList);
+  FreeAndNil(json);
 end;
 
 procedure TfrmJSONView.mnShowHintPanelClick(Sender: TObject);
