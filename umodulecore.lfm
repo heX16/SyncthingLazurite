@@ -45,20 +45,40 @@ object Core: TCore
     Left = 244
     Top = 20
   end
-  object TimerPing: TTimer
+  object TimerCheckOnline: TTimer
     Enabled = False
     Interval = 500
-    OnTimer = TimerPingTimer
+    OnTimer = TimerCheckOnlineTimer
     Left = 472
     Top = 192
   end
   object ActionList: TActionList
     Left = 368
     Top = 20
-    object actStart: TAction
+    object actStartAndConnect: TAction
       Category = 'Core'
-      Caption = 'actStart'
-      OnExecute = actStartExecute
+      Caption = 'actStartAndConnect'
+      OnExecute = actStartAndConnectExecute
+    end
+    object actStopAndExit: TAction
+      Category = 'GUI'
+      Caption = 'actStopAndExit'
+      OnExecute = actStopAndExitExecute
+    end
+    object actReloadConfig: TAction
+      Category = 'GUI'
+      Caption = 'actReloadConfig'
+      OnExecute = actReloadConfigExecute
+    end
+    object actUpdateData: TAction
+      Category = 'GUI'
+      Caption = 'actUpdateData'
+      OnExecute = actUpdateDataExecute
+    end
+    object actConnect: TAction
+      Category = 'Core'
+      Caption = 'actConnect'
+      OnExecute = actConnectExecute
     end
     object actStop: TAction
       Category = 'Core'
@@ -69,11 +89,6 @@ object Core: TCore
       Category = 'Core'
       Caption = 'actRestart'
       OnExecute = actRestartExecute
-    end
-    object actStopAndExit: TAction
-      Category = 'GUI'
-      Caption = 'actStopAndExit'
-      OnExecute = actStopAndExitExecute
     end
     object actTerminate: TAction
       Category = 'Core'
@@ -89,16 +104,6 @@ object Core: TCore
       Category = 'Core'
       Caption = 'actInit'
       OnExecute = actInitExecute
-    end
-    object actReloadConfig: TAction
-      Category = 'GUI'
-      Caption = 'actReloadConfig'
-      OnExecute = actReloadConfigExecute
-    end
-    object actUpdateData: TAction
-      Category = 'GUI'
-      Caption = 'actUpdateData'
-      OnExecute = actUpdateDataExecute
     end
   end
   object TimerInit: TTimer

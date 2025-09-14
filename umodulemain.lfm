@@ -961,7 +961,7 @@ object ModuleMain: TModuleMain
     object mnServer: TMenuItem
       Caption = 'mnServer'
       object MenuItem3: TMenuItem
-        Action = Core.actStart
+        Action = Core.actStartAndConnect
       end
       object MenuItem4: TMenuItem
         Caption = 'actPause'

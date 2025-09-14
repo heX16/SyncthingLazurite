@@ -41,6 +41,7 @@ type
     // Response stream containing server data (position reset to 0 before callback)
     Response: TMemoryStream;
     // True if connection and request succeeded, false otherwise
+    // TODO: rename or remove it
     Connected: Boolean;
     // Request URL for reference
     Url: string;

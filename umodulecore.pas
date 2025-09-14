@@ -50,6 +50,7 @@ type
 
   //todo: extract real core code to 'model'(or 'control') and 'utils'
   TCore = class(TDataModule)
+    actConnect: TAction;
     actUpdateData: TAction;
     actStopAndExit: TAction;
     actInit: TAction;
@@ -58,7 +59,7 @@ type
     actTerminate: TAction;
     actRestart: TAction;
     actStop: TAction;
-    actStart: TAction;
+    actStartAndConnect: TAction;
     ActionList: TActionList;
     ProcessSyncthing: TProcessUTF8;
     ProcessSupport: TProcessUTF8;
@@ -67,16 +68,17 @@ type
     TimerEventProcess: TTimer;
     TimerAfterStartCheck: TTimer;
     TimerInit: TTimer;
-    TimerPing: TTimer;
+    TimerCheckOnline: TTimer;
     TimerReadStdOutput: TTimer;
     TimerStartOnStart: TTimer;
     TimerUpdate: TTimer;
+    procedure actConnectExecute(Sender: TObject);
     procedure actInitExecute(Sender: TObject);
     procedure actStopAndExitExecute(Sender: TObject);
     procedure actReloadConfigExecute(Sender: TObject);
     procedure actRestartExecute(Sender: TObject);
     procedure actRunSupportProcExecute(Sender: TObject);
-    procedure actStartExecute(Sender: TObject);
+    procedure actStartAndConnectExecute(Sender: TObject);
     procedure actStopExecute(Sender: TObject);
     procedure actTerminateExecute(Sender: TObject);
     procedure actUpdateDataExecute(Sender: TObject);
@@ -88,7 +90,7 @@ type
 
     procedure TimerInitTimer(Sender: TObject);
     procedure TimerStartOnStartTimer(Sender: TObject);
-    procedure TimerPingTimer(Sender: TObject);
+    procedure TimerCheckOnlineTimer(Sender: TObject);
     procedure TimerReadStdOutputTimer(Sender: TObject);
     procedure TimerUpdateTimer(Sender: TObject);
   private
@@ -114,7 +116,7 @@ type
     procedure httpUpdateDeviceStat(Request: THttpRequest);
     procedure httpUpdateFolderStat(Request: THttpRequest);
 
-    procedure httpPing(Request: THttpRequest);
+    procedure httpCheckOnline(Request: THttpRequest);
 
     procedure httpGetVer(Request: THttpRequest);
 
@@ -470,7 +472,7 @@ end;
 procedure TCore.aiohttpLongPollingDisconnected(Request: THttpRequest; Sender: TObject);
 begin
   //TODO: check `state`
-  self.TimerPing.Enabled:=true;
+  self.TimerCheckOnline.Enabled:=true;
 end;
 
 procedure TCore.httpReadConfig(Request: THttpRequest);
@@ -568,19 +570,20 @@ begin
   end;
 end;
 
-procedure TCore.TimerPingTimer(Sender: TObject);
+procedure TCore.TimerCheckOnlineTimer(Sender: TObject);
 begin
-  TimerPing.Enabled:=false;
+  TimerCheckOnline.Enabled:=false;
   if not Terminated then begin
     if not aiohttp.RequestInQueue('system/ping') then
-      API_Get('system/ping', @httpPing);
+      API_Get('system/ping', @httpCheckOnline);
   end;
 end;
 
-procedure TCore.httpPing(Request: THttpRequest);
+procedure TCore.httpCheckOnline(Request: THttpRequest);
 begin
   OnlineTested := true;
   if not Terminated then
+    // TODO: Request._Connected_ - rename or remove it
     if Request.Connected then
     begin
       //todo: check ping result
@@ -601,8 +604,12 @@ begin
       end;
     end else
     begin
-      IsOnline := false;
-      frmMain.shStatusCircle.Brush.Color:=clRed;
+      if IsOnline then
+      begin
+        IsOnline := false;
+        EventOffline();
+        frmMain.shStatusCircle.Brush.Color:=clRed;
+      end;
     end;
 end;
 
@@ -1015,7 +1022,7 @@ begin
     Application.ProcessMessages();
   end;
 
-  actStart.Execute();
+  actStartAndConnect.Execute();
 end;
 
 procedure TCore.actStopAndExitExecute(Sender: TObject);
@@ -1044,12 +1051,17 @@ begin
   //frmMain.LanguageChanged();
 end;
 
+procedure TCore.actConnectExecute(Sender: TObject);
+begin
+  TimerCheckOnline.Enabled:=true;
+end;
+
 procedure TCore.actRunSupportProcExecute(Sender: TObject);
 begin
   // empty - it is just options
 end;
 
-procedure TCore.actStartExecute(Sender: TObject);
+procedure TCore.actStartAndConnectExecute(Sender: TObject);
 begin
   StartAndConnect();
 end;
@@ -1094,18 +1106,18 @@ end;
 
 procedure TCore.TimerAfterStartCheckTimer(Sender: TObject);
 begin
-  if TimerAfterStartCheck.Enabled then
+  TimerAfterStartCheck.Enabled:=False;
+  if not ProcessSyncthing.Running then
   begin
-    TimerAfterStartCheck.Enabled:=False;
-    if not ProcessSyncthing.Running then
-    begin
-      ShowMessage('Run fail. Exit code: '+IntToStr(ProcessSyncthing.ExitCode)+
-        #13+
-        '(press [Ctrl]+[C] to copy full error text)'+#13+
-        'Run:'+#13+
-        ProcessSyncthing.Executable + ' ' + ProcessSyncthing.Parameters.Text
-      );
-    end;
+    ShowMessage('Run fail. Exit code: '+IntToStr(ProcessSyncthing.ExitCode)+
+      #13+
+      '(press [Ctrl]+[C] to copy full error text)'+#13+
+      'Run:'+#13+
+      ProcessSyncthing.Executable + ' ' + ProcessSyncthing.Parameters.Text
+    );
+  end else
+  begin
+    TimerCheckOnline.Enabled:=true;
   end;
 end;
 
@@ -1179,7 +1191,7 @@ begin
   APIKey:=ReadAPIKeyFromCfg();
 
   TimerStartOnStart.Enabled:=frmOptions.chRunSyncOnStart.Checked;
-  TimerPing.Enabled:=frmOptions.chRunSyncOnStart.Checked;
+  TimerCheckOnline.Enabled:=frmOptions.chRunSyncOnStart.Checked;
 
   Inited := true;
 end;
@@ -1193,7 +1205,7 @@ begin
 
   Terminated := true;
   // Stop timers related to long-poll and general activity
-  TimerPing.Enabled:=false;
+  TimerCheckOnline.Enabled:=false;
   TimerEventListen.Enabled:=false;
   TimerEventProcess.Enabled:=false;
   FreeAndNil(aiohttp);

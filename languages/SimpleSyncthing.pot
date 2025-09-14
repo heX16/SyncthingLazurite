@@ -1,6 +1,10 @@
 msgid ""
 msgstr "Content-Type: text/plain; charset=UTF-8"
 
+#: tcore.actconnect.caption
+msgid "actConnect"
+msgstr ""
+
 #: tcore.actinit.caption
 msgid "actInit"
 msgstr ""
@@ -17,8 +21,8 @@ msgstr ""
 msgid "actRunSupportProc"
 msgstr ""
 
-#: tcore.actstart.caption
-msgid "actStart"
+#: tcore.actstartandconnect.caption
+msgid "actStartAndConnect"
 msgstr ""
 
 #: tcore.actstop.caption
