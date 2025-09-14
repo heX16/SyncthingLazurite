@@ -27,25 +27,37 @@ type
     panelHintFieldsList: TPanel;
     Splitter2: TSplitter;
     Splitter3: TSplitter;
+    TimerUpdateTreeView: TTimer;
     treeJsonData: TTreeView;
     procedure btnHintUpdClick(Sender: TObject);
     procedure FormCreate(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
     procedure listGetAPIClick(Sender: TObject);
     procedure mnShowHintPanelClick(Sender: TObject);
+    procedure TimerUpdateTreeViewTimer(Sender: TObject);
+
   private
 
   public
     hintList: TStringList;
     endpoint: string;
+    json: TJSONData;
 
     procedure httpGetAPItoTree(Request: THttpRequest);
+
     procedure ShowJSONDocument(TV: TTreeView; DataSource: TJSONData;
       Compact: boolean = False; SortObjectMembers: boolean = False);
-    procedure ShowJSONData(TV: TTreeView; AParent: TTreeNode;
+
+  end;
+
+
+procedure JSONDataAddToTreeView(TV: TTreeView; AParent: TTreeNode;
       Data: TJSONData; Compact: boolean = False;
       SortObjectMembers: boolean = False);
-  end;
+
+procedure JSONDataAddToTreeView_OnAddingNode(TV: TTreeView; AParent: TTreeNode;
+      ACurrent: TTreeNode;
+      Data: TJSONData);
 
 var
   frmJSONView: TfrmJSONView;
@@ -65,33 +77,23 @@ var
 var
   node: TTreeNode;
 begin
+  if Self.json <> nil then
+     FreeAndNil(Self.json);
   if HttpRequestToJson(Request, JData) then
-  try
-    edJSONView.Text := JData.FormatJSON();
-    ShowJSONDocument(Self.treeJsonData, JData, True);
-
-    // treeJsonData.FullExpand();
-    Self.treeJsonData.FullCollapse();
-
-    node := Self.treeJsonData.Items.GetFirstNode;
-    if node <> nil then
-    begin
-      node.Expand(False);
-      while Assigned(node) do
-      begin
-        // enum only root nodes
-        node := node.GetNextSibling;
-        if node <> nil then
-        begin
-          node.Expand(False);
-        end;
-      end;
-    end;
-
-  finally
-    JData.Free();
-  end;
+    Self.json := JData;
+  Self.TimerUpdateTreeView.Enabled:=true;
 end;
+
+procedure TfrmJSONView.TimerUpdateTreeViewTimer(Sender: TObject);
+begin
+  Self.TimerUpdateTreeView.Enabled:=false;
+  if Self.json = nil then
+    Self.json := TJSONData.Create;
+
+  edJSONView.Text := Self.json.FormatJSON();
+  ShowJSONDocument(Self.treeJsonData, Self.json, True);
+end;
+
 
 // Returns image type code for a given TJSONtype
 function JSONTypeToImageIndex(const Value: TJSONtype): Integer;
@@ -109,20 +111,27 @@ begin
   end;
 end;
 
-procedure TfrmJSONView.ShowJSONData(TV: TTreeView; AParent: TTreeNode;
+procedure JSONDataAddToTreeView(TV: TTreeView; AParent: TTreeNode;
   Data: TJSONData; Compact: boolean; SortObjectMembers: boolean);
 var
   N, N2: TTreeNode;
   I: integer;
   D: TJSONData;
   S: TStringList;
+  NWasAdded: boolean;
 begin
   if not Assigned(Data) then
     exit;
   if Compact and (AParent <> nil) then
-    N := AParent
+    begin
+      N := AParent;
+      NWasAdded := False;
+    end
   else
-    N := TV.Items.AddChild(AParent, '');
+    begin
+      N := TV.Items.AddChild(AParent, '');
+      NWasAdded := True;
+    end;
 
   case Data.JSONType of
     jtArray,
@@ -133,8 +142,10 @@ begin
         // collect json items to string list
         for I := 0 to Data.Count - 1 do
           if Data.JSONtype = jtArray then
+            // name as "array index"
             S.AddObject(IntToStr(I), Data.items[i])
           else
+            // name as "dict key"
             S.AddObject(TJSONObject(Data).Names[i], Data.items[i]);
 
         // sort string list
@@ -146,13 +157,18 @@ begin
         begin
           N2 := TV.Items.AddChild(N, S[i]);
           D := TJSONData(S.Objects[i]);
+
           N2.ImageIndex := JSONTypeToImageIndex(D.JSONType);
           N2.SelectedIndex := JSONTypeToImageIndex(D.JSONType);
+
+          // notify about newly added node
+          JSONDataAddToTreeView_OnAddingNode(TV, N, N2, D);
+
           // recursion! ->
-          ShowJSONData(TV, N2, D, Compact, SortObjectMembers);
+          JSONDataAddToTreeView(TV, N2, D, Compact, SortObjectMembers);
         end
       finally
-        S.Free;
+        FreeAndNil(S);
       end;
     end;
     jtNull:
@@ -165,6 +181,16 @@ begin
   N.ImageIndex := JSONTypeToImageIndex(Data.JSONType);
   N.SelectedIndex := JSONTypeToImageIndex(Data.JSONType);
   N.Data := Data;
+
+  // notify only if this node was actually added here (not reused in Compact mode)
+  if NWasAdded then
+    JSONDataAddToTreeView_OnAddingNode(TV, AParent, N, Data);
+end;
+
+procedure JSONDataAddToTreeView_OnAddingNode(TV: TTreeView; AParent: TTreeNode;
+  ACurrent: TTreeNode; Data: TJSONData);
+begin
+
 end;
 
 procedure TfrmJSONView.listGetAPIClick(Sender: TObject);
@@ -204,18 +230,30 @@ end;
 procedure TfrmJSONView.ShowJSONDocument(TV: TTreeView; DataSource: TJSONData;
   Compact: boolean; SortObjectMembers: boolean);
 var  
-  i: Integer;
+  node: TTreeNode;
 begin
-  with TV.Items do
-  begin
-    BeginUpdate;
-    try
-      TV.Items.Clear;
+  TV.Items.BeginUpdate;
+  try
+    TV.Items.Clear;
+    JSONDataAddToTreeView(TV, nil, DataSource, Compact, SortObjectMembers);
 
-      ShowJSONData(TV, nil, DataSource, Compact, SortObjectMembers);
-    finally
-      EndUpdate;
+    Self.treeJsonData.FullCollapse();
+    node := Self.treeJsonData.Items.GetFirstNode;
+    if node <> nil then
+    begin
+      node.Expand(False);
+      while Assigned(node) do
+      begin
+        // enum only root nodes
+        node := node.GetNextSibling;
+        if node <> nil then
+        begin
+          node.Expand(False);
+        end;
+      end;
     end;
+  finally
+    TV.Items.EndUpdate;
   end;
 end;
 
