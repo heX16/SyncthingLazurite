@@ -35,12 +35,28 @@ type
   TBeforeAfterTreeModifyEvent = procedure(Sender: TObject) of object;
   TLongPollingDropHandler = function(Sender: TObject): TLongPollingDropAction of object;
 
-!!!
-для унификации можно добавить типы:
-  - массив массивов (таблица, двумерный массив) с перечислением endpoints в котором указаны пути, обработчики (для большиства одинаковые), и чтото еще если требуется
-  - enum с перечислением endpoints
+  // Endpoints enum for REST initial sync
+  TSyncthingEndpointId = (
+    epConfig,
+    epSystemConnections,
+    epStatsDevice,
+    epStatsFolder,
+    epSystemStatus,
+    epSystemVersion
+  );
 
+const
+  // Typed constant containing all endpoint ids
+  SyncthingEndpointIdList: array[] of TSyncthingEndpointId = (
+    epConfig,
+    epSystemConnections,
+    epStatsDevice,
+    epStatsFolder,
+    epSystemStatus,
+    epSystemVersion
+  );
 
+type
   { TSyncthingApiV2 }
 
   // Core class for interacting with Syncthing (REST + Event API) and maintaining JSON tree
@@ -74,6 +90,7 @@ type
     FOnTreeChanged: TTreeChangedEvent;
     FOnBeforeTreeModify: TBeforeAfterTreeModifyEvent;
     FOnAfterTreeModify: TBeforeAfterTreeModifyEvent;
+    FEndpointCallbacks: array[TSyncthingEndpointId] of THttpRequestCallbackFunction;
     // Internal helpers
     procedure HttpAddHeader(Request: THttpRequest; Sender: TObject);
     procedure EventsDisconnected(Request: THttpRequest; Sender: TObject);
@@ -94,6 +111,8 @@ type
     procedure CB_Events(Request: THttpRequest);
     // REST helper
     procedure API_Get(const Api: UTF8String; Callback: THttpRequestCallbackFunction; const QueueKey: UTF8String = '');
+    // Build endpoints table
+    procedure InitEndpointTable;
 
   protected
     { Builds base server URL from host/port and scheme }
@@ -170,6 +189,8 @@ type
     // State and data
     { Returns true when FSM is online }
     function IsOnline: Boolean; virtual;
+    { Maps endpoint id to REST URI (under /rest/) }
+    class function SyncthingEndpointURI(Id: TSyncthingEndpointId): UTF8String; static;
     { Current finite state machine state }
     property State: TSyncthingState read FState;
     { In-memory JSON root with all synchronized data }
@@ -205,8 +226,21 @@ type
   end;
 
 implementation
+
 uses
   jsonparser;
+
+class function TSyncthingApiV2.SyncthingEndpointURI(Id: TSyncthingEndpointId): UTF8String;
+begin
+  case Id of
+    epConfig:            Exit('config');
+    epSystemConnections: Exit('system/connections');
+    epStatsDevice:       Exit('stats/device');
+    epStatsFolder:       Exit('stats/folder');
+    epSystemStatus:      Exit('system/status');
+    epSystemVersion:     Exit('system/version');
+  end;
+end;
 
 { TSyncthingApiV2 }
 
@@ -225,6 +259,7 @@ begin
   FEventsLastId := 0;
   FLongPollingRestartIntervalSec := 0;
   FLongPollingRestartTimer := nil;
+  InitEndpointTable;
 end;
 
 destructor TSyncthingApiV2.Destroy;
@@ -313,12 +348,13 @@ end;
 
 procedure TSyncthingApiV2.PerformInitialSync;
 begin !!!
-  API_Get('config', @CB_SystemConfig, 'config');
-  API_Get('system/connections', @CB_SystemConnections, 'system/connections');
-  API_Get('stats/device', @CB_StatsDevice, 'stats/device');
-  API_Get('stats/folder', @CB_StatsFolder, 'stats/folder');
-  API_Get('system/status', @CB_SystemStatus, 'system/status');
-  API_Get('system/version', @CB_SystemVersion, 'system/version');
+  // Iterate endpoints (global) and use per-endpoint callbacks from object
+  API_Get(SyncthingEndpointURI(epConfig), @CB_SystemConfig, 'config');
+  API_Get(SyncthingEndpointURI(epSystemConnections), @CB_SystemConnections, 'system/connections');
+  API_Get(SyncthingEndpointURI(epStatsDevice), @CB_StatsDevice, 'stats/device');
+  API_Get(SyncthingEndpointURI(epStatsFolder), @CB_StatsFolder, 'stats/folder');
+  API_Get(SyncthingEndpointURI(epSystemStatus), @CB_SystemStatus, 'system/status');
+  API_Get(SyncthingEndpointURI(epSystemVersion), @CB_SystemVersion, 'system/version');
 end;
 
 procedure TSyncthingApiV2.LoadSystemConfig;
@@ -648,6 +684,17 @@ begin
   if qPos > 0 then
     plainKey := Copy(plainKey, 1, qPos - 1);
   FHTTP.Get(FServerURL + 'rest/' + Api, Callback, '', plainKey);
+end;
+
+procedure TSyncthingApiV2.InitEndpointTable;
+begin
+  // Map enum to callback functions; endpoints themselves are global in SyncthingEndpointsURI
+  FEndpointCallbacks[epConfig] := @CB_SystemConfig;
+  FEndpointCallbacks[epSystemConnections] := @CB_SystemConnections;
+  FEndpointCallbacks[epStatsDevice] := @CB_StatsDevice;
+  FEndpointCallbacks[epStatsFolder] := @CB_StatsFolder;
+  FEndpointCallbacks[epSystemStatus] := @CB_SystemStatus;
+  FEndpointCallbacks[epSystemVersion] := @CB_SystemVersion;
 end;
 
 procedure TSyncthingApiV2.CB_Ping(Request: THttpRequest);

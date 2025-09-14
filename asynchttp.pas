@@ -11,6 +11,7 @@ type
   // Operation status for CheckOperation
   TOperationState = (
     osNotFound,   // Operation not found (never existed or already cleaned up)
+    osCreated,    // Operation just created (empty object)
     osQueued,     // Operation enqueued and waiting in queue
     osProcessing, // Operation picked up by worker and being processed
     osDone        // Operation finished, callback is pending/not yet cleaned up
@@ -46,7 +47,7 @@ type
     // Request URL for reference
     Url: string;
     // HTTP method (GET/POST/...) for reference
-    Method: string;
+    HTTPMethod: string;
     // Operation state for this request lifecycle
     State: TOperationState;
     // Raw HTTP headers to be applied before sending
@@ -57,6 +58,9 @@ type
     Callback: THttpRequestCallbackFunction;
     // Optional operation name for external tracking
     OperationName: string;
+    // User-provided data (not owned by this class)
+    UserObject: TObject;
+    UserString: string;
     constructor Create;
     destructor Destroy; override;
   end;
@@ -147,13 +151,17 @@ type
     procedure Get(url: string;
       callback: THttpRequestCallbackFunction;
       headers: string = '';
-      operationName: string = '');
+      operationName: string = '';
+      userObject: TObject = nil;
+      userString: string = '');
 
     procedure Post(url: string;
       data: string; callback:
       THttpRequestCallbackFunction;
       headers: string = '';
-      operationName: string = '');
+      operationName: string = '';
+      userObject: TObject = nil;
+      userString: string = '');
 
     procedure HttpMethod(
       method: string;
@@ -161,7 +169,9 @@ type
       callback: THttpRequestCallbackFunction;
       headers: string = '';
       data: string = '';
-      operationName: string = '');
+      operationName: string = '';
+      userObject: TObject = nil;
+      userString: string = '');
 
     // Graceful shutdown
     procedure Terminate;
@@ -277,7 +287,10 @@ begin
   Self.Status := 0;
   Self.Response := nil;
   Self.Connected := False;
-  Self.State := osNotFound;
+  Self.State := osCreated;
+  // Initialize user data pointers
+  Self.UserObject := nil;
+  Self.UserString := '';
 end;
 
 destructor THttpRequest.Destroy;
@@ -331,6 +344,7 @@ procedure TRequestWorkerThread.Execute;
 var
   req: THttpRequest;
   sharedClient: TFPHTTPClient;
+  req_old_state: TOperationState;
 begin
   sharedClient := nil;
   while not Self.Terminated do
@@ -343,12 +357,16 @@ begin
     while True do
     begin
       if Self.Terminated then Break;
+
       req := nil;
+
       Self.FOwner.FQueueLock.Acquire;
       try
         if Self.FOwner.FQueue.Size() > 0 then
         begin
           req := Self.FOwner.FQueue.Front();
+          req_old_state := req.State;
+          req.State := osProcessing;
           Self.FOwner.FQueue.Pop();
         end;
       finally
@@ -356,6 +374,11 @@ begin
       end;
 
       if req = nil then Break;
+
+      if (req <> nil) and (req_old_state <> osQueued) then
+      begin
+        continue;
+      end;
 
       if Self.FOwner.FKeepConnection then
       begin
@@ -389,8 +412,7 @@ begin
   Self.FOwner.FIsConnectionOpen := True;
 
   succeeded := False;
-  ARequest.Method := UpperCase(ARequest.Method);
-  ARequest.State := osProcessing;
+  ARequest.HTTPMethod := UpperCase(ARequest.HTTPMethod);
 
   clientNeedFree := False;
   if Client = nil then
@@ -424,9 +446,9 @@ begin
       ARequest.Response.Position := 0;
 
       try
-        if ARequest.Method = 'GET' then
+        if ARequest.HTTPMethod = 'GET' then
           Client.Get(ARequest.Url, ARequest.Response)
-        else if ARequest.Method = 'POST' then
+        else if ARequest.HTTPMethod = 'POST' then
         begin
           body := nil;
           if ARequest.Data <> '' then
@@ -453,7 +475,7 @@ begin
             Client.RequestBody.Position := 0;
           end;
           try
-            Client.HTTPMethod(ARequest.Method, ARequest.Url, ARequest.Response, []);
+            Client.HTTPMethod(ARequest.HTTPMethod, ARequest.Url, ARequest.Response, []);
           finally
             Client.RequestBody := nil;
             FreeAndNil(body);
@@ -572,6 +594,7 @@ begin
 
   Self.FQueueLock.Acquire;
   try
+    ARequest.State := osQueued;
     Self.FQueue.Push(ARequest);
     // Do not free ARequest here; ownership passes to the queue/worker
   finally
@@ -620,46 +643,52 @@ begin
   end;
 end;
 
-procedure TAsyncHTTP.Get(url: string; callback: THttpRequestCallbackFunction; headers: string; operationName: string);
+procedure TAsyncHTTP.Get(url: string; callback: THttpRequestCallbackFunction; headers: string; operationName: string; userObject: TObject; userString: string);
 var
   req: THttpRequest;
 begin
   req := THttpRequest.Create;
-  req.Method := 'GET';
+  req.HTTPMethod := 'GET';
   req.Url := url;
   req.HeadersRaw := headers;
   req.Data := '';
   req.Callback := callback;
   req.OperationName := operationName;
+  req.UserObject := userObject;
+  req.UserString := userString;
   Self.EnqueueRequest(req);
 end;
 
-procedure TAsyncHTTP.Post(url: string; data: string; callback: THttpRequestCallbackFunction; headers: string; operationName: string);
+procedure TAsyncHTTP.Post(url: string; data: string; callback: THttpRequestCallbackFunction; headers: string; operationName: string; userObject: TObject; userString: string);
 var
   req: THttpRequest;
 begin
   req := THttpRequest.Create;
-  req.Method := 'POST';
+  req.HTTPMethod := 'POST';
   req.Url := url;
   req.HeadersRaw := headers;
   req.Data := data;
   req.Callback := callback;
   req.OperationName := operationName;
+  req.UserObject := userObject;
+  req.UserString := userString;
   Self.EnqueueRequest(req);
 end;
 
-procedure TAsyncHTTP.HttpMethod(method: string; url: string; callback: THttpRequestCallbackFunction; headers: string; data: string; operationName: string);
+procedure TAsyncHTTP.HttpMethod(method: string; url: string; callback: THttpRequestCallbackFunction; headers: string; data: string; operationName: string; userObject: TObject; userString: string);
 var
   req: THttpRequest;
 begin
   req := THttpRequest.Create;
-  req.Method := UpperCase(Trim(method));
-  if req.Method = '' then req.Method := 'GET';
+  req.HTTPMethod := UpperCase(Trim(method));
+  if req.HTTPMethod = '' then req.HTTPMethod := 'GET';
   req.Url := url;
   req.HeadersRaw := headers;
   req.Data := data;
   req.Callback := callback;
   req.OperationName := operationName;
+  req.UserObject := userObject;
+  req.UserString := userString;
   Self.EnqueueRequest(req);
 end;
 
@@ -697,7 +726,8 @@ begin
     begin
       req := Self.FQueue.Front();
       Self.FQueue.Pop();
-      FreeAndNil(req);
+      if req.State = osQueued then
+        FreeAndNil(req);
     end;
   finally
     Self.FQueueLock.Release;
