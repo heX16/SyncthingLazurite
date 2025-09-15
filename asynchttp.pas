@@ -23,7 +23,8 @@ type
     iekOpened,
     iekSuccess,
     iekError,
-    iekDisconnected
+    iekDisconnected,
+    iekQueueEmpty
   );
 
   // Forward declaration
@@ -122,6 +123,7 @@ type
     FOnLoadDone: TAsyncHttpRequestEvent;
     FOnError: TAsyncHttpRequestEvent;
     FOnDisconnected: TAsyncHttpRequestEvent;
+    FOnQueueEmpty: TNotifyEvent;
     FRetryCount: Integer;
     FIOTimeout: Integer;
     FTerminated: Boolean;
@@ -129,8 +131,8 @@ type
     // Track current in-flight client for hard abort
     FCurrentClient: TAbortableHTTPClient;
     FCurrentClientLock: TCriticalSection;
-    // True when a request has been opened and not yet completed
-    FIsConnectionOpen: Boolean;
+    // True while a request is actively being processed
+    FIsProcessing: Boolean;
     procedure EnqueueRequest(const ARequest: THttpRequest; const ClearDuplicates: Boolean = False);
     function GetRequestByName(const OperationName: string): THttpRequest;
     procedure AddRequestName(const ARequest: THttpRequest);
@@ -207,8 +209,10 @@ type
     property OnError: TAsyncHttpRequestEvent read FOnError write FOnError;
     // Fired when low-level connection was interrupted and no HTTP status code received
     property OnDisconnected: TAsyncHttpRequestEvent read FOnDisconnected write FOnDisconnected;
-    // True if a request is currently opened and in-flight
-    property IsConnectionOpen: Boolean read FIsConnectionOpen;
+    // Fired when the queue becomes empty after processing requests
+    property OnQueueEmpty: TNotifyEvent read FOnQueueEmpty write FOnQueueEmpty;
+    // True while a request is actively being processed
+    property IsProcessing: Boolean read FIsProcessing;
   end;
 
 implementation
@@ -342,6 +346,9 @@ begin
     iekDisconnected:
       if Assigned(Self.FOwner.FOnDisconnected) then
         Self.FOwner.FOnDisconnected(Self.FInvokeRequest, Self.FOwner);
+    iekQueueEmpty:
+      if Assigned(Self.FOwner.FOnQueueEmpty) then
+        Self.FOwner.FOnQueueEmpty(Self.FOwner);
   else
     ;
   end;
@@ -400,6 +407,14 @@ begin
       begin
         Self.ProcessRequest(req, nil);
       end;
+
+      // After processing a request, if the queue is empty now, notify
+      if Self.FOwner.QueueCount() = 0 then
+      begin
+        Self.FInvokeKind := iekQueueEmpty;
+        Self.FInvokeRequest := nil;
+        Self.Synchronize(@DoInvokeEvents);
+      end;
     end;
   end;
 
@@ -417,10 +432,10 @@ var
   clientNeedFree: Boolean;
 begin
   // Mark started and fire OnOpened on the main thread
+  Self.FOwner.FIsProcessing := True;
   Self.FInvokeKind := iekOpened;
   Self.FInvokeRequest := ARequest;
   Self.Synchronize(@DoInvokeEvents);
-  Self.FOwner.FIsConnectionOpen := True;
 
   succeeded := False;
   ARequest.HTTPMethod := UpperCase(ARequest.HTTPMethod);
@@ -557,7 +572,6 @@ begin
   end;
   Self.FInvokeRequest := ARequest;
   Self.Synchronize(@DoInvokeEvents);
-  Self.FOwner.FIsConnectionOpen := False;
 
   // Prepare and invoke the user callback in main thread
   ARequest.Response.Position := 0;
@@ -568,6 +582,7 @@ begin
   // After callback returns, cleanup
   Self.FOwner.RemoveRequestName(ARequest.OperationName);
   FreeAndNil(ARequest);
+  Self.FOwner.FIsProcessing := False;
 end;
 
 { TAsyncHTTP }

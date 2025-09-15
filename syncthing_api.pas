@@ -29,6 +29,7 @@ type
     ssCmdConnectingConfirmed,
     ssCmdConnectingFault,
     ssCmdConnectingAcceptedData,
+    // TODO: add  `TimerConnectingTimeout`
     ssCmdConnectingTimeout
   );
 
@@ -63,10 +64,10 @@ const
   );
 
 type
-  { TSyncthingApiV2 }
+  { TSyncthingAPI }
 
   // Core class for interacting with Syncthing (REST + Event API) and maintaining JSON tree
-  TSyncthingApiV2 = class(TComponent)
+  TSyncthingAPI = class(TComponent)
   private
     FState: TSyncthingFSM_State;
     FRoot: TJSONObject;            // Single in-memory JSON tree root
@@ -110,13 +111,16 @@ type
     // Events callbacks
     procedure CB_Events(Request: THttpRequest);
     // REST helper
-    procedure API_Get(const Api: UTF8String; Callback: THttpRequestCallbackFunction);
+    procedure API_Get(
+      const Api: UTF8String;
+      Callback: THttpRequestCallbackFunction;
+      userString: string);
     // Build endpoints table
     procedure InitEndpointTable;
     // Maps endpoint id to callback handler
-    function SyncthingEndpointCallback(Id: TSyncthingEndpointId): THttpRequestCallbackFunction; virtual;
-    // Maps endpoint id to JSON storage path (root path to replace)
-    function SyncthingEndpointJsonPath(Id: TSyncthingEndpointId): UTF8String; virtual;
+    function GetEndpointCallback(Id: TSyncthingEndpointId): THttpRequestCallbackFunction; virtual;
+    // Maps endpoint id to "JSON Tree" storage path
+    function GetEndpointJsonTreePath(Id: TSyncthingEndpointId): UTF8String; virtual;
 
   protected
     { Builds base server URL from host/port and scheme }
@@ -131,13 +135,16 @@ type
     procedure BeginTreeModify; virtual;
     { Notifies listeners and finalizes JSON tree modification }
     procedure EndTreeModify; virtual;
-    { Replaces a branch at JsonPath with NewData in the root tree }
+    { Replaces a branch in the "JSON Tree" with NewData }
     procedure ReplaceRootBranch(const JsonPath: UTF8String; NewData: TJSONData); virtual;
 
     // Initial sync via REST API
     { Performs initial synchronization by loading required REST resources }
     procedure PerformInitialSync; virtual;
-    { Loads a single endpoint identified by Id }
+    {
+    Loads a single endpoint identified by Id
+    Note: pass "JSON target" path via UserString
+    }
     procedure LoadEndpoint(Id: TSyncthingEndpointId); virtual;
 
     // Long-polling lifecycle
@@ -185,7 +192,7 @@ type
     { Returns true when FSM is online }
     function IsOnline: Boolean; virtual;
     { Maps endpoint id to REST URI (under /rest/) }
-    class function SyncthingEndpointURI(Id: TSyncthingEndpointId): UTF8String; static;
+    class function GetEndpointURI(Id: TSyncthingEndpointId): UTF8String; static;
     { Current finite state machine state }
     property State: TSyncthingFSM_State read FState;
     { Current finite state machine command }
@@ -231,7 +238,7 @@ uses
 
 
 
-procedure TSyncthingApiV2.FSM_Process();
+procedure TSyncthingAPI.FSM_Process();
 begin
   while True do
   begin
@@ -242,7 +249,7 @@ begin
           BuildServerURL;
           ConfigureHttpClients;
           // Start initial ping; CB_CheckOnline drives next transitions
-          API_Get('system/ping', @CB_CheckOnline);
+          API_Get('system/ping', @CB_CheckOnline, '');
           FState:=ssConnectingPingWait;
         end;
 
@@ -333,7 +340,7 @@ begin
 
 end;
 
-class function TSyncthingApiV2.SyncthingEndpointURI(Id: TSyncthingEndpointId): UTF8String;
+class function TSyncthingAPI.GetEndpointURI(Id: TSyncthingEndpointId): UTF8String;
 begin
   case Id of
     epConfig:            Exit('config');
@@ -346,15 +353,15 @@ begin
   Exit('invalid_endpoint');
 end;
 
-function TSyncthingApiV2.SyncthingEndpointJsonPath(Id: TSyncthingEndpointId): UTF8String;
+function TSyncthingAPI.GetEndpointJsonTreePath(Id: TSyncthingEndpointId): UTF8String;
 begin
   // Copy of endpoint URI
-  Result := SyncthingEndpointURI(Id);
+  Result := GetEndpointURI(Id);
 end;
 
-{ TSyncthingApiV2 }
+{ TSyncthingAPI }
 
-constructor TSyncthingApiV2.Create(AOwner: TComponent);
+constructor TSyncthingAPI.Create(AOwner: TComponent);
 begin
   inherited Create(AOwner);
   FState := ssOffline;
@@ -372,7 +379,7 @@ begin
   InitEndpointTable;
 end;
 
-destructor TSyncthingApiV2.Destroy;
+destructor TSyncthingAPI.Destroy;
 begin
   if Assigned(FLongPollingRestartTimer) then
     FreeAndNil(FLongPollingRestartTimer);
@@ -385,7 +392,7 @@ begin
   inherited Destroy;
 end;
 
-procedure TSyncthingApiV2.BuildServerURL;
+procedure TSyncthingAPI.BuildServerURL;
 begin
   if FUseTLS then
     FServerURL := Format('https://%s:%d/', [FHost, FPort])
@@ -393,7 +400,7 @@ begin
     FServerURL := Format('http://%s:%d/', [FHost, FPort]);
 end;
 
-procedure TSyncthingApiV2.ConfigureHttpClients;
+procedure TSyncthingAPI.ConfigureHttpClients;
 begin
   if not Assigned(FHTTP) then
     FHTTP := TAsyncHTTP.Create;
@@ -426,7 +433,7 @@ begin
     FLongPollingRestartTimer.Enabled := False;
 end;
 
-function TSyncthingApiV2.CreateDefaultRoot: TJSONObject;
+function TSyncthingAPI.CreateDefaultRoot: TJSONObject;
 var
   ep: TSyncthingEndpointId;
   rootObj: TJSONObject;
@@ -434,28 +441,27 @@ begin
   // Create root and pre-create empty branches for known endpoints
   rootObj := TJSONObject.Create;
   for ep in SyncthingEndpointsBasic do
-    SetAtPath(rootObj, SyncthingEndpointJsonPath(ep), TJSONObject.Create);
+    SetAtPath(rootObj, GetEndpointJsonTreePath(ep), TJSONObject.Create);
   Result := rootObj;
 end;
 
-procedure TSyncthingApiV2.BeginTreeModify;
+procedure TSyncthingAPI.BeginTreeModify;
 begin
   if Assigned(FOnBeforeTreeModify) then
     FOnBeforeTreeModify(Self);
 end;
 
-procedure TSyncthingApiV2.EndTreeModify;
+procedure TSyncthingAPI.EndTreeModify;
 begin
   if Assigned(FOnAfterTreeModify) then
     FOnAfterTreeModify(Self);
 end;
 
-procedure TSyncthingApiV2.ReplaceRootBranch(const JsonPath: UTF8String; NewData: TJSONData);
+procedure TSyncthingAPI.ReplaceRootBranch(const JsonPath: UTF8String; NewData: TJSONData);
 begin
-  if not Assigned(FRoot) then
-    FRoot := CreateDefaultRoot;
   BeginTreeModify;
   try
+    // ???!!! StringReplace - это зачем?
     SetAtPath(FRoot, StringReplace(JsonPath, '/', '.', [rfReplaceAll]), NewData);
     NotifyTreeChanged(JsonPath);
   finally
@@ -463,20 +469,24 @@ begin
   end;
 end;
 
-procedure TSyncthingApiV2.PerformInitialSync;
+procedure TSyncthingAPI.PerformInitialSync;
 var
   ep: TSyncthingEndpointId;
 begin
-  // Iterate endpoints and call unified handler; pass JSON path via UserString
+  // Iterate endpoints and call unified handler
   for ep in SyncthingEndpointsBasic do
     LoadEndpoint(ep);
 end;
-procedure TSyncthingApiV2.LoadEndpoint(Id: TSyncthingEndpointId);
+procedure TSyncthingAPI.LoadEndpoint(Id: TSyncthingEndpointId);
 begin
-  API_Get(SyncthingEndpointURI(Id), @CB_HandleEndpoint);
+  API_Get(
+    GetEndpointURI(Id),
+    GetEndpointCallback(Id), // set callback, usually `CB_HandleEndpoint`
+    GetEndpointURI(Id)  // send JSON-tree target path
+  );
 end;
 
-procedure TSyncthingApiV2.CB_HandleEndpoint(Request: THttpRequest);
+procedure TSyncthingAPI.CB_HandleEndpoint(Request: THttpRequest);
 var
   j: TJSONData;
 begin
@@ -486,11 +496,17 @@ begin
     if ParseJson(Request, j) then
     begin
       ReplaceRootBranch(Request.UserString, j);
+
+      if State = ssConnectingLoadData then
+      begin
+        Command:=ssCmdConnectingAcceptedData;
+        FSM_Process();
+      end;
     end;
   end;
 end;
 
-procedure TSyncthingApiV2.StartLongPolling;
+procedure TSyncthingAPI.StartLongPolling;
 begin
   if not Assigned(FHTTPEvents) then Exit;
   if FHTTPEvents.RequestInQueue('polling') then Exit;
@@ -506,7 +522,7 @@ begin
   );
 end;
 
-procedure TSyncthingApiV2.StopLongPolling;
+procedure TSyncthingAPI.StopLongPolling;
 begin
   if Assigned(FLongPollingRestartTimer) then
     FLongPollingRestartTimer.Enabled := False;
@@ -514,20 +530,20 @@ begin
     FHTTPEvents.AbortActiveConnection();
 end;
 
-procedure TSyncthingApiV2.RestartLongPolling;
+procedure TSyncthingAPI.RestartLongPolling;
 begin
   StopLongPolling;
   StartLongPolling;
 end;
 
-procedure TSyncthingApiV2.LongPollingRestartTimerHandler(Sender: TObject);
+procedure TSyncthingAPI.LongPollingRestartTimerHandler(Sender: TObject);
 begin
   if Assigned(FOnBeforeLongPollingRestart) then
     FOnBeforeLongPollingRestart(Self);
   RestartLongPolling;
 end;
 
-procedure TSyncthingApiV2.HandleLongPollingResponse(EventsArray: TJSONArray);
+procedure TSyncthingAPI.HandleLongPollingResponse(EventsArray: TJSONArray);
 var
   i: Integer;
   ev: TJSONObject;
@@ -547,7 +563,7 @@ begin
   end;
 end;
 
-procedure TSyncthingApiV2.ProcessEvent(EventObj: TJSONObject);
+procedure TSyncthingAPI.ProcessEvent(EventObj: TJSONObject);
 var
   eventType: UTF8String;
 begin
@@ -573,30 +589,30 @@ begin
     LoadEndpoint(epSystemStatus);
 end;
 
-procedure TSyncthingApiV2.IntegrateEvent(EventObj: TJSONObject);
+procedure TSyncthingAPI.IntegrateEvent(EventObj: TJSONObject);
 begin
   // Placeholder: integrate fragments from EventObj.Find('data') into Root if needed
 end;
 
-procedure TSyncthingApiV2.NotifyTreeChanged(const Path: UTF8String);
+procedure TSyncthingAPI.NotifyTreeChanged(const Path: UTF8String);
 begin
   if Assigned(FOnTreeChanged) then
     FOnTreeChanged(Self, Path);
 end;
 
-procedure TSyncthingApiV2.Connect;
+procedure TSyncthingAPI.Connect;
 begin
   Self.Command:=ssCmdConnect;
   FSM_Process();
 end;
 
-procedure TSyncthingApiV2.Disconnect;
+procedure TSyncthingAPI.Disconnect;
 begin
   Command:=ssCmdDisconnect;
   FSM_Process();
 end;
 
-procedure TSyncthingApiV2.SetEndpoint(const Host: UTF8String; Port: Integer; UseTLS: Boolean);
+procedure TSyncthingAPI.SetEndpoint(const Host: UTF8String; Port: Integer; UseTLS: Boolean);
 begin
   FHost := Host;
   FPort := Port;
@@ -604,25 +620,25 @@ begin
   BuildServerURL;
 end;
 
-procedure TSyncthingApiV2.SetAPIKey(const Key: UTF8String);
+procedure TSyncthingAPI.SetAPIKey(const Key: UTF8String);
 begin
   FAPIKey := Key;
 end;
 
-procedure TSyncthingApiV2.SetLongPollingRestartInterval(Seconds: Integer);
+procedure TSyncthingAPI.SetLongPollingRestartInterval(Seconds: Integer);
 begin
   FLongPollingRestartIntervalSec := Seconds;
   ConfigureHttpClients;
 end;
 
-function TSyncthingApiV2.IsOnline: Boolean;
+function TSyncthingAPI.IsOnline: Boolean;
 begin
   Result := (State = ssOnline);
 end;
 
 // Internal helpers and callbacks
 
-procedure TSyncthingApiV2.HttpAddHeader(Request: THttpRequest; Sender: TObject);
+procedure TSyncthingAPI.HttpAddHeader(Request: THttpRequest; Sender: TObject);
 begin
   if Pos('X-API-Key:', Request.HeadersRaw) = 0 then
   begin
@@ -633,7 +649,7 @@ begin
   end;
 end;
 
-procedure TSyncthingApiV2.LongPollingDisconnected(Request: THttpRequest; Sender: TObject);
+procedure TSyncthingAPI.LongPollingDisconnected(Request: THttpRequest; Sender: TObject);
 begin
   if Assigned(FOnLongPollingDrop) then
     FOnLongPollingDrop(Self);
@@ -656,7 +672,7 @@ begin
   end;*)
 end;
 
-function TSyncthingApiV2.ParseJson(Request: THttpRequest; out Json: TJSONData): boolean;
+function TSyncthingAPI.ParseJson(Request: THttpRequest; out Json: TJSONData): boolean;
 var
   Parser: TJSONParser;
   Data: TJSONData;
@@ -672,6 +688,10 @@ begin
     MS := TMemoryStream.Create;
     try
       Request.Response.Position := 0;
+      // TODO: ParseJson. remove `MS: TMemoryStream`
+      // I think in the future this can be removed,
+      // there were problems with AV,
+      // but I hope I fixed this bug
       MS.CopyFrom(Request.Response, Request.Response.Size);
       MS.Position := 0;
       Parser := TJSONParser.Create(MS, [joUTF8]);
@@ -692,7 +712,7 @@ begin
   end;
 end;
 
-procedure TSyncthingApiV2.SetAtPath(var RootObj: TJSONObject; const JsonPath: UTF8String; NewData: TJSONData);
+procedure TSyncthingAPI.SetAtPath(var RootObj: TJSONObject; const JsonPath: UTF8String; NewData: TJSONData);
 var
   segs: TStringList;
   i, idx: Integer;
@@ -750,10 +770,8 @@ begin
   end;
 end;
 
-procedure TSyncthingApiV2.API_Get(const Api: UTF8String; Callback: THttpRequestCallbackFunction);
-var
-  key: UTF8String;
-  plainKey: UTF8String;
+procedure TSyncthingAPI.API_Get(const Api: UTF8String;
+  Callback: THttpRequestCallbackFunction; userString: string);
 begin
   if not Assigned(FHTTP) then Exit;
 
@@ -763,17 +781,17 @@ begin
     '',                          // headers
     Api,                    // operationName
     nil,                         // userObject
-    Api,                         // userString
+    userString,                         // userString
     True                         // clearDuplicates
   );
 end;
 
-procedure TSyncthingApiV2.InitEndpointTable;
+procedure TSyncthingAPI.InitEndpointTable;
 begin
-  // Currently not needed since we resolve callback via SyncthingEndpointCallback
+  // Currently not needed since we resolve callback via GetEndpointCallback
 end;
 
-function TSyncthingApiV2.SyncthingEndpointCallback(Id: TSyncthingEndpointId): THttpRequestCallbackFunction;
+function TSyncthingAPI.GetEndpointCallback(Id: TSyncthingEndpointId): THttpRequestCallbackFunction;
 begin
   // Default to unified handler; specialize here if any endpoint needs custom logic
   (*
@@ -785,7 +803,7 @@ begin
   Exit(@CB_HandleEndpoint);
 end;
 
-procedure TSyncthingApiV2.CB_CheckOnline(Request: THttpRequest);
+procedure TSyncthingAPI.CB_CheckOnline(Request: THttpRequest);
 begin
   if (Request <> nil) and (Request.Status = 200) and (Request.Connected) then
   begin
@@ -802,7 +820,7 @@ begin
   end;
 end;
 
-procedure TSyncthingApiV2.CB_Events(Request: THttpRequest);
+procedure TSyncthingAPI.CB_Events(Request: THttpRequest);
 var
   j: TJSONData;
   a: TJSONArray;
