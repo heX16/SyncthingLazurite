@@ -147,8 +147,8 @@ type
     // Factory for worker thread (allows customization in descendants)
     function CreateWorkerThread: TRequestWorkerThread; virtual;
   public
-    constructor Create;
-    destructor Destroy; override;
+    constructor Create();
+    destructor Destroy(); override;
 
     procedure Get(url: string;
       callback: THttpRequestCallbackFunction;
@@ -179,19 +179,22 @@ type
       clearDuplicates: Boolean = False);
 
     // Graceful shutdown
-    procedure Terminate;
+    procedure Terminate();
 
     // Abort only the current in-flight connection (if any), without destroying the object
-    procedure AbortActiveConnection;
+    procedure AbortActiveConnection();
 
     // Clear all pending (queued) requests without destroying the instance
-    procedure ClearQueue;
+    procedure ClearQueue();
 
     // Abort the active connection (if any) and clear the queue
-    procedure CancelAll;
+    procedure CancelAll();
 
     // Check operation status by name
     function RequestInQueue(const OperationName: string): Boolean;
+
+    // Get current number of queued requests (excluding nil gaps)
+    function QueueCount(): SizeUInt;
 
     // Properties
     property ConnectTimeout: Integer read FConnectTimeout write FConnectTimeout;
@@ -373,10 +376,6 @@ begin
 
       Self.FOwner.FQueueLock.Acquire;
       try
-        // Skip nil entries at the front, if any
-        while (Self.FOwner.FQueue.Size() > 0) and (Self.FOwner.FQueue.Front() = nil) do
-          Self.FOwner.FQueue.PopFront();
-          
         if Self.FOwner.FQueue.Size() > 0 then
         begin
           req := Self.FOwner.FQueue.Front();
@@ -390,10 +389,7 @@ begin
 
       if req = nil then Break;
 
-      if (req <> nil) and (req_old_state <> osQueued) then
-      begin
-        continue;
-      end;
+      // State is guaranteed to be osQueued for items in the queue
 
       if Self.FOwner.FKeepConnection then
       begin
@@ -672,17 +668,20 @@ begin
   // Remove name from mapping; it will be re-added for a new request
   RemoveRequestName(OperationName);
 
-  // Free in-place all matching queued requests and set slots to nil
+  // Remove all matching queued requests and compact the deque using Erase
   Self.FQueueLock.Acquire;
   try
-    for i := 0 to Self.FQueue.Size() - 1 do
+    i := 0;
+    while i < Self.FQueue.Size() do
     begin
       req := Self.FQueue.Items[i];
-      if (req <> nil) and (req.OperationName = OperationName) and (req.State = osQueued) then
+      if (req.OperationName = OperationName) and (req.State = osQueued) then
       begin
         FreeAndNil(req);
-        Self.FQueue.Items[i] := nil;
+        Self.FQueue.Erase(i);
+        Continue; // do not increment i, as items shifted left
       end;
+      Inc(i);
     end;
   finally
     Self.FQueueLock.Release;
@@ -857,6 +856,13 @@ end;
 function TAsyncHTTP.RequestInQueue(const OperationName: string): Boolean;
 begin
   Result := GetRequestByName(OperationName) <> nil;
+end;
+
+function TAsyncHTTP.QueueCount: SizeUInt;
+begin
+  Self.FQueueLock.Acquire;
+  Result := Self.FQueue.Size();
+  Self.FQueueLock.Release;
 end;
 
 end.

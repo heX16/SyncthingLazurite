@@ -16,6 +16,7 @@ type
     ssOffline,        // No active connection; idle/offline state
     ssConnectingPingSend,     // Connecting to Syncthing
     ssConnectingPingWait, // Connecting to Syncthing
+    ssConnectingLoadData,
     ssOnline,         // Connected and operational; long-polling is active
     ssDisconnecting   // Graceful disconnect in progress
   );
@@ -26,7 +27,9 @@ type
     ssCmdConnect,
     ssCmdDisconnect,
     ssCmdConnectingConfirmed,
-    ssCmdConnectingFault
+    ssCmdConnectingFault,
+    ssCmdConnectingAcceptedData,
+    ssCmdConnectingTimeout
   );
 
   // Event types (callbacks)
@@ -94,6 +97,8 @@ type
     FOnTreeChanged: TTreeChangedEvent;
     FOnBeforeTreeModify: TBeforeAfterTreeModifyEvent;
     FOnAfterTreeModify: TBeforeAfterTreeModifyEvent;
+    // State process. (FSM)
+    procedure FSM_Process();
     // Internal helpers
     procedure HttpAddHeader(Request: THttpRequest; Sender: TObject);
     procedure LongPollingDisconnected(Request: THttpRequest; Sender: TObject);
@@ -106,8 +111,6 @@ type
     procedure CB_Events(Request: THttpRequest);
     // REST helper
     procedure API_Get(const Api: UTF8String; Callback: THttpRequestCallbackFunction);
-    // State process. (FSM)
-    procedure FSM_Process();
     // Build endpoints table
     procedure InitEndpointTable;
     // Maps endpoint id to callback handler
@@ -240,6 +243,7 @@ begin
           ConfigureHttpClients;
           // Start initial ping; CB_CheckOnline drives next transitions
           API_Get('system/ping', @CB_CheckOnline);
+          FState:=ssConnectingPingWait;
         end;
 
       ssConnectingPingWait:
@@ -254,7 +258,33 @@ begin
           end;
           if Command = ssCmdConnectingConfirmed then
           begin
-            FState:=ssOnline;
+            FState:=ssConnectingLoadData;
+            PerformInitialSync;
+            continue;
+          end;
+        end;
+
+      ssConnectingLoadData:
+        begin
+          if Command = ssCmdConnectingAcceptedData then
+          begin
+            if FHTTP.QueueCount = 0 then
+            begin
+              if Assigned(FOnConnected) then
+                FOnConnected(Self);
+
+              FState:=ssOnline;
+
+              StartLongPolling();
+            end;
+          end;
+          if Command = ssCmdDisconnect then
+          begin
+            FState:=ssOffline;
+          end;
+          if Command = ssCmdConnectingTimeout then
+          begin
+            FState:=ssOffline;
           end;
         end;
 
@@ -273,6 +303,7 @@ begin
       ssDisconnecting:
         begin
           StopLongPolling();
+          FHTTP.CancelAll();
           FState := ssOffline;
 
           if Assigned(FOnDisconnectedByUser) then
@@ -586,7 +617,7 @@ end;
 
 function TSyncthingApiV2.IsOnline: Boolean;
 begin
-  Result := (FState = ssOnline);
+  Result := (State = ssOnline);
 end;
 
 // Internal helpers and callbacks
@@ -761,11 +792,6 @@ begin
     // Is online
     Command:=ssCmdConnectingConfirmed;
     FSM_Process();
-
-    PerformInitialSync;
-    if Assigned(FOnConnected) then
-      FOnConnected(Self);
-    StartLongPolling;
   end
   else
   begin
