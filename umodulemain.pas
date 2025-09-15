@@ -43,6 +43,7 @@ type
     MenuItem17: TMenuItem;
     MenuItem18: TMenuItem;
     MenuItem19: TMenuItem;
+    MenuItem20: TMenuItem;
     Separator2: TMenuItem;
     Separator1: TMenuItem;
     mnView: TMenuItem;

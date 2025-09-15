@@ -1015,6 +1015,9 @@ object ModuleMain: TModuleMain
     object MenuItem7: TMenuItem
       Action = actShowOptions
     end
+    object MenuItem20: TMenuItem
+      Action = actShowRestView
+    end
     object MenuItem12: TMenuItem
       Action = actAbout
     end

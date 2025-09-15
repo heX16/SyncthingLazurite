@@ -44,7 +44,7 @@ type
     Response: TMemoryStream;
     // True if connection and request succeeded, false otherwise
     // TODO: rename or remove it
-    Connected: Boolean;
+    Succeeded: Boolean;
     // Request URL for reference
     Url: string;
     // HTTP method (GET/POST/...) for reference
@@ -61,6 +61,7 @@ type
     OperationName: string;
     // User-provided data (not owned by this class)
     UserObject: TObject;
+    // User-provided string
     UserString: string;
     constructor Create;
     destructor Destroy; override;
@@ -87,6 +88,7 @@ type
     FInvokeKind: TInvokeEventKind;
     procedure DoInvokeCallback;
     procedure DoInvokeEvents;
+    function PerformSingleHttpAttempt(ARequest: THttpRequest; Client: TFPHTTPClient): Boolean;
     procedure ProcessRequest(ARequest: THttpRequest; Client: TFPHTTPClient = nil); virtual;
   protected
     procedure Execute; override;
@@ -95,6 +97,7 @@ type
   end;
 
   // HTTP client that never raises on HTTP response codes
+  // client that does not raise on non-2xx/3xx codes
   TQuietHTTPClient = class(TFPHTTPClient)
   protected
     function CheckResponseCode(ACode: Integer; const AllowedResponseCodes: array of Integer): Boolean; override;
@@ -130,7 +133,7 @@ type
     FTerminated: Boolean;
     FKeepConnection: Boolean;
     // Track current in-flight client for hard abort
-    FCurrentClient: TAbortableHTTPClient;
+    FCurrentClient: TFPHTTPClient;
     FCurrentClientLock: TCriticalSection;
     // True while a request is actively being processed
     FIsProcessing: Boolean;
@@ -149,6 +152,8 @@ type
     procedure CleanupHttpClient(AClient: TFPHTTPClient); virtual;
     // Factory for worker thread (allows customization in descendants)
     function CreateWorkerThread: TRequestWorkerThread; virtual;
+
+    procedure AbortRequest(AClient: TFPHTTPClient); virtual;
   public
     constructor Create();
     destructor Destroy(); override;
@@ -185,12 +190,14 @@ type
     procedure Terminate();
 
     // Abort only the current in-flight connection (if any), without destroying the object
+    // 'OnError' is called with `Request.Status = HTTPErrorCode_ClientClosed`
     procedure AbortActiveConnection();
 
     // Clear all pending (queued) requests without destroying the instance
     procedure ClearQueue();
 
     // Abort the active connection (if any) and clear the queue
+    // 'OnError' is called with `Request.Status = HTTPErrorCode_ClientClosed`
     procedure CancelAll();
 
     // Check operation by name
@@ -203,9 +210,9 @@ type
     // Get current number of queued requests (excluding nil gaps)
     function QueueCount(): SizeUInt;
 
-    // Properties
     property ConnectTimeout: Integer read FConnectTimeout write FConnectTimeout;
     property IOTimeout: Integer read FIOTimeout write FIOTimeout;
+    // Automatic retry on failure
     property RetryCount: Integer read FRetryCount write FRetryCount;
     // When true, reuse one HTTP client (keep-alive) within the worker thread
     property KeepConnection: Boolean read FKeepConnection write FKeepConnection;
@@ -219,6 +226,10 @@ type
     // True while a request is actively being processed
     property IsProcessing: Boolean read FIsProcessing;
   end;
+
+const
+  // Client Closed Request
+  HTTPErrorCode_ClientClosed = 499;
 
 implementation
 
@@ -243,8 +254,7 @@ end;
 
 function TAsyncHTTP.CreateHttpClient: TFPHTTPClient;
 begin
-  // Create client that does not raise on non-2xx/3xx codes
-  Result := TAbortableHTTPClient.Create(nil);
+  Result := TQuietHTTPClient.Create(nil);
 end;
 
 procedure TAsyncHTTP.ConfigureHttpClient(AClient: TFPHTTPClient; const ARequest: THttpRequest);
@@ -302,22 +312,41 @@ begin
   Result := TRequestWorkerThread.Create(Self);
 end;
 
+procedure TAsyncHTTP.AbortRequest(AClient: TFPHTTPClient);
+begin
+  // Force disconnect to break any blocking read/write and flag terminated
+  AClient.Terminate();
+end;
+
 { THttpRequest }
 
 constructor THttpRequest.Create;
 begin
   inherited Create;
+
+  Self.Url:='';
+  Self.HTTPMethod:='';
+  Self.HeadersRaw:='';
+  Self.Data:='';
+  Self.OperationName:='';
+  Self.UserString:='';
+
   Self.Status := 0;
   Self.Response := nil;
-  Self.Connected := False;
+  Self.Callback := nil;
+  Self.Succeeded := False;
   Self.State := osCreated;
-  // Initialize user data pointers
   Self.UserObject := nil;
-  Self.UserString := '';
 end;
 
 destructor THttpRequest.Destroy;
 begin
+  Self.Url:='';
+  Self.HTTPMethod:='';
+  Self.HeadersRaw:='';
+  Self.Data:='';
+  Self.OperationName:='';
+  Self.UserString:='';
   FreeAndNil(Self.Response);
   inherited Destroy;
 end;
@@ -366,74 +395,74 @@ begin
     Self.FInvokeCallbackProc(Self.FInvokeRequest);
 end;
 
-procedure TRequestWorkerThread.Execute;
+function TRequestWorkerThread.PerformSingleHttpAttempt(ARequest: THttpRequest;
+  Client: TFPHTTPClient): Boolean;
 var
-  req: THttpRequest;
-  sharedClient: TFPHTTPClient;
-  req_old_state: TOperationState;
+  body: TStream;
 begin
-  sharedClient := nil;
-  while not Self.Terminated do
-  begin
-    // Wait until there is work or termination
-    Self.FOwner.FQueueEvent.WaitFor(INFINITE);
-    if Self.Terminated then Break;
+  // Execute one HTTP attempt; return True to break retry loop
+  if ARequest.Response = nil then
+    ARequest.Response := TMemoryStream.Create
+  else
+    ARequest.Response.Size := 0;
+  ARequest.Response.Position := 0;
 
-    // Pop and process all available requests
-    while True do
+  try
+    // Always use HTTPMethod to reduce duplication (GET/POST wrappers call it)
+    body := nil;
+    if ARequest.Data <> '' then
     begin
-      if Self.Terminated then Break;
+      body := TStringStream.Create(ARequest.Data);
+      Client.RequestBody := body;
+      Client.RequestBody.Position := 0;
+    end;
+    try
+      Client.HTTPMethod(ARequest.HTTPMethod, ARequest.Url, ARequest.Response, []);
+    finally
+      Client.RequestBody := nil;
+      if body <> nil then
+        FreeAndNil(body);
+    end;
 
-      req := nil;
-
-      Self.FOwner.FQueueAndFreeLock.Acquire;
-      try
-        if Self.FOwner.FQueue.Size() > 0 then
-        begin
-          req := Self.FOwner.FQueue.Front();
-          req_old_state := req.State;
-          req.State := osProcessing;
-          Self.FOwner.FQueue.PopFront();
-        end;
-      finally
-        Self.FOwner.FQueueAndFreeLock.Release;
-      end;
-
-      if req = nil then Break;
-
-      // State is guaranteed to be osQueued for items in the queue
-
-      if Self.FOwner.FKeepConnection then
+    ARequest.Status := Client.ResponseStatusCode;
+    ARequest.Succeeded := (ARequest.Status >= 200) and (ARequest.Status < 400);
+    if ARequest.Succeeded then
+    begin
+      Result := True; // don't retry
+      Exit;
+    end;
+  except
+    // Explicitly classify HTTP client errors caused by abort/terminate
+    on E: EHTTPClient do
+    begin
+      ARequest.Succeeded := False;
+      if (Client.Terminated) then
       begin
-        if sharedClient = nil then
-          sharedClient := Self.FOwner.CreateHttpClient;
-        Self.ProcessRequest(req, sharedClient);
-      end else
+        // Treat as client-cancelled request
+        ARequest.Status := HTTPErrorCode_ClientClosed; // Client Closed Request (non-standard)
+        Result := True; // don't retry on intentional abort
+        Exit;
+      end
+      else
       begin
-        Self.ProcessRequest(req, nil);
-      end;
-
-      // After processing a request, if the queue is empty now, notify
-      if Self.FOwner.QueueCount() = 0 then
-      begin
-        Self.FInvokeKind := iekQueueEmpty;
-        Self.FInvokeRequest := nil;
-        Self.Synchronize(@DoInvokeEvents);
+        ARequest.Status := 0; // unknown HTTP error, allow retry
       end;
     end;
-  end;
+    // Other exceptions: mark as failure and allow retry attempts
+    on E: Exception do
+    begin
+      ARequest.Succeeded := False;
+      ARequest.Status := 0;
+    end;
+  end; // try
 
-  // Cleanup shared client if used
-  if sharedClient <> nil then
-    sharedClient.Free;
+  Result := False; // do retry
 end;
 
 procedure TRequestWorkerThread.ProcessRequest(ARequest: THttpRequest;
   Client: TFPHTTPClient);
 var
   attempt: Integer;
-  succeeded: Boolean;
-  body: TStream;
   clientNeedFree: Boolean;
 begin
   // Mark started and fire OnOpened on the main thread
@@ -442,13 +471,12 @@ begin
   Self.FInvokeRequest := ARequest;
   Self.Synchronize(@DoInvokeEvents);
 
-  succeeded := False;
   ARequest.HTTPMethod := UpperCase(ARequest.HTTPMethod);
 
   clientNeedFree := False;
   if Client = nil then
   begin
-    Client := Self.FOwner.CreateHttpClient;
+    Client := Self.FOwner.CreateHttpClient();
     clientNeedFree := True;
   end
   else
@@ -458,105 +486,30 @@ begin
     Self.FOwner.ConfigureHttpClient(Client, ARequest);
 
     // Expose current client for external abort
-    if Client is TAbortableHTTPClient then
-    begin
-      Self.FOwner.FCurrentClientLock.Acquire;
-      try
-        Self.FOwner.FCurrentClient := TAbortableHTTPClient(Client);
-      finally
-        Self.FOwner.FCurrentClientLock.Release;
-      end;
+    Self.FOwner.FCurrentClientLock.Acquire;
+    try
+      Self.FOwner.FCurrentClient := Client;
+    finally
+      Self.FOwner.FCurrentClientLock.Release;
     end;
 
+    // Do request
     for attempt := 0 to Self.FOwner.FRetryCount do
     begin
-      if ARequest.Response = nil then
-        ARequest.Response := TMemoryStream.Create
-      else
-        ARequest.Response.Size := 0;
-      ARequest.Response.Position := 0;
-
-      try
-        if ARequest.HTTPMethod = 'GET' then
-          Client.Get(ARequest.Url, ARequest.Response)
-        else if ARequest.HTTPMethod = 'POST' then
-        begin
-          body := nil;
-          if ARequest.Data <> '' then
-          begin
-            body := TStringStream.Create(ARequest.Data);
-            Client.RequestBody := body;
-            Client.RequestBody.Position := 0;
-          end;
-          try
-            Client.Post(ARequest.Url, ARequest.Response);
-          finally
-            Client.RequestBody := nil;
-            FreeAndNil(body);
-          end;
-        end
-        else
-        begin
-          // Generic HTTP method
-          body := nil;
-          if ARequest.Data <> '' then
-          begin
-            body := TStringStream.Create(ARequest.Data);
-            Client.RequestBody := body;
-            Client.RequestBody.Position := 0;
-          end;
-          try
-            Client.HTTPMethod(ARequest.HTTPMethod, ARequest.Url, ARequest.Response, []);
-          finally
-            Client.RequestBody := nil;
-            FreeAndNil(body);
-          end;
-        end; // if
-
-        ARequest.Status := Client.ResponseStatusCode;
-        ARequest.Connected := (ARequest.Status >= 200) and (ARequest.Status < 400);
-        if ARequest.Connected then
-        begin
-          succeeded := True;
-          Break;
-        end;
-      except
-        // Explicitly classify HTTP client errors caused by abort/terminate
-        on E: EHTTPClient do
-        begin
-          ARequest.Connected := False;
-          if (Client.Terminated or Self.FOwner.FTerminated) and
-             (CompareText(E.Message, 'Error reading data from socket') = 0) then
-          begin
-            // Treat as client-cancelled request
-            ARequest.Status := 499; // Client Closed Request (non-standard)
-            Break; // don't retry on intentional abort
-          end
-          else
-          begin
-            ARequest.Status := 0; // unknown HTTP error, allow retry
-          end;
-        end;
-        // Other exceptions: mark as failure and allow retry attempts
-        on E: Exception do
-        begin
-          ARequest.Connected := False;
-          ARequest.Status := 0;
-        end;
-      end; // try
+      if Self.PerformSingleHttpAttempt(ARequest, Client) then
+        Break;
     end; // for
+
   finally
     // Clear current client reference
-    if Client is TAbortableHTTPClient then
-    begin
-      Self.FOwner.FCurrentClientLock.Acquire;
-      try
-        if Self.FOwner.FCurrentClient = Client then
-          Self.FOwner.FCurrentClient := nil;
-      finally
-        Self.FOwner.FCurrentClientLock.Release;
-      end;
-    end; // if
+    Self.FOwner.FCurrentClientLock.Acquire;
+    try
+      if Self.FOwner.FCurrentClient = Client then
+        Self.FOwner.FCurrentClient := nil;
+    finally
+      Self.FOwner.FCurrentClientLock.Release;
+    end;
+
     if clientNeedFree then
       Client.Free;
   end; // try
@@ -565,12 +518,12 @@ begin
   ARequest.State := osDone;
 
   // Fire success/error event in main thread
-  if succeeded then
+  if ARequest.Succeeded then
     Self.FInvokeKind := iekSuccess
   else
   begin
     // If there is no HTTP status and not connected, classify as disconnection
-    if (ARequest.Status = 0) and (not ARequest.Connected) then
+    if (ARequest.Status = 0) and (not ARequest.Succeeded) then
       Self.FInvokeKind := iekDisconnected
     else
       Self.FInvokeKind := iekError;
@@ -599,13 +552,72 @@ begin
   Self.FOwner.FIsProcessing := False;
 end;
 
+procedure TRequestWorkerThread.Execute;
+var
+  req: THttpRequest;
+  sharedClient: TFPHTTPClient;
+
+  function GetRequestFromQueue(): THttpRequest;
+  begin
+    Result := nil;
+    Self.FOwner.FQueueAndFreeLock.Acquire;
+    try
+      if Self.FOwner.FQueue.Size() > 0 then
+      begin
+        Result := Self.FOwner.FQueue.Front();
+        Self.FOwner.FQueue.PopFront();
+      end;
+    finally
+      Self.FOwner.FQueueAndFreeLock.Release;
+    end;
+  end;
+
+begin
+  sharedClient := nil;
+
+  while not Self.Terminated do
+  begin
+    // Wait
+    Self.FOwner.FQueueEvent.WaitFor(INFINITE);
+
+    if Self.Terminated then
+      Break;
+
+    // Pop and process all available requests
+    while Self.FOwner.QueueCount() > 0 do
+    begin
+      if Self.Terminated then
+        Break;
+      req := GetRequestFromQueue();
+      if req = nil then
+        Break;
+      req.State := osProcessing;
+      if Self.FOwner.FKeepConnection and (sharedClient = nil) then
+        sharedClient := Self.FOwner.CreateHttpClient();
+      Self.ProcessRequest(req, sharedClient);
+    end; // while
+
+    // Queue is empty - notify
+    if Self.FOwner.QueueCount() > 0 then
+    begin
+      Self.FInvokeKind := iekQueueEmpty;
+      Self.FInvokeRequest := nil;
+      Self.Synchronize(@DoInvokeEvents);
+    end;
+  end;
+
+  // Cleanup shared client if used
+  if sharedClient <> nil then
+    FreeAndNil(sharedClient);
+end;
+
 { TAsyncHTTP }
 
 constructor TAsyncHTTP.Create;
 begin
   inherited Create;
   Self.FConnectTimeout := 0;
-  Self.FRetryCount := 1; // Simple automatic retry on failure
+  Self.FRetryCount := 0;
   Self.FIOTimeout := 0;
   Self.FTerminated := False;
   Self.FKeepConnection := False;
@@ -628,13 +640,14 @@ end;
 
 procedure TAsyncHTTP.EnqueueRequest(const ARequest: THttpRequest; const ClearDuplicates: Boolean);
 begin
-  // Optionally remove queued duplicates first
-  if ClearDuplicates and (ARequest.OperationName <> '') then
-    Self.CleanQueueByOperationName(ARequest.OperationName);
-
   // Map operation name to request if provided
   if ARequest.OperationName <> '' then
+  begin
+    if ClearDuplicates then
+      Self.CleanQueueByOperationName(ARequest.OperationName);
+
     Self.AddRequestName(ARequest);
+  end;
 
   Self.FQueueAndFreeLock.Acquire;
   try
@@ -644,7 +657,8 @@ begin
   finally
     Self.FQueueAndFreeLock.Release;
   end;
-  // Wake worker
+
+  // Wake worker - we have some work for him
   Self.FQueueEvent.SetEvent;
 end;
 
@@ -804,25 +818,24 @@ begin
   end;
 
   FreeAndNil(Self.FQueueEvent);
-  FreeAndNil(Self.FQueueAndFreeLock);
-  FreeAndNil(Self.FNamedRequestsLock);
   FreeAndNil(Self.FNamedRequestsDict);
   FreeAndNil(Self.FQueue);
+  FreeAndNil(Self.FQueueAndFreeLock);
+  FreeAndNil(Self.FNamedRequestsLock);
   FreeAndNil(Self.FCurrentClientLock);
 end;
 
 procedure TAsyncHTTP.AbortActiveConnection;
 begin
   // Abort active client/socket if present
-  if Assigned(Self.FCurrentClientLock) then
-  begin
-    Self.FCurrentClientLock.Acquire;
-    try
-      if Assigned(Self.FCurrentClient) then
-        Self.FCurrentClient.AbortRequest;
-    finally
-      Self.FCurrentClientLock.Release;
+  Self.FCurrentClientLock.Acquire;
+  try
+    if Assigned(Self.FCurrentClient) then
+    begin
+      self.AbortRequest(Self.FCurrentClient);
     end;
+  finally
+    Self.FCurrentClientLock.Release;
   end;
 end;
 
@@ -841,10 +854,16 @@ begin
   Self.FQueueAndFreeLock.Acquire;
   Self.FNamedRequestsLock.Acquire;
   try
-    oldQueue := Self.FQueue;
-    Self.FQueue := TDequeHttpRequest.Create;
-    oldDict := Self.FNamedRequestsDict;
-    Self.FNamedRequestsDict := TDictHttpRequest.Create;
+    if Self.FQueue.Size() > 0 then
+    begin
+      oldQueue := Self.FQueue;
+      Self.FQueue := TDequeHttpRequest.Create;
+    end;
+    if Self.FNamedRequestsDict.Size() > 0 then
+    begin
+      oldDict := Self.FNamedRequestsDict;
+      Self.FNamedRequestsDict := TDictHttpRequest.Create;
+    end;
   finally
     Self.FNamedRequestsLock.Release;
     Self.FQueueAndFreeLock.Release;
@@ -867,10 +886,6 @@ begin
 
   if Assigned(oldDict) then
     oldDict.Free;
-
-  // Wake worker in case it's waiting on an empty queue
-  if Assigned(Self.FQueueEvent) then
-    Self.FQueueEvent.SetEvent;
 end;
 
 procedure TAsyncHTTP.CancelAll;

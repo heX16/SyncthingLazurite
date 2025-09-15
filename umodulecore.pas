@@ -612,7 +612,7 @@ begin
   OnlineTested := true;
   if not Terminated then
     // TODO: Request._Connected_ - rename or remove it
-    if Request.Connected then
+    if Request.Succeeded then
     begin
       //todo: check ping result
       if Request.Status <> 200 then

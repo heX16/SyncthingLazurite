@@ -122,11 +122,15 @@ type
     procedure OnRestAPIQueueEmpty(Sender: TObject);
     procedure ConnectingTimeoutTimerHandler(Sender: TObject);
     procedure LongPollingErrorRestoreTimerHandler(Sender: TObject);
+
+    // JSON Utils
+
     function ParseJson(Request: THttpRequest; out Json: TJSONData): boolean;
     procedure SetAtPath(var RootObj: TJSONObject; const JsonPath: UTF8String; NewData: TJSONData);
     procedure FindAndCreatePathInJsonTree(var RootObj: TJSONObject;
       const JsonPath: UTF8String; out Parent: TJSONObject; out
-  Target: TJSONData; out TargetName: UTF8String);
+      Target: TJSONData; out TargetName: UTF8String);
+
     // REST callbacks
     procedure CB_CheckOnline(Request: THttpRequest);
     procedure CB_HandleEndpoint(Request: THttpRequest);
@@ -158,7 +162,7 @@ type
     { Notifies listeners and finalizes JSON tree modification }
     procedure EndTreeModify(); virtual;
     { Replaces a branch in the "JSON Tree" with NewData }
-    procedure ReplaceRootBranch(const JsonPath: UTF8String; NewData: TJSONData); virtual;
+    procedure JSONTreeNewData(const JsonPath: UTF8String; NewData: TJSONData); virtual;
 
     { Load all data from REST resources to JSON tree }
     procedure LoadAllData(); virtual;
@@ -618,10 +622,16 @@ begin
     FOnAfterTreeModify(Self);
 end;
 
-procedure TSyncthingAPI.ReplaceRootBranch(const JsonPath: UTF8String; NewData: TJSONData);
+procedure TSyncthingAPI.JSONTreeNewData(const JsonPath: UTF8String; NewData: TJSONData);
 begin
   BeginTreeModify;
   try
+    if NewData is TJSONData then
+    begin
+      //
+    end;
+
+
     SetAtPath(FRoot, JsonPath, NewData);
     NotifyTreeChanged(JsonPath);
   finally
@@ -658,7 +668,7 @@ begin
     if Request.UserString = '' then Exit;
     if ParseJson(Request, j) then
     begin
-      ReplaceRootBranch(Request.UserString, j);
+      JSONTreeNewData(Request.UserString, j);
     end;
   end;
 end;
@@ -992,7 +1002,7 @@ end;
 
 procedure TSyncthingAPI.CB_CheckOnline(Request: THttpRequest);
 begin
-  if (Request <> nil) and (Request.Status = 200) and (Request.Connected) then
+  if (Request <> nil) and (Request.Status = 200) and (Request.Succeeded) then
   begin
     // Is online
     Command:=ssCmdConnectingPingAck;
@@ -1024,6 +1034,9 @@ begin
     if Assigned(j) then
       j.Free;
   end;
+  // TODO: remove it !!!
+  // кажется это просто не нужно, мы потом поймаем событие дисконект.
+  // или тут нужно вызывать FSM с особой командой
   StartLongPolling;
 end;
 
