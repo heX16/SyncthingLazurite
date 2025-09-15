@@ -12,18 +12,21 @@ uses
 
 type
   // Finite state machine for the core
-  TSyncthingState = (
+  TSyncthingFSM_State = (
     ssOffline,        // No active connection; idle/offline state
-    ssConnecting,     // Connecting to Syncthing and performing initial sync
+    ssConnectingPingSend,     // Connecting to Syncthing
+    ssConnectingPingWait, // Connecting to Syncthing
     ssOnline,         // Connected and operational; long-polling is active
     ssDisconnecting   // Graceful disconnect in progress
   );
 
-  // Action to take after a long-polling drop
-  TLongPollingDropAction = (
-    lpdaDefault,  // Use default internal strategy (e.g., retry with backoff)
-    lpdaRetry,    // Explicitly keep retrying to restore long-polling
-    lpdaAbort     // Abort session and transition to offline
+  // ###
+  TSyncthingFSM_Command = (
+    ssCmdNone,
+    ssCmdConnect,
+    ssCmdDisconnect,
+    ssCmdConnectingConfirmed,
+    ssCmdConnectingFault
   );
 
   // Event types (callbacks)
@@ -33,7 +36,7 @@ type
   // Fired when a branch in the in-memory JSON tree was modified; Path is a JSON path
   TTreeChangedEvent = procedure(Sender: TObject; const Path: UTF8String) of object;
   TBeforeAfterTreeModifyEvent = procedure(Sender: TObject) of object;
-  TLongPollingDropHandler = function(Sender: TObject): TLongPollingDropAction of object;
+  TLongPollingDropHandler = procedure(Sender: TObject) of object;
 
   // Endpoints enum for REST initial sync
   TSyncthingEndpointId = (
@@ -62,11 +65,12 @@ type
   // Core class for interacting with Syncthing (REST + Event API) and maintaining JSON tree
   TSyncthingApiV2 = class(TComponent)
   private
-    FState: TSyncthingState;
+    FState: TSyncthingFSM_State;
     FRoot: TJSONObject;            // Single in-memory JSON tree root
     FAPIKey: UTF8String;           // X-API-Key
     FHost: UTF8String;             // Syncthing host
     FPort: Integer;                // Syncthing port
+    FStateCommand: TSyncthingFSM_Command;
     FUseTLS: Boolean;              // Use HTTPS if true
     FServerURL: UTF8String;        // Built base URL (scheme://host:port/), see `BuildServerURL`
 
@@ -92,7 +96,7 @@ type
     FOnAfterTreeModify: TBeforeAfterTreeModifyEvent;
     // Internal helpers
     procedure HttpAddHeader(Request: THttpRequest; Sender: TObject);
-    procedure EventsDisconnected(Request: THttpRequest; Sender: TObject);
+    procedure LongPollingDisconnected(Request: THttpRequest; Sender: TObject);
     function ParseJson(Request: THttpRequest; out Json: TJSONData): boolean;
     procedure SetAtPath(var RootObj: TJSONObject; const JsonPath: UTF8String; NewData: TJSONData);
     // REST callbacks
@@ -102,9 +106,8 @@ type
     procedure CB_Events(Request: THttpRequest);
     // REST helper
     procedure API_Get(const Api: UTF8String; Callback: THttpRequestCallbackFunction);
-    // FSM helpers
-    procedure FSM_Event(NextState: TSyncthingState);
-    procedure FSM_Process;
+    // State process. (FSM)
+    procedure FSM_Process();
     // Build endpoints table
     procedure InitEndpointTable;
     // Maps endpoint id to callback handler
@@ -175,18 +178,22 @@ type
     procedure SetLongPollingRestartInterval(Seconds: Integer); virtual;
 
     // State and data
+
     { Returns true when FSM is online }
     function IsOnline: Boolean; virtual;
     { Maps endpoint id to REST URI (under /rest/) }
     class function SyncthingEndpointURI(Id: TSyncthingEndpointId): UTF8String; static;
     { Current finite state machine state }
-    property State: TSyncthingState read FState;
+    property State: TSyncthingFSM_State read FState;
+    { Current finite state machine command }
+    property Command: TSyncthingFSM_Command read FStateCommand write FStateCommand;
     { In-memory JSON root with all synchronized data }
     property Root: TJSONObject read FRoot;
     { Last seen event id (from Event API) }
     property EventsLastId: Int64 read FEventsLastId;
 
     // Callbacks
+
     { Called before starting connection procedure }
     property OnBeforeConnect: TNotifyEventObj read FOnBeforeConnect write FOnBeforeConnect;
     { Called after successful connection and initial sync }
@@ -219,36 +226,80 @@ uses
   jsonscanner,
   jsonparser;
 
-procedure TSyncthingApiV2.FSM_Event(NextState: TSyncthingState);
-begin
-  // Simple event setter; real transitions are executed in FSM_Process
-  FState := NextState;
-end;
 
-procedure TSyncthingApiV2.FSM_Process;
+
+procedure TSyncthingApiV2.FSM_Process();
 begin
-  case FState of
-    ssConnecting:
-      begin
-        BuildServerURL;
-        ConfigureHttpClients;
-        // Start initial ping; CB_CheckOnline drives next transitions
-        API_Get('system/ping', @CB_CheckOnline);
-      end;
-    ssDisconnecting:
-      begin
-        StopLongPolling;
-        FState := ssOffline;
-      end;
-    ssOnline:
-      begin
-        // Nothing to do; idle
-      end;
-    ssOffline:
-      begin
-        // Nothing to do; idle
-      end;
-  end;
+  while True do
+  begin
+    case FState of
+
+      ssConnectingPingSend:
+        begin
+          BuildServerURL;
+          ConfigureHttpClients;
+          // Start initial ping; CB_CheckOnline drives next transitions
+          API_Get('system/ping', @CB_CheckOnline);
+        end;
+
+      ssConnectingPingWait:
+        begin
+          if Command = ssCmdDisconnect then
+          begin
+            FState:=ssOffline;
+          end;
+          if Command = ssCmdConnectingFault then
+          begin
+            FState:=ssOffline;
+          end;
+          if Command = ssCmdConnectingConfirmed then
+          begin
+            FState:=ssOnline;
+          end;
+        end;
+
+      ssOnline:
+        begin
+          if (Command = ssCmdDisconnect) and Assigned(FOnBeforeDisconnect) then
+            FOnBeforeDisconnect(Self);
+
+          if Command = ssCmdDisconnect then
+          begin
+            FState:=ssDisconnecting;
+            continue;
+          end;
+        end;
+
+      ssDisconnecting:
+        begin
+          StopLongPolling();
+          FState := ssOffline;
+
+          if Assigned(FOnDisconnectedByUser) then
+             FOnDisconnectedByUser(Self);
+        end;
+
+      ssOffline:
+        begin
+          if Command = ssCmdConnect then
+          begin
+            if Assigned(FOnBeforeConnect) then
+              FOnBeforeConnect(Self);
+
+            if Command = ssCmdConnect then
+            begin
+              FState := ssConnectingPingSend;
+              continue;
+            end;
+          end;
+        end;
+
+    end; // case
+
+    break;
+    Command:=ssCmdNone;
+  end; // while
+
 end;
 
 class function TSyncthingApiV2.SyncthingEndpointURI(Id: TSyncthingEndpointId): UTF8String;
@@ -328,7 +379,7 @@ begin
   FHTTPEvents.IOTimeout := 61000;
   FHTTPEvents.KeepConnection := True;
   FHTTPEvents.OnOpened := @HttpAddHeader;
-  FHTTPEvents.OnDisconnected := @EventsDisconnected;
+  FHTTPEvents.OnDisconnected := @LongPollingDisconnected;
 
   if (FLongPollingRestartIntervalSec > 0) then
   begin
@@ -410,7 +461,6 @@ end;
 
 procedure TSyncthingApiV2.StartLongPolling;
 begin
-  if (FState <> ssOnline) then Exit;
   if not Assigned(FHTTPEvents) then Exit;
   if FHTTPEvents.RequestInQueue('polling') then Exit;
 
@@ -505,25 +555,14 @@ end;
 
 procedure TSyncthingApiV2.Connect;
 begin
-  FSM_Event(ssConnecting);
-  
-  if Assigned(FOnBeforeConnect) then
-    FOnBeforeConnect(Self);
-
+  Self.Command:=ssCmdConnect;
   FSM_Process();
 end;
 
 procedure TSyncthingApiV2.Disconnect;
 begin
-  FSM_Event(ssDisconnecting);
-
-  if Assigned(FOnBeforeDisconnect) then
-    FOnBeforeDisconnect(Self);
-
+  Command:=ssCmdDisconnect;
   FSM_Process();
-
-  if (State = ssOffline) and Assigned(FOnDisconnectedByUser) then
-     FOnDisconnectedByUser(Self);
 end;
 
 procedure TSyncthingApiV2.SetEndpoint(const Host: UTF8String; Port: Integer; UseTLS: Boolean);
@@ -534,7 +573,7 @@ begin
   BuildServerURL;
 end;
 
-procedure TSyncthingApiV2.SetAPIKey(const Key: UTF8STRING);
+procedure TSyncthingApiV2.SetAPIKey(const Key: UTF8String);
 begin
   FAPIKey := Key;
 end;
@@ -563,14 +602,14 @@ begin
   end;
 end;
 
-procedure TSyncthingApiV2.EventsDisconnected(Request: THttpRequest; Sender: TObject);
-var
-  action: TLongPollingDropAction;
+procedure TSyncthingApiV2.LongPollingDisconnected(Request: THttpRequest; Sender: TObject);
 begin
-  action := lpdaDefault;
   if Assigned(FOnLongPollingDrop) then
-    action := FOnLongPollingDrop(Self);
+    FOnLongPollingDrop(Self);
 
+  // TODO: !!!
+  (*if
+  // MOVE TO FSM
   case action of
   // !!!???
     lpdaAbort:
@@ -583,7 +622,7 @@ begin
       end;
   else
     RestartLongPolling;
-  end;
+  end;*)
 end;
 
 function TSyncthingApiV2.ParseJson(Request: THttpRequest; out Json: TJSONData): boolean;
@@ -719,7 +758,10 @@ procedure TSyncthingApiV2.CB_CheckOnline(Request: THttpRequest);
 begin
   if (Request <> nil) and (Request.Status = 200) and (Request.Connected) then
   begin
-    FSM_Event(ssOnline);
+    // Is online
+    Command:=ssCmdConnectingConfirmed;
+    FSM_Process();
+
     PerformInitialSync;
     if Assigned(FOnConnected) then
       FOnConnected(Self);
@@ -727,7 +769,8 @@ begin
   end
   else
   begin
-    FSM_Event(ssOffline);
+    Command:=ssCmdConnectingFault;
+    FSM_Process();
     if Assigned(FOnConnectError) then
       FOnConnectError(Self, 'Ping failed or not connected');
   end;

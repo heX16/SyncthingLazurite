@@ -184,6 +184,12 @@ type
     // Abort only the current in-flight connection (if any), without destroying the object
     procedure AbortActiveConnection;
 
+    // Clear all pending (queued) requests without destroying the instance
+    procedure ClearQueue;
+
+    // Abort the active connection (if any) and clear the queue
+    procedure CancelAll;
+
     // Check operation status by name
     function RequestInQueue(const OperationName: string): Boolean;
 
@@ -794,6 +800,58 @@ begin
       Self.FCurrentClientLock.Release;
     end;
   end;
+end;
+
+procedure TAsyncHTTP.ClearQueue;
+var
+  i: SizeUInt;
+  req: THttpRequest;
+  oldQueue: TDequeHttpRequest;
+  oldDict: TDictHttpRequest;
+begin
+  // Atomically swap out queue and names under their respective locks
+  oldQueue := nil;
+  oldDict := nil;
+
+  Self.FQueueLock.Acquire;
+  Self.FNamedRequestsLock.Acquire;
+  try
+    oldQueue := Self.FQueue;
+    Self.FQueue := TDequeHttpRequest.Create;
+    oldDict := Self.FNamedRequestsDict;
+    Self.FNamedRequestsDict := TDictHttpRequest.Create;
+  finally
+    Self.FNamedRequestsLock.Release;
+    Self.FQueueLock.Release;
+  end;
+
+  // Now safely free queued requests and old containers outside locks
+  if Assigned(oldQueue) then
+  begin
+    for i := 0 to oldQueue.Size() - 1 do
+    begin
+      req := oldQueue.Items[i];
+      if (req <> nil) and (req.State = osQueued) then
+      begin
+        FreeAndNil(req);
+      end;
+    end;
+    oldQueue.Free;
+  end;
+
+  if Assigned(oldDict) then
+    oldDict.Free;
+
+  // Wake worker in case it's waiting on an empty queue
+  if Assigned(Self.FQueueEvent) then
+    Self.FQueueEvent.SetEvent;
+end;
+
+procedure TAsyncHTTP.CancelAll;
+begin
+  // Abort the current connection and clear queued requests
+  Self.AbortActiveConnection;
+  Self.ClearQueue;
 end;
 
 function TAsyncHTTP.RequestInQueue(const OperationName: string): Boolean;
