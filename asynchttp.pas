@@ -511,7 +511,7 @@ begin
             Client.RequestBody := nil;
             FreeAndNil(body);
           end;
-        end;
+        end; // if
 
         ARequest.Status := Client.ResponseStatusCode;
         ARequest.Connected := (ARequest.Status >= 200) and (ARequest.Status < 400);
@@ -543,8 +543,8 @@ begin
           ARequest.Connected := False;
           ARequest.Status := 0;
         end;
-      end;
-    end;
+      end; // try
+    end; // for
   finally
     // Clear current client reference
     if Client is TAbortableHTTPClient then
@@ -556,10 +556,10 @@ begin
       finally
         Self.FOwner.FCurrentClientLock.Release;
       end;
-    end;
+    end; // if
     if clientNeedFree then
       Client.Free;
-  end;
+  end; // try
 
   // Mark as done before invoking callback; after callback we will remove operation
   ARequest.State := osDone;
