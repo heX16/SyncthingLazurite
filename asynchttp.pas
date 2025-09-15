@@ -98,9 +98,9 @@ type
   end;
 
   // Abortable HTTP client to allow forcing socket close from outside
-  TAbortableHTTPClient = class(TFPHTTPClient)
+  TFPHTTPClientHelper = class(TFPHTTPClient)
   public
-    procedure AbortRequest; virtual;
+    procedure DisconnectFromServer; override;
   end;
 
   // Main class exposed to users
@@ -235,13 +235,11 @@ const
 
 implementation
 
-{ TAbortableHTTPClient }
+{ TFPHTTPClientHelper }
 
-procedure TAbortableHTTPClient.AbortRequest;
+procedure TFPHTTPClientHelper.DisconnectFromServer;
 begin
-  // Force disconnect to break any blocking read/write and flag terminated
-  DisconnectFromServer;
-  Terminate;
+  inherited DisconnectFromServer;
 end;
 
 { TAsyncHTTP - virtual factory/configuration }
@@ -425,7 +423,7 @@ begin
     except
       on E: EHTTPClient do
       begin
-        if (Client.Terminated) then
+        if Client.Terminated then
           // Client-cancelled request
           ARequest.Status := HTTPErrorCode_ClientClosed
         else
@@ -434,7 +432,7 @@ begin
       end;
       on E: EWriteError do
       begin
-        if (Client.KeepConnection = true) then
+        if Client.KeepConnection = true then
           // "Keep-Alive connection" was closed by server
           ARequest.Status := HTTPErrorCode_KeepAliveEnded;
       end;
@@ -449,10 +447,6 @@ begin
   Client.RequestBody := nil;
   if body <> nil then
     FreeAndNil(body);
-
-  // TODO: !!!!
-  if ARequest.Status = HTTPErrorCode_KeepAliveEnded then
-    writeln('ARequest.Status = HTTPErrorCode_KeepAliveEnded');
 
   ARequest.Succeeded := (ARequest.Status >= 200) and (ARequest.Status < 400);
 end;
@@ -491,11 +485,32 @@ begin
       Self.FOwner.FCurrentClientLock.Release;
     end;
 
-    // Do request
+    // Do request (first try)
     Self.PerformSingleHttpAttempt(ARequest, Client);
 
+    // unfortunately TFPHTTPClient does not support socket closure tracking.
+    // I have to service this moment myself.  =\
+    if (ARequest.Status = HTTPErrorCode_KeepAliveEnded) or
+       (ARequest.Status = HTTPErrorCode_HTTPClientException) then
+    begin
+      // unfortunately TFPHTTPClient hide the `DisconnectFromServer` function.
+      // so i have to solve this problem with a little hack.
+      {$PUSH}
+      {$OBJECTCHECKS OFF}
+      // disable RunError(219) in compile mode "-CR" (Verify object method call)
+      // ref: https://www.freepascal.org/docs-html/current/prog/progsu57.html
+      // ref: https://www.freepascal.org/docs-html/user/userap1.html
+
+      // now, call protected method:
+      TFPHTTPClientHelper(Client).DisconnectFromServer();
+      {$POP}
+      // Do request (first try, again)
+      // the previous attempt does not count because the socket was broken
+      Self.PerformSingleHttpAttempt(ARequest, Client);
+    end;
+
     if not ARequest.Succeeded then
-      // Do retry if needed
+      // Do retry the request, if needed
       for attempt := 1 to Self.FOwner.FRetryCount do
       begin
         Self.PerformSingleHttpAttempt(ARequest, Client);
