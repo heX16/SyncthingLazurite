@@ -8,7 +8,6 @@ object frmJSONView: TfrmJSONView
   ClientWidth = 513
   DesignTimePPI = 120
   Menu = MainMenu
-  LCLVersion = '4.2.0.0'
   OnCreate = FormCreate
   OnDestroy = FormDestroy
   object listEndpoints: TListBox
@@ -372,6 +371,17 @@ object frmJSONView: TfrmJSONView
     object mnShowHintPanel: TMenuItem
       Caption = 'mnShowHintPanel'
       OnClick = mnShowHintPanelClick
+    end
+    object mnTestGrp: TMenuItem
+      Caption = 'mnTestGrp'
+      object mnTestConnect: TMenuItem
+        Caption = 'mnTestConnect'
+        OnClick = mnTestConnectClick
+      end
+      object mnTestJson: TMenuItem
+        Caption = 'mnTestJson'
+        OnClick = mnTestJsonClick
+      end
     end
   end
   object TimerUpdateTreeView: TTimer

@@ -6,6 +6,7 @@ interface
 
 uses
   uModuleCore,
+  syncthing_api,
   AsyncHttp, fpjson,
   Classes, SysUtils, Forms, Controls, StdCtrls,
   ExtCtrls, ComCtrls, Menus;
@@ -21,6 +22,9 @@ type
     edHintFieldsList: TLabeledEdit;
     listEndpoints: TListBox;
     MainMenu: TMainMenu;
+    mnTestConnect: TMenuItem;
+    mnTestJson: TMenuItem;
+    mnTestGrp: TMenuItem;
     mnShowHintPanel: TMenuItem;
     mnCollapseAll: TMenuItem;
     mnExpandAll: TMenuItem;
@@ -34,9 +38,13 @@ type
     procedure FormDestroy(Sender: TObject);
     procedure listGetAPIClick(Sender: TObject);
     procedure mnShowHintPanelClick(Sender: TObject);
+    procedure mnTestConnectClick(Sender: TObject);
+    procedure mnTestJsonClick(Sender: TObject);
     procedure TimerUpdateTreeViewTimer(Sender: TObject);
 
   private
+    // tmp
+    sync_api: TSyncthingAPI;
 
   public
     hintList: TStringList;
@@ -288,6 +296,20 @@ end;
 procedure TfrmJSONView.mnShowHintPanelClick(Sender: TObject);
 begin
   panelHintFieldsList.Visible := not panelHintFieldsList.Visible;
+end;
+
+procedure TfrmJSONView.mnTestConnectClick(Sender: TObject);
+begin
+  //
+  sync_api := TSyncthingAPI.Create(self);
+  sync_api.SetAPIKey(Core.APIKey);
+  sync_api.SetEndpoint('127.0.0.1', 8384, false);
+  sync_api.Connect();
+end;
+
+procedure TfrmJSONView.mnTestJsonClick(Sender: TObject);
+begin
+  ShowJSONDocument(self.treeJsonData, sync_api.Root, false, false);
 end;
 
 procedure TfrmJSONView.ShowJSONDocument(TV: TTreeView; DataSource: TJSONData;

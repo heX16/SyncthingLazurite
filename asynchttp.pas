@@ -853,14 +853,15 @@ begin
   // Now safely free old containers outside locks
   if Assigned(oldQueue) then
   begin
-    for i := 0 to oldQueue.Size() - 1 do
-    begin
-      req := oldQueue.Items[i];
-      if (req <> nil) and (req.State = osQueued) then
+    if oldQueue.Size() > 0 then
+      for i := 0 to oldQueue.Size() - 1 do
       begin
-        FreeAndNil(req);
+        req := oldQueue.Items[i];
+        if (req <> nil) and (req.State = osQueued) then
+        begin
+          FreeAndNil(req);
+        end;
       end;
-    end;
     oldQueue.Free;
   end;
 

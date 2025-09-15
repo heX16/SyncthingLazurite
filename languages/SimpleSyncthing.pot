@@ -94,6 +94,19 @@ msgstr ""
 msgid "mnShowHintPanel"
 msgstr ""
 
+#: tfrmjsonview.mntestconnect.caption
+msgctxt "tfrmjsonview.mntestconnect.caption"
+msgid "mnTestConnect"
+msgstr ""
+
+#: tfrmjsonview.mntestgrp.caption
+msgid "mnTestGrp"
+msgstr ""
+
+#: tfrmjsonview.mntestjson.caption
+msgid "mnTestJson"
+msgstr ""
+
 #: tfrmmain.caption
 msgid "frmMain"
 msgstr ""
