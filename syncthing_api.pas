@@ -5,7 +5,7 @@ unit syncthing_api;
 interface
 
 uses
-  Classes, SysUtils,
+  Classes, SysUtils, Types, StrUtils,
   fpjson,
   AsyncHttp,
   ExtCtrls;
@@ -30,7 +30,9 @@ type
     ssCmdConnectingFault,
     ssCmdConnectingAcceptedData,
     // TODO: add  `TimerConnectingTimeout`
-    ssCmdConnectingTimeout
+    ssCmdConnectingTimeout,
+    ssCmdLongPollingTimeToReconnect,
+    ssCmdLongPollingDisconnected
   );
 
   // Event types (callbacks)
@@ -84,6 +86,7 @@ type
     FEventsLastId: Int64;          // Last seen event id
     FLongPollingRestartIntervalSec: Integer; // Periodic restart interval
     FLongPollingRestartTimer: TTimer;
+    FLongPollingSelfRestartFlag: boolean; // flag that we ourselves caused the pooling restart
 
     // Events (callbacks)
     FOnBeforeConnect: TNotifyEventObj;
@@ -105,6 +108,9 @@ type
     procedure LongPollingDisconnected(Request: THttpRequest; Sender: TObject);
     function ParseJson(Request: THttpRequest; out Json: TJSONData): boolean;
     procedure SetAtPath(var RootObj: TJSONObject; const JsonPath: UTF8String; NewData: TJSONData);
+    procedure FindAndCreatePathInJsonTree(var RootObj: TJSONObject;
+      const JsonPath: UTF8String; out Parent: TJSONObject; out
+  Target: TJSONData; out TargetName: UTF8String);
     // REST callbacks
     procedure CB_CheckOnline(Request: THttpRequest);
     procedure CB_HandleEndpoint(Request: THttpRequest);
@@ -149,11 +155,11 @@ type
 
     // Long-polling lifecycle
     { Starts event long-polling listener }
-    procedure StartLongPolling; virtual;
+    procedure StartLongPolling(); virtual;
     { Stops event long-polling listener }
-    procedure StopLongPolling; virtual;
+    procedure StopLongPolling(); virtual;
     { Restarts event long-polling listener (periodic or on drop) }
-    procedure RestartLongPolling; virtual;
+    procedure RestartLongPolling(); virtual;
     { Timer handler to periodically restart long-polling }
     procedure LongPollingRestartTimerHandler(Sender: TObject); virtual;
 
@@ -163,7 +169,7 @@ type
     { Dispatches single event to user handler before internal integration }
     procedure ProcessEvent(EventObj: TJSONObject); virtual;
     { Integrates single event data into the JSON tree }
-    procedure IntegrateEvent(EventObj: TJSONObject); virtual;
+    procedure IntegrateEvent(const EventObj: TJSONObject); virtual;
     { Notifies listeners that a tree branch at Path was changed }
     procedure NotifyTreeChanged(const Path: UTF8String); virtual;
 
@@ -236,6 +242,46 @@ uses
   jsonscanner,
   jsonparser;
 
+procedure TSyncthingAPI.FindAndCreatePathInJsonTree(
+  var RootObj: TJSONObject; const JsonPath: UTF8String; 
+  out Parent: TJSONObject; out Target: TJSONData; out TargetName: UTF8String);
+var
+  parts: TStringDynArray;
+  i: Integer;
+begin
+  if (JsonPath = '') or (JsonPath[1] = '/') or (JsonPath[Length(JsonPath)] = '/') then
+    raise Exception.Create('Invalid JSON path format');
+
+  parts := SplitString(JsonPath, '/');
+
+  Parent := nil;
+  Target := RootObj;
+
+  for i := Low(parts) to High(parts) do
+  begin
+    // Step into the target
+    Parent := TJSONObject(Target);
+
+    TargetName := parts[i];
+    Target := TJSONObject(Parent.Find(TargetName));
+
+    // Remove invalid object
+    // if object present and is not a last object in path
+    if Assigned(Target) and ((i < High(parts)) and not (Target is TJSONObject)) then
+    begin
+      Parent.Delete(TargetName);
+      Target := nil;
+    end;
+
+    // Add new object to continue path (if needed)
+    if not Assigned(Target) then
+    begin
+      Parent.Add(TargetName, TJSONObject.Create());
+      Target := TJSONObject(Parent.Find(TargetName));
+    end;
+  end;
+end;
+
 
 
 procedure TSyncthingAPI.FSM_Process();
@@ -304,6 +350,14 @@ begin
           begin
             FState:=ssDisconnecting;
             continue;
+          end;
+          if Command = ssCmdLongPollingDisconnected then
+          begin
+            StartLongPolling();
+          end;
+          if Command = ssCmdLongPollingTimeToReconnect then
+          begin
+            RestartLongPolling();
           end;
         end;
 
@@ -461,8 +515,7 @@ procedure TSyncthingAPI.ReplaceRootBranch(const JsonPath: UTF8String; NewData: T
 begin
   BeginTreeModify;
   try
-    // ???!!! StringReplace - это зачем?
-    SetAtPath(FRoot, StringReplace(JsonPath, '/', '.', [rfReplaceAll]), NewData);
+    SetAtPath(FRoot, JsonPath, NewData);
     NotifyTreeChanged(JsonPath);
   finally
     EndTreeModify;
@@ -508,9 +561,6 @@ end;
 
 procedure TSyncthingAPI.StartLongPolling;
 begin
-  if not Assigned(FHTTPEvents) then Exit;
-  if FHTTPEvents.RequestInQueue('polling') then Exit;
-
   if (Assigned(FLongPollingRestartTimer)) and (FLongPollingRestartIntervalSec > 0) then
     FLongPollingRestartTimer.Enabled := True;
 
@@ -532,8 +582,10 @@ end;
 
 procedure TSyncthingAPI.RestartLongPolling;
 begin
-  StopLongPolling;
-  StartLongPolling;
+  FLongPollingSelfRestartFlag := true;
+  StopLongPolling();
+  StartLongPolling();
+  FLongPollingSelfRestartFlag := false;
 end;
 
 procedure TSyncthingAPI.LongPollingRestartTimerHandler(Sender: TObject);
@@ -589,9 +641,10 @@ begin
     LoadEndpoint(epSystemStatus);
 end;
 
-procedure TSyncthingAPI.IntegrateEvent(EventObj: TJSONObject);
+procedure TSyncthingAPI.IntegrateEvent(const EventObj: TJSONObject);
 begin
   // Placeholder: integrate fragments from EventObj.Find('data') into Root if needed
+  Assert(EventObj <> nil);
 end;
 
 procedure TSyncthingAPI.NotifyTreeChanged(const Path: UTF8String);
@@ -651,25 +704,12 @@ end;
 
 procedure TSyncthingAPI.LongPollingDisconnected(Request: THttpRequest; Sender: TObject);
 begin
+  Command:=ssCmdLongPollingDisconnected;
+
   if Assigned(FOnLongPollingDrop) then
     FOnLongPollingDrop(Self);
 
-  // TODO: !!!
-  (*if
-  // MOVE TO FSM
-  case action of
-  // !!!???
-    lpdaAbort:
-      begin
-        FSM_Event(ssOffline);
-        if Assigned(FOnHardDisconnect) then
-          FOnHardDisconnect(Self)
-        else
-          RestartLongPolling;
-      end;
-  else
-    RestartLongPolling;
-  end;*)
+  FSM_Process();
 end;
 
 function TSyncthingAPI.ParseJson(Request: THttpRequest; out Json: TJSONData): boolean;
@@ -714,60 +754,15 @@ end;
 
 procedure TSyncthingAPI.SetAtPath(var RootObj: TJSONObject; const JsonPath: UTF8String; NewData: TJSONData);
 var
-  segs: TStringList;
-  i, idx: Integer;
-  cur: TJSONObject;
-  key: UTF8String;
-  nextObj: TJSONObject;
-  dotPath: UTF8String;
+  parent: TJSONObject;
+  targetData: TJSONData;
+  targetName: UTF8String;
 begin
-  if not Assigned(RootObj) then
-    RootObj := TJSONObject.Create;
+  FindAndCreatePathInJsonTree(RootObj, JsonPath, parent, targetData, targetName);
 
-  // !!! ??? что тут происходит и почему так сложно?
-
-  dotPath := StringReplace(JsonPath, '/', '.', [rfReplaceAll]);
-
-  segs := TStringList.Create;
-  try
-    segs.Delimiter := '.';
-    segs.StrictDelimiter := True;
-    segs.DelimitedText := StringReplace(dotPath, '.', ',', [rfReplaceAll]);
-    if segs.Count = 0 then Exit;
-
-    cur := RootObj;
-    for i := 0 to segs.Count - 2 do
-    begin
-      key := segs[i];
-      idx := cur.IndexOfName(key);
-      if idx = -1 then
-      begin
-        nextObj := TJSONObject.Create;
-        cur.Add(key, nextObj);
-        cur := nextObj;
-      end
-      else
-      begin
-        if cur.Items[idx] is TJSONObject then
-          cur := TJSONObject(cur.Items[idx])
-        else
-        begin
-          cur.Delete(idx);
-          nextObj := TJSONObject.Create;
-          cur.Add(key, nextObj);
-          cur := nextObj;
-        end;
-      end;
-    end;
-
-    key := segs[segs.Count - 1];
-    idx := cur.IndexOfName(key);
-    if idx <> -1 then
-      cur.Delete(idx);
-    cur.Add(key, NewData);
-  finally
-    segs.Free;
-  end;
+  // remove the old branch and adding the new branch
+  parent.Delete(targetName);
+  parent.Add(targetName, NewData);
 end;
 
 procedure TSyncthingAPI.API_Get(const Api: UTF8String;
