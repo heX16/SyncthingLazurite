@@ -54,13 +54,13 @@ type
     procedure httpGetAPItoTree(Request: THttpRequest);
 
     procedure ShowJSONDocument(TV: TTreeView; DataSource: TJSONData;
-      Compact: boolean = False; SortObjectMembers: boolean = False);
+      SortObjectMembers: boolean = False);
 
   end;
 
 
 procedure JSONDataAddToTreeView(TV: TTreeView; AParent: TTreeNode;
-      Data: TJSONData; Compact: boolean = False;
+      Data: TJSONData;
       SortObjectMembers: boolean = False);
 
 procedure JSONDataAddToTreeView_OnAddingNode(TV: TTreeView; AParent: TTreeNode;
@@ -132,7 +132,7 @@ begin
 end;
 
 procedure JSONDataAddToTreeView(TV: TTreeView; AParent: TTreeNode;
-  Data: TJSONData; Compact: boolean; SortObjectMembers: boolean);
+  Data: TJSONData; SortObjectMembers: boolean);
 var
   N, N2: TTreeNode;
   I: integer;
@@ -142,7 +142,7 @@ var
 begin
   if not Assigned(Data) then
     exit;
-  if Compact and (AParent <> nil) then
+  if (AParent <> nil) then
     begin
       N := AParent;
       NWasAdded := False;
@@ -185,7 +185,7 @@ begin
           JSONDataAddToTreeView_OnAddingNode(TV, N, N2, D);
 
           // recursion! ->
-          JSONDataAddToTreeView(TV, N2, D, Compact, SortObjectMembers);
+          JSONDataAddToTreeView(TV, N2, D, SortObjectMembers);
         end
       finally
         FreeAndNil(S);
@@ -309,18 +309,18 @@ end;
 
 procedure TfrmJSONView.mnTestJsonClick(Sender: TObject);
 begin
-  ShowJSONDocument(self.treeJsonData, sync_api.Root, false, false);
+  ShowJSONDocument(self.treeJsonData, sync_api.Root, false);
 end;
 
 procedure TfrmJSONView.ShowJSONDocument(TV: TTreeView; DataSource: TJSONData;
-  Compact: boolean; SortObjectMembers: boolean);
+  SortObjectMembers: boolean);
 var  
   node: TTreeNode;
 begin
   TV.Items.BeginUpdate;
   try
     TV.Items.Clear;
-    JSONDataAddToTreeView(TV, nil, DataSource, Compact, SortObjectMembers);
+    JSONDataAddToTreeView(TV, nil, DataSource, SortObjectMembers);
 
     Self.treeJsonData.FullCollapse();
     node := Self.treeJsonData.Items.GetFirstNode;

@@ -88,7 +88,8 @@ type
     FInvokeKind: TInvokeEventKind;
     procedure DoInvokeCallback;
     procedure DoInvokeEvents;
-    function PerformSingleHttpAttempt(ARequest: THttpRequest; Client: TFPHTTPClient): Boolean;
+    procedure PerformSingleHttpAttempt(ARequest: THttpRequest; Client: TFPHTTPClient
+      );
     procedure ProcessRequest(ARequest: THttpRequest; Client: TFPHTTPClient = nil); virtual;
   protected
     procedure Execute; override;
@@ -96,15 +97,8 @@ type
     constructor Create(Owner: TAsyncHTTP);
   end;
 
-  // HTTP client that never raises on HTTP response codes
-  // client that does not raise on non-2xx/3xx codes
-  TQuietHTTPClient = class(TFPHTTPClient)
-  protected
-    function CheckResponseCode(ACode: Integer; const AllowedResponseCodes: array of Integer): Boolean; override;
-  end;
-
   // Abortable HTTP client to allow forcing socket close from outside
-  TAbortableHTTPClient = class(TQuietHTTPClient)
+  TAbortableHTTPClient = class(TFPHTTPClient)
   public
     procedure AbortRequest; virtual;
   end;
@@ -155,6 +149,11 @@ type
 
     procedure AbortRequest(AClient: TFPHTTPClient); virtual;
   public
+    // User-provided data (not owned by this class)
+    UserObject: TObject;
+    // User-provided string
+    UserString: string;
+
     constructor Create();
     destructor Destroy(); override;
 
@@ -162,8 +161,8 @@ type
       callback: THttpRequestCallbackFunction;
       headers: string = '';
       operationName: string = '';
-      userObject: TObject = nil;
-      userString: string = '';
+      AUserObject: TObject = nil;
+      AUserString: string = '';
       clearDuplicates: Boolean = False);
 
     procedure Post(url: string;
@@ -171,8 +170,8 @@ type
       THttpRequestCallbackFunction;
       headers: string = '';
       operationName: string = '';
-      userObject: TObject = nil;
-      userString: string = '';
+      AUserObject: TObject = nil;
+      AUserString: string = '';
       clearDuplicates: Boolean = False);
 
     procedure HttpMethod(
@@ -182,8 +181,8 @@ type
       headers: string = '';
       data: string = '';
       operationName: string = '';
-      userObject: TObject = nil;
-      userString: string = '';
+      AUserObject: TObject = nil;
+      AUserString: string = '';
       clearDuplicates: Boolean = False);
 
     // Graceful shutdown
@@ -229,17 +228,12 @@ type
 
 const
   // Client Closed Request
-  HTTPErrorCode_ClientClosed = 499;
+  HTTPErrorCode_ClientClosed = 16499;
+  HTTPErrorCode_HTTPClientException = 16002;
+  HTTPErrorCode_UnknownException = 16001;
+  HTTPErrorCode_KeepAliveEnded = 16004;
 
 implementation
-
-{ TQuietHTTPClient }
-
-function TQuietHTTPClient.CheckResponseCode(ACode: Integer; const AllowedResponseCodes: array of Integer): Boolean;
-begin
-  // Always treat any HTTP response code as acceptable to prevent exceptions.
-  Result := True;
-end;
 
 { TAbortableHTTPClient }
 
@@ -254,7 +248,7 @@ end;
 
 function TAsyncHTTP.CreateHttpClient: TFPHTTPClient;
 begin
-  Result := TQuietHTTPClient.Create(nil);
+  Result := TFPHTTPClient.Create(nil);
 end;
 
 procedure TAsyncHTTP.ConfigureHttpClient(AClient: TFPHTTPClient; const ARequest: THttpRequest);
@@ -395,68 +389,72 @@ begin
     Self.FInvokeCallbackProc(Self.FInvokeRequest);
 end;
 
-function TRequestWorkerThread.PerformSingleHttpAttempt(ARequest: THttpRequest;
-  Client: TFPHTTPClient): Boolean;
+procedure TRequestWorkerThread.PerformSingleHttpAttempt(ARequest: THttpRequest;
+  Client: TFPHTTPClient);
 var
   body: TStream;
 begin
-  // Execute one HTTP attempt; return True to break retry loop
+  body := nil;
+  ARequest.Status := 0;
+
   if ARequest.Response = nil then
     ARequest.Response := TMemoryStream.Create
   else
     ARequest.Response.Size := 0;
+
   ARequest.Response.Position := 0;
 
   try
     // Always use HTTPMethod to reduce duplication (GET/POST wrappers call it)
-    body := nil;
     if ARequest.Data <> '' then
     begin
       body := TStringStream.Create(ARequest.Data);
       Client.RequestBody := body;
       Client.RequestBody.Position := 0;
     end;
-    try
-      Client.HTTPMethod(ARequest.HTTPMethod, ARequest.Url, ARequest.Response, []);
-    finally
-      Client.RequestBody := nil;
-      if body <> nil then
-        FreeAndNil(body);
-    end;
 
-    ARequest.Status := Client.ResponseStatusCode;
-    ARequest.Succeeded := (ARequest.Status >= 200) and (ARequest.Status < 400);
-    if ARequest.Succeeded then
-    begin
-      Result := True; // don't retry
-      Exit;
-    end;
-  except
-    // Explicitly classify HTTP client errors caused by abort/terminate
-    on E: EHTTPClient do
-    begin
-      ARequest.Succeeded := False;
-      if (Client.Terminated) then
+    try
+      // do Request
+      Client.HTTPMethod(
+        ARequest.HTTPMethod, // `Method` GET/POST/PUT/ect
+        ARequest.Url,        // `URL`
+        ARequest.Response,   // `Stream` with response data from server
+        []                   // `AllowedResponseCodes`. `[]` - allow all codes
+      );
+      ARequest.Status := Client.ResponseStatusCode;
+    except
+      on E: EHTTPClient do
       begin
-        // Treat as client-cancelled request
-        ARequest.Status := HTTPErrorCode_ClientClosed; // Client Closed Request (non-standard)
-        Result := True; // don't retry on intentional abort
-        Exit;
-      end
-      else
-      begin
-        ARequest.Status := 0; // unknown HTTP error, allow retry
+        if (Client.Terminated) then
+          // Client-cancelled request
+          ARequest.Status := HTTPErrorCode_ClientClosed
+        else
+          // Unknown HTTP error
+          ARequest.Status := HTTPErrorCode_HTTPClientException;
       end;
-    end;
+      on E: EWriteError do
+      begin
+        if (Client.KeepConnection = true) then
+          // "Keep-Alive connection" was closed by server
+          ARequest.Status := HTTPErrorCode_KeepAliveEnded;
+      end;
+    end; // try
+
+  except
     // Other exceptions: mark as failure and allow retry attempts
     on E: Exception do
-    begin
-      ARequest.Succeeded := False;
-      ARequest.Status := 0;
-    end;
+      ARequest.Status := HTTPErrorCode_UnknownException;
   end; // try
 
-  Result := False; // do retry
+  Client.RequestBody := nil;
+  if body <> nil then
+    FreeAndNil(body);
+
+  // TODO: !!!!
+  if ARequest.Status = HTTPErrorCode_KeepAliveEnded then
+    writeln('ARequest.Status = HTTPErrorCode_KeepAliveEnded');
+
+  ARequest.Succeeded := (ARequest.Status >= 200) and (ARequest.Status < 400);
 end;
 
 procedure TRequestWorkerThread.ProcessRequest(ARequest: THttpRequest;
@@ -494,11 +492,16 @@ begin
     end;
 
     // Do request
-    for attempt := 0 to Self.FOwner.FRetryCount do
-    begin
-      if Self.PerformSingleHttpAttempt(ARequest, Client) then
-        Break;
-    end; // for
+    Self.PerformSingleHttpAttempt(ARequest, Client);
+
+    if not ARequest.Succeeded then
+      // Do retry if needed
+      for attempt := 1 to Self.FOwner.FRetryCount do
+      begin
+        Self.PerformSingleHttpAttempt(ARequest, Client);
+        if ARequest.Succeeded or Self.Terminated then
+          Break;
+      end; // for
 
   finally
     // Clear current client reference
@@ -630,11 +633,15 @@ begin
   Self.FWorker := Self.CreateWorkerThread;
   Self.FCurrentClient := nil;
   Self.FCurrentClientLock := TCriticalSection.Create;
+  Self.UserObject := nil;
+  Self.UserString := '';
 end;
 
 destructor TAsyncHTTP.Destroy;
 begin
   Self.Terminate;
+  Self.UserObject := nil;
+  Self.UserString := '';
   inherited Destroy;
 end;
 
@@ -736,7 +743,7 @@ begin
   end;
 end;
 
-procedure TAsyncHTTP.Get(url: string; callback: THttpRequestCallbackFunction; headers: string; operationName: string; userObject: TObject; userString: string; clearDuplicates: Boolean);
+procedure TAsyncHTTP.Get(url: string; callback: THttpRequestCallbackFunction; headers: string; operationName: string; AUserObject: TObject; AUserString: string; clearDuplicates: Boolean);
 var
   req: THttpRequest;
 begin
@@ -747,12 +754,12 @@ begin
   req.Data := '';
   req.Callback := callback;
   req.OperationName := operationName;
-  req.UserObject := userObject;
-  req.UserString := userString;
+  req.UserObject := AUserObject;
+  req.UserString := AUserString;
   Self.EnqueueRequest(req, clearDuplicates);
 end;
 
-procedure TAsyncHTTP.Post(url: string; data: string; callback: THttpRequestCallbackFunction; headers: string; operationName: string; userObject: TObject; userString: string; clearDuplicates: Boolean);
+procedure TAsyncHTTP.Post(url: string; data: string; callback: THttpRequestCallbackFunction; headers: string; operationName: string; AUserObject: TObject; AUserString: string; clearDuplicates: Boolean);
 var
   req: THttpRequest;
 begin
@@ -763,12 +770,12 @@ begin
   req.Data := data;
   req.Callback := callback;
   req.OperationName := operationName;
-  req.UserObject := userObject;
-  req.UserString := userString;
+  req.UserObject := AUserObject;
+  req.UserString := AUserString;
   Self.EnqueueRequest(req, clearDuplicates);
 end;
 
-procedure TAsyncHTTP.HttpMethod(method: string; url: string; callback: THttpRequestCallbackFunction; headers: string; data: string; operationName: string; userObject: TObject; userString: string; clearDuplicates: Boolean);
+procedure TAsyncHTTP.HttpMethod(method: string; url: string; callback: THttpRequestCallbackFunction; headers: string; data: string; operationName: string; AUserObject: TObject; AUserString: string; clearDuplicates: Boolean);
 var
   req: THttpRequest;
 begin
@@ -780,8 +787,8 @@ begin
   req.Data := data;
   req.Callback := callback;
   req.OperationName := operationName;
-  req.UserObject := userObject;
-  req.UserString := userString;
+  req.UserObject := AUserObject;
+  req.UserString := AUserString;
   Self.EnqueueRequest(req, clearDuplicates);
 end;
 

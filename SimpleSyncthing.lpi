@@ -327,7 +327,7 @@
     </Other>
   </CompilerOptions>
   <Debugging>
-    <Exceptions Count="5">
+    <Exceptions Count="6">
       <Item1>
         <Name Value="EAbort"/>
       </Item1>
@@ -343,6 +343,9 @@
       <Item5>
         <Name Value="EHTTPClient"/>
       </Item5>
+      <Item6>
+        <Name Value="EWriteError"/>
+      </Item6>
     </Exceptions>
   </Debugging>
 </CONFIG>
