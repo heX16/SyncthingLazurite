@@ -114,7 +114,8 @@ type
   private
     FConnectTimeout: Integer;
     FQueue: TDequeHttpRequest;
-    FQueueLock: TCriticalSection;
+    // Lock access to `FQueue` and `free(Request)`
+    FQueueAndFreeLock: TCriticalSection;
     FQueueEvent: TEvent;
     FWorker: TRequestWorkerThread;
     FNamedRequestsDict: TDictHttpRequest;
@@ -192,8 +193,12 @@ type
     // Abort the active connection (if any) and clear the queue
     procedure CancelAll();
 
-    // Check operation status by name
+    // Check operation by name
     function RequestInQueue(const OperationName: string): Boolean;
+
+    // Check operation is present and still queued (not processing)
+    // Return true only if request is still queued and not in processing
+    function RequestInQueueCold(const OperationName: string): Boolean;
 
     // Get current number of queued requests (excluding nil gaps)
     function QueueCount(): SizeUInt;
@@ -381,7 +386,7 @@ begin
 
       req := nil;
 
-      Self.FOwner.FQueueLock.Acquire;
+      Self.FOwner.FQueueAndFreeLock.Acquire;
       try
         if Self.FOwner.FQueue.Size() > 0 then
         begin
@@ -391,7 +396,7 @@ begin
           Self.FOwner.FQueue.PopFront();
         end;
       finally
-        Self.FOwner.FQueueLock.Release;
+        Self.FOwner.FQueueAndFreeLock.Release;
       end;
 
       if req = nil then Break;
@@ -580,8 +585,17 @@ begin
   Self.Synchronize(@DoInvokeCallback);
 
   // After callback returns, cleanup
-  Self.FOwner.RemoveRequestName(ARequest.OperationName);
-  FreeAndNil(ARequest);
+
+  // Remove request name from dictionary if it's the last request with this name
+  if Self.FOwner.GetRequestByName(ARequest.OperationName) = ARequest then
+    Self.FOwner.RemoveRequestName(ARequest.OperationName);
+
+  Self.FOwner.FQueueAndFreeLock.Acquire;
+  try
+    FreeAndNil(ARequest);
+  finally
+    Self.FOwner.FQueueAndFreeLock.Release;
+  end;
   Self.FOwner.FIsProcessing := False;
 end;
 
@@ -596,7 +610,7 @@ begin
   Self.FTerminated := False;
   Self.FKeepConnection := False;
   Self.FQueue := TDequeHttpRequest.Create;
-  Self.FQueueLock := TCriticalSection.Create;
+  Self.FQueueAndFreeLock := TCriticalSection.Create;
   // Auto-reset event, initially non-signaled
   Self.FQueueEvent := TEvent.Create(nil, False, False, '');
   Self.FNamedRequestsDict := TDictHttpRequest.Create;
@@ -622,13 +636,13 @@ begin
   if ARequest.OperationName <> '' then
     Self.AddRequestName(ARequest);
 
-  Self.FQueueLock.Acquire;
+  Self.FQueueAndFreeLock.Acquire;
   try
     ARequest.State := osQueued;
     Self.FQueue.PushBack(ARequest);
     // Do not free ARequest here; ownership passes to the queue/worker
   finally
-    Self.FQueueLock.Release;
+    Self.FQueueAndFreeLock.Release;
   end;
   // Wake worker
   Self.FQueueEvent.SetEvent;
@@ -654,8 +668,10 @@ end;
 procedure TAsyncHTTP.AddRequestName(const ARequest: THttpRequest);
 begin
   if (ARequest = nil) or (ARequest.OperationName = '') then Exit;
+
   Self.FNamedRequestsLock.Acquire;
   try
+    // replace existing previous request with the same name
     Self.FNamedRequestsDict[ARequest.OperationName] := ARequest;
   finally
     Self.FNamedRequestsLock.Release;
@@ -665,6 +681,8 @@ end;
 procedure TAsyncHTTP.RemoveRequestName(const OperationName: string);
 begin
   if OperationName = '' then Exit;
+  if Self.GetRequestByName(OperationName) = nil then Exit;
+
   Self.FNamedRequestsLock.Acquire;
   try
     Self.FNamedRequestsDict.delete(OperationName);
@@ -679,13 +697,14 @@ var
   req: THttpRequest;
 begin
   if OperationName = '' then Exit;
+  if Self.GetRequestByName(OperationName) = nil then Exit;
 
-  // Remove name from mapping; it will be re-added for a new request
-  RemoveRequestName(OperationName);
-
-  // Remove all matching queued requests and compact the deque using Erase
-  Self.FQueueLock.Acquire;
+  Self.FQueueAndFreeLock.Acquire;
   try
+    // Remove name from mapping; it will be re-added for a new request
+    RemoveRequestName(OperationName);
+
+    // Remove all matching queued requests and compact the deque using Erase
     i := 0;
     while i < Self.FQueue.Size() do
     begin
@@ -699,7 +718,7 @@ begin
       Inc(i);
     end;
   finally
-    Self.FQueueLock.Release;
+    Self.FQueueAndFreeLock.Release;
   end;
 end;
 
@@ -758,18 +777,9 @@ var
 begin
   if Self.FTerminated then Exit;
   Self.FTerminated := True;
+  // Self.Pause := True; // WIP
   
-  // Abort active client/socket ASAP
-  if Assigned(Self.FCurrentClientLock) then
-  begin
-    Self.FCurrentClientLock.Acquire;
-    try
-      if Assigned(Self.FCurrentClient) then
-        Self.FCurrentClient.AbortRequest;
-    finally
-      Self.FCurrentClientLock.Release;
-    end;
-  end;
+  AbortActiveConnection();
 
   if Assigned(Self.FWorker) then
   begin
@@ -780,7 +790,7 @@ begin
     FreeAndNil(Self.FWorker);
   end;
 
-  Self.FQueueLock.Acquire;
+  Self.FQueueAndFreeLock.Acquire;
   try
     while (Self.FQueue.Size() > 0) do
     begin
@@ -790,11 +800,11 @@ begin
         FreeAndNil(req);
     end;
   finally
-    Self.FQueueLock.Release;
+    Self.FQueueAndFreeLock.Release;
   end;
 
   FreeAndNil(Self.FQueueEvent);
-  FreeAndNil(Self.FQueueLock);
+  FreeAndNil(Self.FQueueAndFreeLock);
   FreeAndNil(Self.FNamedRequestsLock);
   FreeAndNil(Self.FNamedRequestsDict);
   FreeAndNil(Self.FQueue);
@@ -827,7 +837,8 @@ begin
   oldQueue := nil;
   oldDict := nil;
 
-  Self.FQueueLock.Acquire;
+  // Deattach queue and names from the instance
+  Self.FQueueAndFreeLock.Acquire;
   Self.FNamedRequestsLock.Acquire;
   try
     oldQueue := Self.FQueue;
@@ -836,10 +847,10 @@ begin
     Self.FNamedRequestsDict := TDictHttpRequest.Create;
   finally
     Self.FNamedRequestsLock.Release;
-    Self.FQueueLock.Release;
+    Self.FQueueAndFreeLock.Release;
   end;
 
-  // Now safely free queued requests and old containers outside locks
+  // Now safely free old containers outside locks
   if Assigned(oldQueue) then
   begin
     for i := 0 to oldQueue.Size() - 1 do
@@ -873,11 +884,21 @@ begin
   Result := GetRequestByName(OperationName) <> nil;
 end;
 
+function TAsyncHTTP.RequestInQueueCold(const OperationName: string): Boolean;
+var
+  req: THttpRequest;
+begin
+  Self.FQueueAndFreeLock.Acquire;
+  req := GetRequestByName(OperationName);
+  Result := (req <> nil) and (req.State = osQueued);
+  Self.FQueueAndFreeLock.Release;
+end;
+
 function TAsyncHTTP.QueueCount: SizeUInt;
 begin
-  Self.FQueueLock.Acquire;
+  Self.FQueueAndFreeLock.Acquire;
   Result := Self.FQueue.Size();
-  Self.FQueueLock.Release;
+  Self.FQueueAndFreeLock.Release;
 end;
 
 end.
