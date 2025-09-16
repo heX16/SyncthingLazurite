@@ -22,6 +22,12 @@ type
     edHintFieldsList: TLabeledEdit;
     listEndpoints: TListBox;
     MainMenu: TMainMenu;
+    mnCopyExpandRecursive: TMenuItem;
+    mnCopyValueText: TMenuItem;
+    mnCopyValue: TMenuItem;
+    mnCopyName: TMenuItem;
+    mnCopyJsonRecursive: TMenuItem;
+    mnCopyPath: TMenuItem;
     mnTestConnect: TMenuItem;
     mnTestJson: TMenuItem;
     mnTestGrp: TMenuItem;
@@ -29,6 +35,7 @@ type
     mnCollapseAll: TMenuItem;
     mnExpandAll: TMenuItem;
     panelHintFieldsList: TPanel;
+    PopupMenuJson: TPopupMenu;
     Splitter2: TSplitter;
     Splitter3: TSplitter;
     TimerUpdateTreeView: TTimer;
@@ -37,6 +44,12 @@ type
     procedure FormCreate(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
     procedure listGetAPIClick(Sender: TObject);
+    procedure mnCopyExpandRecursiveClick(Sender: TObject);
+    procedure mnCopyJsonRecursiveClick(Sender: TObject);
+    procedure mnCopyNameClick(Sender: TObject);
+    procedure mnCopyPathClick(Sender: TObject);
+    procedure mnCopyValueClick(Sender: TObject);
+    procedure mnCopyValueTextClick(Sender: TObject);
     procedure mnShowHintPanelClick(Sender: TObject);
     procedure mnTestConnectClick(Sender: TObject);
     procedure mnTestJsonClick(Sender: TObject);
@@ -74,7 +87,7 @@ implementation
 
 uses
   Dialogs,
-  jsonparser, jsonscanner, StrUtils;
+  jsonparser, jsonscanner, StrUtils, Clipbrd;
 
 {$R *.lfm}
 
@@ -180,6 +193,7 @@ begin
 
           N2.ImageIndex := JSONTypeToImageIndex(D.JSONType);
           N2.SelectedIndex := JSONTypeToImageIndex(D.JSONType);
+          N2.Data:=D;
 
           // notify about newly added node
           JSONDataAddToTreeView_OnAddingNode(TV, N, N2, D);
@@ -256,6 +270,145 @@ begin
 
     Core.API_Get(self.endpoint, @httpGetAPItoTree);
   end;
+end;
+
+procedure TfrmJSONView.mnCopyExpandRecursiveClick(Sender: TObject);
+begin
+  // expand tree of current item in treeJsonData
+  if Assigned(treeJsonData.Selected) then
+    treeJsonData.Selected.Expand(True);
+end;
+
+procedure TfrmJSONView.mnCopyJsonRecursiveClick(Sender: TObject);
+begin
+  // copy json as text of current item in treeJsonData
+  // with sub items - recursive
+  if Assigned(treeJsonData.Selected) and Assigned(treeJsonData.Selected.Data) then
+    Clipboard.AsText := TJSONData(treeJsonData.Selected.Data).FormatJSON()
+  else
+    Clipboard.AsText := '';
+end;
+
+procedure TfrmJSONView.mnCopyNameClick(Sender: TObject);
+var
+  node: TTreeNode;
+  nameOnly: string;
+  p: Integer;
+begin
+  // copy name of element of current item in treeJsonData
+  // if name not present - copy empty string
+  node := treeJsonData.Selected;
+  nameOnly := '';
+  if Assigned(node) then
+  begin
+    nameOnly := node.Text;
+    // cut value suffix like ": value"
+    p := Pos(':', nameOnly);
+    if p > 0 then
+      nameOnly := Trim(Copy(nameOnly, 1, p - 1));
+    // cut appended hints like " (field1:..., field2:...)"
+    p := Pos(' (', nameOnly);
+    if p > 0 then
+      nameOnly := Trim(Copy(nameOnly, 1, p - 1));
+  end;
+  Clipboard.AsText := nameOnly;
+end;
+
+procedure TfrmJSONView.mnCopyPathClick(Sender: TObject);
+var
+  node, cur: TTreeNode;
+  parts: TStringList;
+  token, path, t: string;
+  p: Integer;
+  i, idx: Integer;
+begin
+  // copy path of current item in treeJsonData
+  node := treeJsonData.Selected;
+  path := '';
+  if Assigned(node) then
+  begin
+    parts := TStringList.Create;
+    try
+      cur := node;
+      while Assigned(cur) do
+      begin
+        token := cur.Text;
+        // get name only (before ':' and before ' (')
+        p := Pos(':', token);
+        if p > 0 then
+          token := Trim(Copy(token, 1, p - 1));
+        p := Pos(' (', token);
+        if p > 0 then
+          token := Trim(Copy(token, 1, p - 1));
+        token := Trim(token);
+        if token <> '' then
+          parts.Add(token);
+        cur := cur.Parent;
+      end;
+      // build path from root to selected
+      for i := parts.Count - 1 downto 0 do
+      begin
+        t := parts[i];
+        if TryStrToInt(t, idx) then
+        begin
+          // array index style: previous part + [idx]
+          if path = '' then
+            path := '[' + t + ']'
+          else
+            path := path + '[' + t + ']';
+        end
+        else
+        begin
+          if path = '' then
+            path := t
+          else
+            path := path + '.' + t;
+        end;
+      end;
+    finally
+      parts.Free;
+    end;
+  end;
+  Clipboard.AsText := path;
+end;
+
+procedure TfrmJSONView.mnCopyValueClick(Sender: TObject);
+var
+  node: TTreeNode;
+  s: string;
+  data: TJSONData;
+begin
+  // copy value of element of current item in treeJsonData
+  // if value not present - copy empty string
+  node := treeJsonData.Selected;
+  s := '';
+  if Assigned(node) and Assigned(node.Data) then
+  begin
+    data := TJSONData(node.Data);
+    case data.JSONType of
+      jtString,
+      jtNumber,
+      jtBoolean:
+        s := data.AsString;
+      jtNull:
+        s := '';
+    else
+      s := '';
+    end;
+  end;
+  Clipboard.AsText := s;
+end;
+
+procedure TfrmJSONView.mnCopyValueTextClick(Sender: TObject);
+var
+  node: TTreeNode;
+begin
+  // copy JSON literal (quoted string, numbers, booleans, null; objects/arrays as compact JSON)
+  node := treeJsonData.Selected;
+  if Assigned(node) and Assigned(node.Data) then
+    Clipboard.AsText := TJSONData(node.Data).AsJSON
+  else
+    Clipboard.AsText := '';
 end;
 
 procedure TfrmJSONView.btnHintUpdClick(Sender: TObject);

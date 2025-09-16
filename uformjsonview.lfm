@@ -8,7 +8,6 @@ object frmJSONView: TfrmJSONView
   ClientWidth = 513
   DesignTimePPI = 120
   Menu = MainMenu
-  LCLVersion = '4.2.0.0'
   OnCreate = FormCreate
   OnDestroy = FormDestroy
   object listEndpoints: TListBox
@@ -115,6 +114,7 @@ object frmJSONView: TfrmJSONView
     Width = 193
     Align = alClient
     Images = imgJSON
+    PopupMenu = PopupMenuJson
     TabOrder = 2
   end
   object Splitter2: TSplitter
@@ -391,5 +391,33 @@ object frmJSONView: TfrmJSONView
     OnTimer = TimerUpdateTreeViewTimer
     Left = 201
     Top = 296
+  end
+  object PopupMenuJson: TPopupMenu
+    Left = 200
+    Top = 376
+    object mnCopyPath: TMenuItem
+      Caption = 'mnCopyPath'
+      OnClick = mnCopyPathClick
+    end
+    object mnCopyJsonRecursive: TMenuItem
+      Caption = 'mnCopyJsonRecursive'
+      OnClick = mnCopyJsonRecursiveClick
+    end
+    object mnCopyName: TMenuItem
+      Caption = 'mnCopyName'
+      OnClick = mnCopyNameClick
+    end
+    object mnCopyValue: TMenuItem
+      Caption = 'mnCopyValue'
+      OnClick = mnCopyValueClick
+    end
+    object mnCopyValueText: TMenuItem
+      Caption = 'mnCopyValueText'
+      OnClick = mnCopyValueTextClick
+    end
+    object mnCopyExpandRecursive: TMenuItem
+      Caption = 'mnCopyExpandRecursive'
+      OnClick = mnCopyExpandRecursiveClick
+    end
   end
 end
