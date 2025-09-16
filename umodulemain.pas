@@ -9,7 +9,8 @@ uses
   AsyncHttp,
   Classes, SysUtils, FileUtil, Controls, ExtCtrls, Menus, ActnList,
   VirtualTrees,
-  UniqueInstance;
+  UniqueInstance,
+  syncthing_api;
 
 resourcestring
   cStrLocal = ' (local)';
@@ -22,6 +23,8 @@ type
     actCopySelectedDevID: TAction;
     actAbout: TAction;
     actCloseGUI: TAction;
+    actConnect: TAction;
+    actDisconnect: TAction;
     actShowConsole: TAction;
     actShowEvents: TAction;
     actSetStateStop: TAction;
@@ -72,7 +75,9 @@ type
     UniqueInstance1: TUniqueInstance;
     procedure actAboutExecute(Sender: TObject);
     procedure actCloseGUIExecute(Sender: TObject);
+    procedure actConnectExecute(Sender: TObject);
     procedure actCopySelectedDevIDExecute(Sender: TObject);
+    procedure actDisconnectExecute(Sender: TObject);
     procedure actShowConsoleExecute(Sender: TObject);
     procedure actShowEventsExecute(Sender: TObject);
     procedure actShowOptionsExecute(Sender: TObject);
@@ -81,8 +86,13 @@ type
     procedure actSetStateRunExecute(Sender: TObject);
     procedure actSetStateStopExecute(Sender: TObject);
     procedure DataModuleCreate(Sender: TObject);
+    procedure DataModuleDestroy(Sender: TObject);
     procedure TrayIconDblClick(Sender: TObject);
   private
+    FSyncthingAPI: TSyncthingAPI; // Core Syncthing API instance (created manually)
+    procedure Syn_OnConnected(Sender: TObject);
+    procedure Syn_OnEvent(Sender: TObject; Event: TJSONObject);
+    procedure Syn_OnTreeChanged(Sender: TObject; const Path: UTF8String);
   public
 
   end;
@@ -136,6 +146,25 @@ begin
   if (Length(CpText)>1) and (CpText[1]=#13) then
     Delete(CpText, 1, 1);
   Clipboard.AsText:=CpText;
+end;
+
+procedure TModuleMain.actConnectExecute(Sender: TObject);
+begin
+  // Configure endpoint and API key from Core settings
+  FSyncthingAPI.SetEndpoint(
+    Core.SyncthigHost,
+    Core.SyncthigPort,
+    Pos('https://', LowerCase(Core.SyncthigServer)) = 1
+  );
+  FSyncthingAPI.SetAPIKey(Core.APIKey);
+
+  // Connect to Syncthing
+  FSyncthingAPI.Connect();
+end;
+
+procedure TModuleMain.actDisconnectExecute(Sender: TObject);
+begin
+  FSyncthingAPI.Disconnect();
 end;
 
 procedure TModuleMain.actShowConsoleExecute(Sender: TObject);
@@ -208,6 +237,34 @@ end;
 
 procedure TModuleMain.DataModuleCreate(Sender: TObject);
 begin
+  // Create Syncthing API instance manually (do not place on form)
+  FSyncthingAPI := TSyncthingAPI.Create(Self);
+  // Bind event handlers
+  FSyncthingAPI.OnConnected := @Syn_OnConnected;
+  FSyncthingAPI.OnEvent := @Syn_OnEvent;
+  FSyncthingAPI.OnTreeChanged := @Syn_OnTreeChanged;
+end;
+
+procedure TModuleMain.DataModuleDestroy(Sender: TObject);
+begin
+  // Free Syncthing API instance
+  if Assigned(FSyncthingAPI) then
+    FreeAndNil(FSyncthingAPI);
+end;
+
+procedure TModuleMain.Syn_OnConnected(Sender: TObject);
+begin
+  // TODO: add UI updates or logging on successful connection
+end;
+
+procedure TModuleMain.Syn_OnEvent(Sender: TObject; Event: TJSONObject);
+begin
+  // TODO: process raw event or forward to UI/log
+end;
+
+procedure TModuleMain.Syn_OnTreeChanged(Sender: TObject; const Path: UTF8String);
+begin
+  // TODO: react to JSON tree updates (refresh views as needed)
 end;
 
 end.

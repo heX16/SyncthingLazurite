@@ -300,7 +300,7 @@ end;
 
 procedure TfrmJSONView.mnTestConnectClick(Sender: TObject);
 begin
-  //
+  // TODO: remove me
   sync_api := TSyncthingAPI.Create(self);
   sync_api.SetAPIKey(Core.APIKey);
   sync_api.SetEndpoint('127.0.0.1', 8384, false);
@@ -309,7 +309,7 @@ end;
 
 procedure TfrmJSONView.mnTestJsonClick(Sender: TObject);
 begin
-  ShowJSONDocument(self.treeJsonData, sync_api.Root, false);
+  ShowJSONDocument(self.treeJsonData, sync_api.TreeRoot, false);
 end;
 
 procedure TfrmJSONView.ShowJSONDocument(TV: TTreeView; DataSource: TJSONData;

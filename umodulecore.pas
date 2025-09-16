@@ -1233,8 +1233,9 @@ begin
   SyncthigHome:=GetSyncthigHomePath();
   APIKey:=ReadAPIKeyFromCfg();
 
-  TimerStartOnStart.Enabled:=frmOptions.chRunSyncOnStart.Checked;
-  TimerCheckOnline.Enabled:=frmOptions.chRunSyncOnStart.Checked;
+  // TODO: migrate
+  //TimerStartOnStart.Enabled:=frmOptions.chRunSyncOnStart.Checked;
+  //TimerCheckOnline.Enabled:=frmOptions.chRunSyncOnStart.Checked;
 
   Inited := true;
 end;

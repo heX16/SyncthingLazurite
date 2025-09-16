@@ -28,7 +28,7 @@ object frmMain: TfrmMain
       Height = 40
       Top = 5
       Width = 160
-      Action = Core.actStartAndConnect
+      Action = ModuleMain.actConnect
       TabOrder = 0
       OnClick = btnStartClick
     end
@@ -37,7 +37,7 @@ object frmMain: TfrmMain
       Height = 40
       Top = 5
       Width = 163
-      Action = Core.actStop
+      Action = ModuleMain.actDisconnect
       TabOrder = 1
       OnClick = btnStopClick
     end

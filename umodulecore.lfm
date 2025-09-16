@@ -25,6 +25,7 @@ object Core: TCore
     Top = 20
   end
   object TimerReadStdOutput: TTimer
+    Enabled = False
     OnTimer = TimerReadStdOutputTimer
     Left = 70
     Top = 80

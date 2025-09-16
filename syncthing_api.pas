@@ -26,19 +26,20 @@ type
   // ###
   TSyncthingFSM_Command = (
     ssCmdNone,
-    ssCmdConnect,
-    ssCmdDisconnect,
-    ssCmdPause,
-    ssCmdPauseRelease,
+    ssCmdConnect, // user Cmd
+    ssCmdDisconnect, // user Cmd
+    ssCmdPause, // user Cmd
+    ssCmdPauseRelease, // user Cmd
     ssCmdConnectingPingAck,
     ssCmdConnectingPingFault,
     ssCmdConnectingAcceptedData,
-    // TODO: add  `TimerConnectingTimeout`
     ssCmdConnectingTimeout,
     ssCmdLongPollingTimeToAutoReconnect,
     ssCmdLongPollingDisconnected,
     ssCmdLongPollingTimerRestore,
-    ssCmdLongPollingError
+    ssCmdLongPollingError,
+    ssCmdConnectionStable, // user Cmd
+    ssCmdConnectionUnstable // user Cmd
   );
 
   // Event types (callbacks)
@@ -49,6 +50,8 @@ type
   TTreeChangedEvent = procedure(Sender: TObject; const Path: UTF8String) of object;
   TBeforeAfterTreeModifyEvent = procedure(Sender: TObject) of object;
   TLongPollingDropHandler = procedure(Sender: TObject) of object;
+  // Fired when FSM state changes
+  TStateChangedEvent = procedure(Sender: TObject; NewState: TSyncthingFSM_State) of object;
 
   // Endpoints enum for REST initial sync
   TSyncthingEndpointId = (
@@ -78,7 +81,8 @@ type
   TSyncthingAPI = class(TComponent)
   private
     FState: TSyncthingFSM_State;
-    FRoot: TJSONObject;            // Single in-memory JSON tree root
+    FTreeRoot: TJSONObject;            // Single in-memory JSON tree root
+
     FAPIKey: UTF8String;           // X-API-Key
     FHost: UTF8String;             // Syncthing host
     FPort: Integer;                // Syncthing port
@@ -109,10 +113,12 @@ type
     FOnHardDisconnect: TNotifyEventObj;
     FOnLongPollingDrop: TLongPollingDropHandler;
     FOnBeforeLongPollingRestart: TNotifyEventObj;
+    FOnConnectionUnstable: TNotifyEventObj;
     FOnEvent: TEventJsonEvent;
     FOnTreeChanged: TTreeChangedEvent;
     FOnBeforeTreeModify: TBeforeAfterTreeModifyEvent;
     FOnAfterTreeModify: TBeforeAfterTreeModifyEvent;
+    FOnStateChanged: TStateChangedEvent;
     // State process. (FSM)
     procedure FSM_Process();
     // Internal helpers
@@ -216,6 +222,8 @@ type
     procedure SetIOTimeout(Value: Integer); virtual;
     procedure SetConnectingTimeout(Value: Integer); virtual;
     function GetConnectingTimeout: Integer; virtual;
+    { Sets FSM state and triggers OnStateChanged }
+    procedure SetState(Value: TSyncthingFSM_State); virtual;
 
     // Properties
     property ConnectTimeout: Integer read FConnectTimeout write SetConnectTimeout;
@@ -233,7 +241,7 @@ type
     { Current finite state machine command }
     property Command: TSyncthingFSM_Command read FStateCommand write FStateCommand;
     { In-memory JSON root with all synchronized data }
-    property Root: TJSONObject read FRoot;
+    property TreeRoot: TJSONObject read FTreeRoot;
     { Last seen event id (from Event API) }
     property EventsLastId: Int64 read FEventsLastId;
 
@@ -255,6 +263,8 @@ type
     property OnLongPollingDrop: TLongPollingDropHandler read FOnLongPollingDrop write FOnLongPollingDrop;
     { Called before periodic long-polling restart }
     property OnBeforeLongPollingRestart: TNotifyEventObj read FOnBeforeLongPollingRestart write FOnBeforeLongPollingRestart;
+    { Called when entering unstable online state }
+    property OnConnectionUnstable: TNotifyEventObj read FOnConnectionUnstable write FOnConnectionUnstable;
     { Called on every received raw event (before integration) }
     property OnEvent: TEventJsonEvent read FOnEvent write FOnEvent;
     { Called after integration when a JSON tree path was updated }
@@ -263,6 +273,8 @@ type
     property OnBeforeTreeModify: TBeforeAfterTreeModifyEvent read FOnBeforeTreeModify write FOnBeforeTreeModify;
     { Called after modifying the JSON tree }
     property OnAfterTreeModify: TBeforeAfterTreeModifyEvent read FOnAfterTreeModify write FOnAfterTreeModify;
+    { Called when FSM state changes }
+    property OnStateChanged: TStateChangedEvent read FOnStateChanged write FOnStateChanged;
   end;
 
 implementation
@@ -321,7 +333,7 @@ procedure TSyncthingAPI.FSM_Process();
       FOnBeforeDisconnect(Self);
     if Command = ssCmdDisconnect then
     begin
-      FState:=ssDisconnecting;
+      SetState(ssDisconnecting);
       Result := true; // continue;
     end;
   end;
@@ -338,7 +350,7 @@ begin
           // Start initial ping; CB_CheckOnline drives next transitions
           API_Get('system/ping', @CB_CheckOnline, '');
           FTimerConnectingTimeout.Enabled := True;
-          FState:=ssConnectingPingWait;
+          SetState(ssConnectingPingWait);
         end;
 
       ssConnectingPingWait:
@@ -348,12 +360,12 @@ begin
              (Command = ssCmdDisconnect)
           then
           begin
-            FState:=ssOffline;
+            SetState(ssOffline);
             FHTTP.CancelAll();
           end;
           if Command = ssCmdConnectingPingAck then
           begin
-            FState:=ssConnectingWaitData;
+            SetState(ssConnectingWaitData);
             LoadAllData();
           end;
         end;
@@ -365,7 +377,7 @@ begin
             if FHTTP.QueueCount = 0 then
             begin
               // All data loaded, ready to "online status" ('.')\
-              FState:=ssOnline;
+              SetState(ssOnline);
               FTimerConnectingTimeout.Enabled := False;
 
               Command := ssCmdLongPollingTimeToAutoReconnect;
@@ -379,7 +391,7 @@ begin
              (Command = ssCmdDisconnect)
           then
           begin
-            FState:=ssOffline;
+            SetState(ssOffline);
             FHTTP.CancelAll();
           end;
         end;
@@ -389,13 +401,6 @@ begin
           if ProcessCmdDisconnect() then
             continue;
 
-          if Command = ssCmdLongPollingError then
-          begin
-            // goto "Unstable"
-            FState:=ssOnlineUnstable;
-            FTimerLongPollingErrorRestore.Enabled:=true;
-            continue;
-          end;
           if Command = ssCmdLongPollingDisconnected then
           begin
             if not FHTTPEvents.RequestInQueueCold('pooling') and
@@ -410,7 +415,18 @@ begin
           if Command = ssCmdPause then
           begin
             StopLongPolling();
-            FState:=ssOnlinePaused;
+            SetState(ssOnlinePaused);
+          end;
+          if (Command = ssCmdLongPollingError) or 
+             (Command = ssCmdConnectionUnstable) then
+          begin
+            // goto "Unstable"
+            SetState(ssOnlineUnstable);
+            if Command = ssCmdLongPollingError then
+              FTimerLongPollingErrorRestore.Enabled:=true;
+            if Assigned(FOnConnectionUnstable) then
+              FOnConnectionUnstable(Self);
+            continue;
           end;
           if Command = ssCmdLongPollingTimerRestore then
           begin
@@ -427,16 +443,21 @@ begin
             if FHTTPEvents.RequestInQueue('pooling') then
             begin
               // goto "Online"
-              FState:=ssOnline;
+              SetState(ssOnline);
               continue;
             end
             else
               StartLongPolling();
           end;
+          if Command = ssCmdConnectionStable then
+          begin
+            SetState(ssOnline);
+            continue;
+          end;
           if Command = ssCmdPause then
           begin
             StopLongPolling();
-            FState:=ssOnlinePaused;
+            SetState(ssOnlinePaused);
             continue;
           end;
         end;
@@ -448,7 +469,7 @@ begin
 
         if Command = ssCmdPauseRelease then
         begin
-          FState:=ssOnline;
+          SetState(ssOnline);
           StartLongPolling();
         end;
       end;
@@ -458,7 +479,7 @@ begin
           FTimerConnectingTimeout.Enabled := False;
           StopLongPolling();
           FHTTP.CancelAll();
-          FState := ssOffline;
+          SetState(ssOffline);
 
           if Assigned(FOnDisconnectedByUser) then
              FOnDisconnectedByUser(Self);
@@ -475,7 +496,7 @@ begin
 
             if Command = ssCmdConnect then
             begin
-              FState := ssConnectingInitAndPing;
+              SetState(ssConnectingInitAndPing);
               continue;
             end;
           end;
@@ -514,7 +535,7 @@ constructor TSyncthingAPI.Create(AOwner: TComponent);
 begin
   inherited Create(AOwner);
   FState := ssOffline;
-  FRoot := CreateDefaultRoot;
+  FTreeRoot := CreateDefaultRoot;
   FAPIKey := '';
   FHost := '127.0.0.1';
   FPort := 8384;
@@ -550,8 +571,8 @@ begin
     FreeAndNil(FHTTP);
   if Assigned(FHTTPEvents) then
     FreeAndNil(FHTTPEvents);
-  if Assigned(FRoot) then
-    FreeAndNil(FRoot);
+  if Assigned(FTreeRoot) then
+    FreeAndNil(FTreeRoot);
   inherited Destroy;
 end;
 
@@ -632,7 +653,7 @@ begin
     end;
 
 
-    SetAtPath(FRoot, JsonPath, NewData);
+    SetAtPath(FTreeRoot, JsonPath, NewData);
     NotifyTreeChanged(JsonPath);
   finally
     EndTreeModify;
@@ -868,6 +889,16 @@ begin
     Result := FTimerConnectingTimeout.Interval
   else
     Result := 0;
+end;
+
+procedure TSyncthingAPI.SetState(Value: TSyncthingFSM_State);
+begin
+  if FState <> Value then
+  begin
+    FState := Value;
+    if Assigned(FOnStateChanged) then
+      FOnStateChanged(Self, FState);
+  end;
 end;
 
 function TSyncthingAPI.IsOnline: Boolean;

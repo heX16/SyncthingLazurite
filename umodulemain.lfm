@@ -1,5 +1,6 @@
 object ModuleMain: TModuleMain
   OnCreate = DataModuleCreate
+  OnDestroy = DataModuleDestroy
   OldCreateOrder = False
   Height = 349
   HorizontalOffset = 409
@@ -948,6 +949,14 @@ object ModuleMain: TModuleMain
     object actShowConsole: TAction
       Caption = 'actShowConsole'
       OnExecute = actShowConsoleExecute
+    end
+    object actConnect: TAction
+      Caption = 'actConnect'
+      OnExecute = actConnectExecute
+    end
+    object actDisconnect: TAction
+      Caption = 'actDisconnect'
+      OnExecute = actDisconnectExecute
     end
   end
   object TimerUpdate: TTimer
