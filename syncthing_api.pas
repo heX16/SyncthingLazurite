@@ -46,8 +46,6 @@ type
   TNotifyEventObj = procedure(Sender: TObject) of object;
   TConnectErrorEvent = procedure(Sender: TObject; const MessageText: UTF8String) of object;
   TEventJsonEvent = procedure(Sender: TObject; Event: TJSONObject) of object;
-  // Fired when a branch in the in-memory JSON tree was modified; Path is a JSON path
-  TTreeChangedEvent = procedure(Sender: TObject; const Path: UTF8String) of object;
   TBeforeAfterTreeModifyEvent = procedure(Sender: TObject) of object;
   TLongPollingDropHandler = procedure(Sender: TObject) of object;
   // Fired when FSM state changes
@@ -261,6 +259,10 @@ type
     epEndpointsCount
   );
 
+  // Fired when a branch in the in-memory JSON tree was modified
+  // EndpointId is resolved by URI, Path is a JSON path (copy of REST URI)
+  TTreeChangedEvent = procedure(Sender: TObject; EndpointId: TSyncthingEndpointId; const Path: UTF8String) of object;
+
 const
   // Typed constant containing all endpoint ids
   SyncthingEndpointsBasic: array of TSyncthingEndpointId = (
@@ -357,12 +359,18 @@ type
     // JSON tree helpers
     { Creates default JSON root object used before initial sync }
     function CreateDefaultRoot: TJSONObject; virtual;
+    { Returns JSON string used to initialize default root }
+    function GetDefaultRootStr: UTF8String; virtual;
     { Notifies listeners and prepares to modify the JSON tree }
     procedure BeginTreeModify(); virtual;
     { Notifies listeners and finalizes JSON tree modification }
     procedure EndTreeModify(); virtual;
     { Replaces a branch in the "JSON Tree" with NewData }
     procedure JSONTreeNewData(const JsonPath: UTF8String; NewData: TJSONData); virtual;
+    { Updates typed JSON pointers (config, stats, etc.) by resolving paths in FTreeRoot }
+    procedure UpdateJsonPointersFromTree(EndpointId: TSyncthingEndpointId); virtual;
+    { Updates all typed JSON pointers using JsonPointerEndpointsList }
+    procedure UpdateAllJsonPointersFromTree; virtual;
 
     { Load all data from REST resources to JSON tree }
     procedure LoadAllData(); virtual;
@@ -396,8 +404,18 @@ type
   public
     { Maps endpoint id to REST URI (under /rest/) }
     class function GetEndpointURI(Id: TSyncthingEndpointId): UTF8String; static;
+    { Resolves endpoint id by its REST URI; returns epUnknown if not found }
+    class function GetEndpointIdByURI(const URI: UTF8String): TSyncthingEndpointId; static;
     // Maps endpoint id to "JSON Tree" storage path
     function GetEndpointJsonTreePath(Id: TSyncthingEndpointId): UTF8String; virtual;
+  public
+    config: TJSONObject;
+    config_folders: TJSONArray;
+    config_devices: TJSONArray;
+    config_options: TJSONObject;
+    stats_device: TJSONArray;
+    stats_folder: TJSONArray;
+  
   public
     { Creates the core object without starting any network activity }
     constructor Create(AOwner: TComponent); override;
@@ -717,8 +735,8 @@ begin
     epConfig_RestartRequired:      Exit('config/restart-required');
     epConfig_Folders:              Exit('config/folders');
     epConfig_Devices:              Exit('config/devices');
-    epConfig_Folders_Subitems:     Exit('config/folders/subitems');
-    epConfig_Devices_Subitems:     Exit('config/devices/subitems');
+    epConfig_Folders_Subitems:     Exit('config/folders/@');
+    epConfig_Devices_Subitems:     Exit('config/devices/@');
     epConfig_Defaults_Folder:      Exit('config/defaults/folder');
     epConfig_Defaults_Device:      Exit('config/defaults/device');
     epConfig_Defaults_Ignores:     Exit('config/defaults/ignores');
@@ -888,15 +906,53 @@ begin
     FLongPollingRestartTimer.Enabled := False;
 end;
 
+function TSyncthingAPI.GetDefaultRootStr: UTF8String;
+begin
+  // Initial JSON tree structure (pretty formatted)
+  Result :=
+    '{'                             + LineEnding +
+    '  "system" : {'               + LineEnding +
+    '    "connections" : {'        + LineEnding +
+    '      "connections" : {'      + LineEnding +
+    '      },'                      + LineEnding +
+    '      "total" : {'            + LineEnding +
+    '        "at" : "",'         + LineEnding +
+    '        "inBytesTotal" : 0,'  + LineEnding +
+    '        "outBytesTotal" : 0'  + LineEnding +
+    '      }'                       + LineEnding +
+    '    },'                        + LineEnding +
+    '    "status" : {'             + LineEnding +
+    '      "myID" : "",'         + LineEnding +
+    '      "startTime" : "",'     + LineEnding +
+    '      "uptime" : 0'           + LineEnding +
+    '    },'                        + LineEnding +
+    '    "version" : {'            + LineEnding +
+    '      "longVersion" : "",'   + LineEnding +
+    '      "version" : ""'        + LineEnding +
+    '    }'                         + LineEnding +
+    '  },'                          + LineEnding +
+    '  "stats" : {'                + LineEnding +
+    '    "device" : {'             + LineEnding +
+    '    },'                        + LineEnding +
+    '    "folder" : {'             + LineEnding +
+    '    }'                         + LineEnding +
+    '  },'                          + LineEnding +
+    '  "config" : {'               + LineEnding +
+    '    "folders" : ['            + LineEnding +
+    '    ],'                        + LineEnding +
+    '    "devices" : ['            + LineEnding +
+    '    ]'                         + LineEnding +
+    '  }'                           + LineEnding +
+    '}';
+end;
+
 function TSyncthingAPI.CreateDefaultRoot: TJSONObject;
 var
   ep: TSyncthingEndpointId;
   rootObj: TJSONObject;
 begin
-  // Create root and pre-create empty branches for known endpoints
-  rootObj := TJSONObject.Create;
-  for ep in SyncthingEndpointsBasic do
-    SetAtPath(rootObj, GetEndpointJsonTreePath(ep), TJSONObject.Create);
+  // Create root from default JSON string
+  rootObj := TJSONObject(GetJSON(GetDefaultRootStr()));
   Result := rootObj;
 end;
 
@@ -918,14 +974,65 @@ begin
   try
     if NewData is TJSONData then
     begin
-      //
+      // TODO: ??? !!!
     end;
 
 
     SetAtPath(FTreeRoot, JsonPath, NewData);
+    UpdateJsonPointersFromTree(GetEndpointIdByURI(JsonPath));
     NotifyTreeChanged(JsonPath);
   finally
     EndTreeModify;
+  end;
+end;
+
+procedure TSyncthingAPI.UpdateAllJsonPointersFromTree;
+const 
+  JsonPointerEndpointsList: array of TSyncthingEndpointId = (
+    epConfig,
+    epConfig_Folders,
+    epConfig_Devices,
+    epConfig_Options,
+    epStats_Device,
+    epStats_Folder
+  );
+var
+  ep: TSyncthingEndpointId;
+begin
+  for ep in JsonPointerEndpointsList do
+    UpdateJsonPointersFromTree(ep);
+end;
+
+procedure TSyncthingAPI.UpdateJsonPointersFromTree(EndpointId: TSyncthingEndpointId);
+  function FindByEndpointId(const EndpointId: TSyncthingEndpointId): TJSONData;
+  begin
+    Result := FTreeRoot.FindPath(
+      StringReplace(GetEndpointURI(EndpointId), '/', '.', [rfReplaceAll]));
+  end;
+  function GetPointerObject(const EndpointId: TSyncthingEndpointId): TJSONObject;
+  var
+    d: TJSONData;
+  begin
+    d := FindByEndpointId(EndpointId);
+    if (d is TJSONObject) then Exit(TJSONObject(d)) else Exit(nil);
+  end;
+  function GetPointerArray(const EndpointId: TSyncthingEndpointId): TJSONArray;
+  var
+    d: TJSONData;
+  begin
+    d := FindByEndpointId(EndpointId);
+    if (d is TJSONArray) then Exit(TJSONArray(d)) else Exit(nil);
+  end;
+begin
+  case EndpointId of
+    epConfig:              config := GetPointerObject(epConfig);
+    epConfig_Folders:      config_folders := GetPointerArray(epConfig_Folders);
+    epConfig_Devices:      config_devices := GetPointerArray(epConfig_Devices);
+    epConfig_Options:      config_options := GetPointerObject(epConfig_Options);
+    epStats_Device:        stats_device := GetPointerArray(epStats_Device);
+    epStats_Folder:        stats_folder := GetPointerArray(epStats_Folder);
+  else
+    // No matching pointer - do nothing
   end;
 end;
 
@@ -1074,9 +1181,39 @@ begin
 end;
 
 procedure TSyncthingAPI.NotifyTreeChanged(const Path: UTF8String);
+var
+  ep: TSyncthingEndpointId;
 begin
   if Assigned(FOnTreeChanged) then
-    FOnTreeChanged(Self, Path);
+  begin
+    // Resolve endpoint id from URI stored in Path
+    ep := GetEndpointIdByURI(Path);
+    FOnTreeChanged(Self, ep, Path);
+  end;
+end;
+
+class function TSyncthingAPI.GetEndpointIdByURI(const URI: UTF8String): TSyncthingEndpointId;
+var
+  ep: TSyncthingEndpointId;
+  base: UTF8String;
+begin
+  // Linear scan over enum values via GetEndpointURI (simple but slow)
+  for ep := Low(TSyncthingEndpointId) to High(TSyncthingEndpointId) do
+  begin
+    if GetEndpointURI(ep) = URI then
+      Exit(ep);
+  end;
+  
+  // Additional checks for subitem endpoints with $id placeholder removed
+  base := StringReplace(GetEndpointURI(epConfig_Folders_Subitems), '@', '', [rfReplaceAll]);
+  if (LeftStr(URI, Length(base)) = base) and (Length(URI) > Length(base)) then
+    Exit(epConfig_Folders_Subitems);
+
+  base := StringReplace(GetEndpointURI(epConfig_Devices_Subitems), '@', '', [rfReplaceAll]);
+  if (LeftStr(URI, Length(base)) = base) and (Length(URI) > Length(base)) then
+    Exit(epConfig_Devices_Subitems);
+
+  Result := epUnknown;
 end;
 
 procedure TSyncthingAPI.Connect;
