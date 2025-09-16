@@ -17,6 +17,7 @@ type
 
   TfrmJSONView = class(TForm)
     btnHintUpd: TButton;
+    edServerURL: TLabeledEdit;
     edJSONView: TMemo;
     imgJSON: TImageList;
     edHintFieldsList: TLabeledEdit;
@@ -35,6 +36,7 @@ type
     mnCollapseAll: TMenuItem;
     mnExpandAll: TMenuItem;
     panelHintFieldsList: TPanel;
+    panelServerURL: TPanel;
     PopupMenuJson: TPopupMenu;
     Splitter2: TSplitter;
     Splitter3: TSplitter;
@@ -262,7 +264,7 @@ end;
 
 procedure TfrmJSONView.listGetAPIClick(Sender: TObject);
 var
-  ep, url, headers: string;
+  url, headers: string;
 begin
   if listEndpoints.ItemIndex>=0 then
   begin
@@ -272,14 +274,7 @@ begin
     if Pos(' (', self.endpoint) > 0 then
       self.endpoint := Copy(self.endpoint, 1, Pos(' (', self.endpoint) - 1);
 
-    // Build full REST URL and headers, then perform GET via TAsyncHTTP
-    ep := Trim(self.endpoint);
-    if (Length(ep) > 0) and (ep[1] = '/') then
-      Delete(ep, 1, 1);
-    if AnsiPos('rest/', LowerCase(ep)) <> 1 then
-      ep := 'rest/' + ep;
-
-    url := Core.SyncthigServer + ep;
+    url := edServerURL.Text + '/' + self.endpoint;
     headers := 'X-API-Key: ' + Core.APIKey + LineEnding +
                'Accept: application/json';
 

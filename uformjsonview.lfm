@@ -8,13 +8,69 @@ object frmJSONView: TfrmJSONView
   ClientWidth = 513
   DesignTimePPI = 120
   Menu = MainMenu
-  LCLVersion = '4.2.0.0'
   OnCreate = FormCreate
   OnDestroy = FormDestroy
+  object panelHintFieldsList: TPanel
+    Left = 0
+    Height = 32
+    Top = 32
+    Width = 513
+    Align = alTop
+    ClientHeight = 32
+    ClientWidth = 513
+    TabOrder = 5
+    Visible = False
+    object edHintFieldsList: TLabeledEdit
+      Left = 96
+      Height = 28
+      Top = 1
+      Width = 360
+      Anchors = [akTop, akLeft, akRight]
+      EditLabel.Height = 28
+      EditLabel.Width = 105
+      EditLabel.Caption = 'edHintFieldsList'
+      LabelPosition = lpLeft
+      TabOrder = 0
+    end
+    object btnHintUpd: TButton
+      Left = 464
+      Height = 28
+      Top = 1
+      Width = 48
+      Anchors = [akTop, akRight]
+      Caption = 'Update'
+      TabOrder = 1
+      OnClick = btnHintUpdClick
+    end
+  end
+  object panelServerURL: TPanel
+    Left = 0
+    Height = 32
+    Top = 0
+    Width = 513
+    Align = alTop
+    ClientHeight = 32
+    ClientWidth = 513
+    TabOrder = 6
+    Visible = False
+    object edServerURL: TLabeledEdit
+      Left = 96
+      Height = 28
+      Top = 1
+      Width = 413
+      Anchors = [akTop, akLeft, akRight]
+      EditLabel.Height = 28
+      EditLabel.Width = 84
+      EditLabel.Caption = 'edServerURL'
+      LabelPosition = lpLeft
+      TabOrder = 0
+      Text = 'http://127.0.0.1:8384'
+    end
+  end
   object listEndpoints: TListBox
     Left = 0
-    Height = 491
-    Top = 32
+    Height = 459
+    Top = 64
     Width = 128
     Align = alLeft
     Items.Strings = (
@@ -104,14 +160,14 @@ object frmJSONView: TfrmJSONView
   end
   object Splitter3: TSplitter
     Left = 128
-    Height = 491
-    Top = 32
+    Height = 459
+    Top = 64
     Width = 5
   end
   object treeJsonData: TTreeView
     Left = 133
-    Height = 491
-    Top = 32
+    Height = 459
+    Top = 64
     Width = 193
     Align = alClient
     Images = imgJSON
@@ -120,54 +176,21 @@ object frmJSONView: TfrmJSONView
   end
   object Splitter2: TSplitter
     Left = 326
-    Height = 491
-    Top = 32
+    Height = 459
+    Top = 64
     Width = 5
     Align = alRight
     ResizeAnchor = akRight
   end
   object edJSONView: TMemo
     Left = 331
-    Height = 491
-    Top = 32
+    Height = 459
+    Top = 64
     Width = 182
     Align = alRight
     ScrollBars = ssAutoBoth
     TabOrder = 4
     WordWrap = False
-  end
-  object panelHintFieldsList: TPanel
-    Left = 0
-    Height = 32
-    Top = 0
-    Width = 513
-    Align = alTop
-    ClientHeight = 32
-    ClientWidth = 513
-    TabOrder = 5
-    Visible = False
-    object edHintFieldsList: TLabeledEdit
-      Left = 96
-      Height = 28
-      Top = 1
-      Width = 360
-      Anchors = [akTop, akLeft, akRight]
-      EditLabel.Height = 28
-      EditLabel.Width = 105
-      EditLabel.Caption = 'edHintFieldsList'
-      LabelPosition = lpLeft
-      TabOrder = 0
-    end
-    object btnHintUpd: TButton
-      Left = 464
-      Height = 28
-      Top = 1
-      Width = 48
-      Anchors = [akTop, akRight]
-      Caption = 'Update'
-      TabOrder = 1
-      OnClick = btnHintUpdClick
-    end
   end
   object imgJSON: TImageList
     DrawingStyle = dsTransparent
