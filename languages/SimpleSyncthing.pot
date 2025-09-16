@@ -10,10 +10,6 @@ msgstr ""
 msgid "actInit"
 msgstr ""
 
-#: tcore.actreloadconfig.caption
-msgid "actReloadConfig"
-msgstr ""
-
 #: tcore.actrestart.caption
 msgid "actRestart"
 msgstr ""
@@ -40,10 +36,6 @@ msgstr ""
 
 #: tcore.actterminate.caption
 msgid "actTerminate"
-msgstr ""
-
-#: tcore.actupdatedata.caption
-msgid "actUpdateData"
 msgstr ""
 
 #: tfrmabout.caption
@@ -81,6 +73,14 @@ msgstr ""
 
 #: tfrmjsonview.edhintfieldslist.editlabel.caption
 msgid "edHintFieldsList"
+msgstr ""
+
+#: tfrmjsonview.edserverurl.editlabel.caption
+msgid "edServerURL"
+msgstr ""
+
+#: tfrmjsonview.edserverurl.text
+msgid "http://127.0.0.1:8384"
 msgstr ""
 
 #: tfrmjsonview.mncollapseall.caption

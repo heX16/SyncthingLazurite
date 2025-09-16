@@ -1,5 +1,4 @@
 object Core: TCore
-  OnDestroy = DataModuleDestroy
   OldCreateOrder = False
   Height = 406
   HorizontalOffset = 793
@@ -46,48 +45,29 @@ object Core: TCore
     Left = 244
     Top = 20
   end
-  object TimerCheckOnline: TTimer
-    Enabled = False
-    Interval = 500
-    Left = 472
-    Top = 192
-  end
   object ActionList: TActionList
-    Left = 368
-    Top = 20
+    Left = 244
+    Top = 88
     object actStopAndExit: TAction
       Category = 'GUI'
       Caption = 'actStopAndExit'
       OnExecute = actStopAndExitExecute
     end
-    object actReloadConfig: TAction
-      Category = 'GUI'
-      Caption = 'actReloadConfig'
-    end
-    object actUpdateData: TAction
-      Category = 'GUI'
-      Caption = 'actUpdateData'
-      OnExecute = actUpdateDataExecute
-    end
     object actStartOrConnect: TAction
       Category = 'Core'
       Caption = 'actStartOrConnect'
-      OnExecute = actStartOrConnectExecute
     end
     object actStartAndConnect: TAction
       Category = 'Core'
       Caption = 'actStartAndConnect'
-      OnExecute = actStartAndConnectExecute
     end
     object actStop: TAction
       Category = 'Core'
       Caption = 'actStop'
-      OnExecute = actStopExecute
     end
     object actConnect: TAction
       Category = 'Core'
       Caption = 'actConnect'
-      OnExecute = actConnectExecute
     end
     object actRestart: TAction
       Category = 'Core'
@@ -102,7 +82,6 @@ object Core: TCore
     object actRunSupportProc: TAction
       Category = 'Core'
       Caption = 'actRunSupportProc'
-      OnExecute = actRunSupportProcExecute
     end
     object actInit: TAction
       Category = 'Core'
@@ -116,42 +95,11 @@ object Core: TCore
     Left = 70
     Top = 152
   end
-  object TimerStartOnStart: TTimer
+  object TimerAfterStartCheckRunError: TTimer
     Enabled = False
-    Interval = 3000
-    OnTimer = TimerStartOnStartTimer
+    Interval = 100
+    OnTimer = TimerAfterStartCheckRunErrorTimer
     Left = 70
-    Top = 336
-  end
-  object TimerAfterStartCheck: TTimer
-    Enabled = False
-    Interval = 100
-    OnTimer = TimerAfterStartCheckTimer
-    Left = 472
-    Top = 248
-  end
-  object TimerEventProcess: TTimer
-    Enabled = False
-    Interval = 100
-    Left = 296
-    Top = 192
-  end
-  object TimerEventCheckTimeout: TTimer
-    Enabled = False
-    Interval = 65000
-    Left = 296
-    Top = 312
-  end
-  object TimerEventListen: TTimer
-    Interval = 100
-    Left = 296
-    Top = 136
-  end
-  object TimerUpdate: TTimer
-    Enabled = False
-    Interval = 100
-    OnTimer = TimerUpdateTimer
-    Left = 296
-    Top = 248
+    Top = 232
   end
 end

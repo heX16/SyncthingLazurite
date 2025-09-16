@@ -168,11 +168,12 @@ end;
 
 procedure TModuleMain.actConnectExecute(Sender: TObject);
 begin
+  //TODO: add support TLS
   // Configure endpoint and API key from Core settings
   FSyncthingAPI.SetEndpoint(
     Core.SyncthigHost,
     Core.SyncthigPort,
-    Pos('https://', LowerCase(Core.SyncthigServer)) = 1
+    false
   );
   FSyncthingAPI.SetAPIKey(Core.APIKey);
 
@@ -232,11 +233,22 @@ end;
 
 procedure TModuleMain.actShowWebExecute(Sender: TObject);
 begin
-  OpenURL(Core.SyncthigServer);
+  //TODO: !!! make function `Core.SyncthigServer()`
+  //OpenURL(Core.SyncthigServer());
 end;
 
 procedure TModuleMain.DataModuleCreate(Sender: TObject);
 begin
+  //todo: !!! i18n WIP. - нужно подумать как сделать. инструкция для GPT: спроси меня прежде чем писать код.
+  {strs:=TStringList.Create;
+  GetFiles(ExtractFilePath(Application.ExeName)+'languages' + PathDelim, strs, '*.po');
+  frmMain.cbLanguage.Items.Assign(strs);
+  strs.Free;}
+  //SetDefaultLang('ru');
+  //SetDefaultLang(GetOSLanguage()); // - just use DefaultTranslator module
+  //frmMain.LanguageChanged();
+
+
   // Create Syncthing API instance manually (do not place on form)
   LockJSONTree := TCriticalSection.Create;
   FSyncthingAPI := TSyncthingAPI.Create(Self);
@@ -360,23 +372,27 @@ begin
     if obj <> nil then
     begin
       nameField := obj.Find('label');
-      if (nameField = nil) or (nameField.JSONType <> jtString) then
+      if (nameField = nil) or (nameField.AsString = '') then
         nameField := obj.Find('id');
+
       if (nameField <> nil) and (nameField.JSONType = jtString) then
         nameStr := nameField.AsString
       else
-        nameStr := '';
+        nameStr := '(error)';
 
-      dirField := obj.Find('path');
-      if (dirField <> nil) and (dirField.JSONType = jtString) then
-        pathStr := dirField.AsString
-      else
-        pathStr := '';
+      begin
+        // TODO: делать эту проверку самому не нужно - syncthing делает ее, можно смотреть особый параметр в jsontree
+        dirField := obj.Find('path');
+        if (dirField <> nil) and (dirField.JSONType = jtString) then
+          pathStr := dirField.AsString
+        else
+          pathStr := '';
 
-      if (pathStr <> '') and (not DirectoryExists(pathStr)) then
-        Result := 'NOT FOUND! ' + nameStr
-      else
-        Result := nameStr;
+        if (pathStr <> '') and (not DirectoryExists(pathStr)) then
+          Result := 'NOT FOUND! ' + nameStr
+        else
+          Result := nameStr;
+      end;
     end;
   end;
 end;
@@ -458,8 +474,9 @@ var
   dev: TJSONObject;
   nameStr, deviceId, addrStr: string;
   lastSeenStr: string;
-  statsDev: TJSONObject;
+  lsData: TJSONData;
   addresses: TJSONArray;
+  p: integer;
 begin
   Result := '';
   if (Index < 0) or (Index >= FSyncthingAPI.config_devices.Count) then Exit;
@@ -478,18 +495,25 @@ begin
   if (addresses <> nil) and (addresses.Count > 0) then
     addrStr := addresses.Strings[0];
 
-  // try lastSeen from stats/device
+  // lastSeen from JSON tree at stats.device.<id>.lastSeen (use value as-is)
   lastSeenStr := '';
-  if (FSyncthingAPI.stats_device <> nil) then
+  if deviceId <> '' then
   begin
-    statsDev := FSyncthingAPI.stats_device.FindPath(deviceId) as TJSONObject;
-    if statsDev <> nil then
-      lastSeenStr := statsDev.Get('lastSeen', '');
+    lsData := FSyncthingAPI.TreeRoot.FindPath('stats.device.' + deviceId + '.lastSeen');
+    if (lsData <> nil) and (lsData.JSONType = jtString) then
+      lastSeenStr := lsData.AsString;
   end;
 
   Result := nameStr;
   if lastSeenStr <> '' then
-    Result := Result + LineEnding + 'Offline: ' + lastSeenStr;
+  begin
+    // Format lastSeen: replace 'T' with space and cut timezone suffix starting with '+'
+    lastSeenStr := StringReplace(lastSeenStr, 'T', ' ', []);
+    p := Pos('+', lastSeenStr);
+    if p > 0 then
+      lastSeenStr := Copy(lastSeenStr, 1, p - 1);
+    Result := Result + LineEnding + 'lastSeen: ' + lastSeenStr;
+  end;
   if addrStr <> '' then
     Result := Result + LineEnding + 'Address: ' + addrStr;
 end;

@@ -52,10 +52,8 @@ type
   TCore = class(TDataModule)
     actConnect: TAction;
     actStartOrConnect: TAction;
-    actUpdateData: TAction;
     actStopAndExit: TAction;
     actInit: TAction;
-    actReloadConfig: TAction;
     actRunSupportProc: TAction;
     actTerminate: TAction;
     actRestart: TAction;
@@ -64,57 +62,27 @@ type
     ActionList: TActionList;
     ProcessSyncthing: TProcessUTF8;
     ProcessSupport: TProcessUTF8;
-    TimerEventListen: TTimer;
-    TimerEventCheckTimeout: TTimer;
-    TimerEventProcess: TTimer;
-    TimerAfterStartCheck: TTimer;
+    TimerAfterStartCheckRunError: TTimer;
     TimerInit: TTimer;
-    TimerCheckOnline: TTimer;
     TimerReadStdOutput: TTimer;
-    TimerStartOnStart: TTimer;
-    TimerUpdate: TTimer;
-    procedure actConnectExecute(Sender: TObject);
     procedure actInitExecute(Sender: TObject);
-    procedure actStartOrConnectExecute(Sender: TObject);
     procedure actStopAndExitExecute(Sender: TObject);
     procedure actRestartExecute(Sender: TObject);
-    procedure actRunSupportProcExecute(Sender: TObject);
-    procedure actStartAndConnectExecute(Sender: TObject);
-    procedure actStopExecute(Sender: TObject);
     procedure actTerminateExecute(Sender: TObject);
-    procedure actUpdateDataExecute(Sender: TObject);
 
-    procedure DataModuleDestroy(Sender: TObject);
-    procedure TimerAfterStartCheckTimer(Sender: TObject);
+    procedure TimerAfterStartCheckRunErrorTimer(Sender: TObject);
 
     procedure TimerInitTimer(Sender: TObject);
-    procedure TimerStartOnStartTimer(Sender: TObject);
     procedure TimerReadStdOutputTimer(Sender: TObject);
-    procedure TimerUpdateTimer(Sender: TObject);
   private
     OutputChankStr: UTF8String;
   public
-    procedure httpUpdateConnections(Request: THttpRequest);
-    procedure httpUpdateDeviceStat(Request: THttpRequest);
-  public
-
     // Flag that core is inited
     Inited: boolean;
 
     // State (FSM)
     //TODO: WIP!
     State: TCoreState;
-
-    // flag - checked 'syncthing is work'
-    OnlineTested: boolean;
-
-    Terminated: boolean;
-
-    // REST API access
-    aiohttp: TAsyncHTTP;
-
-    // REST API pooling
-    aiohttpLongPolling: TAsyncHTTP;
 
     APIKey: string;
     SyncthigExecPath: UTF8String;
@@ -123,16 +91,8 @@ type
     SyncthigHome: UTF8String;
 
     SyncthigParam: UTF8String;
-    SyncthigServer: UTF8String;
     SyncthigHost: UTF8String;
     SyncthigPort: integer;
-
-    EventsLastId: int64;
-
-    procedure Init(); virtual;
-    procedure Done(); virtual;
-    procedure EventOnline(); virtual;
-    procedure EventOffline(); virtual;
 
     function GetSyncthigExecPath(): UTF8String; virtual;
     function GetSyncthigHomePath(): UTF8String; virtual;
@@ -140,17 +100,7 @@ type
     procedure FillSyncthingExecPath();
     procedure FillSupportExecPath();
 
-    procedure StartAndConnect();
-    procedure Stop();
-
     procedure EventProcess(event: TJSONObject); virtual;
-
-    function MakeOnlineHint(): string;
-
-    // Returns true if current state implies Syncthing is online/working
-    function Online(): boolean;
-    // Returns true if FSM is in a transitional state
-    function InTransition(): boolean;
 
     procedure ReadStdOutput(Proc: TProcessUTF8; AddProc: TAddConsoleLine; var TextChank: UTF8String);
     procedure AddStringToConsole(Str: UTF8String);
@@ -177,29 +127,6 @@ uses
   jsonscanner;
 
 {$R *.lfm}
-
-function TCore.Online(): boolean;
-begin
-  // Minimal logic: online only when fully working
-  Result := (self.State = stWork);
-end;
-
-function TCore.InTransition(): boolean;
-begin
-  case self.State of
-    stLaunching,
-    stLaunchingWait,
-    stConnectOrStart,
-    stShutdownAndStart,
-    stShutdownAndStartWait,
-    stStopping,
-    stStoppingWait,
-    stDisconnectingGUI:
-      Result := true;
-  else
-    Result := false;
-  end;
-end;
 
 function HttpRequestToJson(Request: THttpRequest; out Json: TJSONData): boolean;
 var
@@ -242,75 +169,6 @@ begin
 end;
 
 { TCore }
-
-procedure TCore.httpUpdateConnections(Request: THttpRequest);
-var
-  JData, j2: TJSONData;
-  ij: TJSONEnum;
-  d: TDevInfo;
-begin
-  (*
-  if HttpRequestToJson(Request, JData) then
-  try
-    j2 := JData.GetPath('connections');
-    // enum all device
-    for ij in j2 do
-    begin
-      // find in device list.
-      if self.MapDevInfo.GetValue(ij.Key, d) then
-      begin
-        // update data
-        d.Connected:=ij.Value.GetPath('connected').AsBoolean;
-        d.Paused:=ij.Value.GetPath('paused').AsBoolean;
-        d.Address:=ij.Value.GetPath('address').AsString;
-        //todo: use 'mutable' ptr
-        // write to map
-        self.MapDevInfo[ij.Key] := d;
-      end;
-    end;
-    // OFF: frmMain.treeDevices.RootNodeCount:=j2.Count;
-    // OFF: frmMain.treeDevices.Invalidate(); //todo: <-optimize
-  finally
-    FreeAndNil(JData);
-  end;
-  *)
-end;
-
-procedure TCore.httpUpdateDeviceStat(Request: THttpRequest);
-var
-  JData: TJSONData;
-  ij: TJSONEnum;
-  s: ansistring;
-  dt: TDateTime;
-  d: TDevInfo;
-begin
-  (*
-  if HttpRequestToJson(Request, JData) then
-  try
-    // enum all device
-    for ij in JData do
-    begin
-      // find in device list.
-      if self.MapDevInfo.GetValue(ij.Key, d) then
-      begin
-        // update data
-        if ij.Value.FindPath('lastSeen')<>nil then
-        begin
-          s := ij.Value.GetPath('lastSeen').AsString;
-          if JsonStrToDateTime(s, dt) then
-            d.LastSeen:=dt;
-        end;
-        //todo: use 'mutable' ptr
-        // write to map
-        self.MapDevInfo[ij.Key] := d;
-      end;
-    end;
-  finally
-    FreeAndNil(JData);
-  end;
-  *)
-end;
-
 
 function GetXml(var Node:TDOMNode; Name: WideString): boolean;
 var N:TDOMNode;
@@ -357,6 +215,7 @@ begin
     Result := frmOptions.edAPIKey.Text;
 end;
 
+(*
 procedure TCore.StartAndConnect();
 begin
   //TODO: добавить поддержку "подключения" к уже запущенному процессу (без консоли разумеется)
@@ -367,7 +226,7 @@ begin
     self.State := stLaunching;
     FillSyncthingExecPath();
     ProcessSyncthing.Execute();
-    TimerAfterStartCheck.Enabled:=True;
+    TimerAfterStartCheckRunError.Enabled:=True;
     if actRunSupportProc.Checked then
     begin
       FillSupportExecPath();
@@ -379,7 +238,10 @@ begin
     // TODO: process is already running - ...???...
   end;
 end;
+*)
 
+
+(*
 procedure TCore.Stop();
 begin
   // move state to stopping, final state will be set by httpCheckOnline
@@ -389,6 +251,7 @@ begin
     ProcessSupport.Terminate(0);
   //ProcessSyncthing.Terminate(0);
 end;
+*)
 
 procedure TCore.EventProcess(event: TJSONObject);
 var
@@ -470,69 +333,21 @@ begin
   ReadStdOutput(ProcessSyncthing, @AddStringToConsole, OutputChankStr);
 end;
 
-procedure TCore.TimerUpdateTimer(Sender: TObject);
-begin
-  self.TimerUpdate.Enabled:=false;
-  actUpdateData.Execute();
-end;
-
-function TCore.MakeOnlineHint(): string;
-(*
-var
-  i: Core.MapDevInfo.TIterator;
-  OnlineCount: integer;
-  OnlineList: string;
-  DeviceName: string;
-  DeviceAddr: string;
-const
-  MaxItemsInHint = 5;
-*)
-begin
-  (*
-  i := self.MapDevInfo.Iterator();
-  OnlineCount := 0;
-  OnlineList := '';
-  if i <> nil then
-    try
-      repeat
-        if i.GetMutable()^.Connected then begin
-          inc(OnlineCount);
-          if OnlineCount <= MaxItemsInHint then
-          begin
-            DeviceName := i.Data.Value.Name;
-            DeviceAddr := i.Data.Value.Address;
-            if IsLocalIP(DeviceAddr) then
-              DeviceName := DeviceName + ' (local)';
-            OnlineList := OnlineList + DeviceName + #13;
-          end;
-        end;
-      until not i.Next;
-    finally
-      FreeAndNil(i);
-    end;
-  if OnlineCount > MaxItemsInHint then
-    OnlineList := OnlineList + '...' + #13;
-
-  Result := 'Online ' + IntToStr(OnlineCount) + ' devices:' + #13 + OnlineList;
-  *)
-end;
-
 procedure TCore.TimerInitTimer(Sender: TObject);
 begin
   if TimerInit.Enabled then
   begin
     TimerInit.Enabled:=false;
-    actInit.Execute();
-  end;
-end;
 
-procedure TCore.TimerStartOnStartTimer(Sender: TObject);
-begin
-  if OnlineTested then
-  begin
-    TimerStartOnStart.Enabled:=false;
-    if not Online() then
-      StartAndConnect();
+    self.State := stUnknown;
+
+    SyncthigHost:='127.0.0.1';
+    SyncthigPort:=8384;
+
+    // TODO: WIP...
+    SyncthigExecPath:=GetSyncthigExecPath();
+    SyncthigHome:=GetSyncthigHomePath();
+    APIKey:=ReadAPIKeyFromCfg();
   end;
 end;
 
@@ -558,41 +373,6 @@ end;
 
 procedure TCore.actInitExecute(Sender: TObject);
 begin
-  self.Init();
-
-  //todo: i18n move to module main
-  {strs:=TStringList.Create;
-  GetFiles(ExtractFilePath(Application.ExeName)+'languages' + PathDelim, strs, '*.po');
-  frmMain.cbLanguage.Items.Assign(strs);
-  strs.Free;}
-  SetDefaultLang('ru');
-  //SetDefaultLang(GetOSLanguage()); // - just use DefaultTranslator module
-  //frmMain.LanguageChanged();
-end;
-
-procedure TCore.actStartOrConnectExecute(Sender: TObject);
-begin
-  // TODO: WIP...
-end;
-
-procedure TCore.actConnectExecute(Sender: TObject);
-begin
-  TimerCheckOnline.Enabled:=true;
-end;
-
-procedure TCore.actRunSupportProcExecute(Sender: TObject);
-begin
-  // empty - it is just options
-end;
-
-procedure TCore.actStartAndConnectExecute(Sender: TObject);
-begin
-  StartAndConnect();
-end;
-
-procedure TCore.actStopExecute(Sender: TObject);
-begin
-  Stop();
 end;
 
 procedure TCore.actTerminateExecute(Sender: TObject);
@@ -601,22 +381,9 @@ begin
   ProcessSyncthing.Terminate(0);
 end;
 
-procedure TCore.actUpdateDataExecute(Sender: TObject);
+procedure TCore.TimerAfterStartCheckRunErrorTimer(Sender: TObject);
 begin
-  if self.Online() then
-    ModuleMain.TrayIcon.Hint := Core.MakeOnlineHint()
-  else
-    ModuleMain.TrayIcon.Hint := '';
-end;
-
-procedure TCore.DataModuleDestroy(Sender: TObject);
-begin
-  Done();
-end;
-
-procedure TCore.TimerAfterStartCheckTimer(Sender: TObject);
-begin
-  TimerAfterStartCheck.Enabled:=False;
+  TimerAfterStartCheckRunError.Enabled:=False;
   if not ProcessSyncthing.Running then
   begin
     ShowMessage('Run fail. Exit code: '+IntToStr(ProcessSyncthing.ExitCode)+
@@ -625,73 +392,7 @@ begin
       'Run:'+#13+
       ProcessSyncthing.Executable + ' ' + ProcessSyncthing.Parameters.Text
     );
-  end else
-  begin
-    TimerCheckOnline.Enabled:=true;
   end;
-end;
-
-procedure TCore.Init();
-begin
-  self.State := stUnknown;
-
-  aiohttp := TAsyncHTTP.Create;
-  aiohttp.ConnectTimeout:=1000;
-  aiohttp.RetryCount:=1;
-  aiohttp.IOTimeout:=1000;
-  aiohttp.KeepConnection:=true;
-
-  aiohttpLongPolling := TAsyncHTTP.Create;
-  aiohttpLongPolling.ConnectTimeout:=1000;
-  aiohttpLongPolling.RetryCount:=0;
-  aiohttpLongPolling.IOTimeout:=61000;
-  aiohttpLongPolling.KeepConnection:=true;
-
-
-  SyncthigHost:='127.0.0.1';
-  SyncthigPort:=8384;
-  SyncthigServer:=Format('http://%s:%d/', [SyncthigHost, SyncthigPort]);
-
-  SyncthigExecPath:=GetSyncthigExecPath();
-  SyncthigHome:=GetSyncthigHomePath();
-  APIKey:=ReadAPIKeyFromCfg();
-
-  // TODO: migrate
-  //TimerStartOnStart.Enabled:=frmOptions.chRunSyncOnStart.Checked;
-  //TimerCheckOnline.Enabled:=frmOptions.chRunSyncOnStart.Checked;
-
-  Inited := true;
-end;
-
-procedure TCore.Done();
-var
-  i: TMapFolderInfo.TIterator;
-  i2: TMapDevInfo.TIterator;
-begin
-  Inited := false;
-
-  Terminated := true;
-  // Stop timers related to long-poll and general activity
-  TimerCheckOnline.Enabled:=false;
-  TimerEventListen.Enabled:=false;
-  TimerEventProcess.Enabled:=false;
-  FreeAndNil(aiohttp);
-  FreeAndNil(aiohttpLongPolling);
-end;
-
-procedure TCore.EventOnline();
-begin
-  // OFF: frmMain.shStatusCircle.Brush.Color:=clGreen;
-  actUpdateData.Execute();
-  // start listening events when we became online
-  self.TimerEventListen.Enabled:=true;
-end;
-
-procedure TCore.EventOffline();
-begin
-  // OFF: frmMain.shStatusCircle.Brush.Color:=clPurple;
-  // stop listening events when offline
-  self.TimerEventListen.Enabled:=false;
 end;
 
 procedure TCore.AddStringToConsole(Str: UTF8String);
