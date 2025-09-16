@@ -140,6 +140,7 @@ type
     // Remove queued requests matching the given operation name
     procedure CleanQueueByOperationName(const OperationName: string);
   protected
+    procedure DestroyProcedure(); virtual;
     // Factory method for HTTP client instance
     function CreateHttpClient: TFPHTTPClient; virtual;
     // Configure HTTP client based on timeouts and request-specific headers/body hints
@@ -188,8 +189,6 @@ type
       AUserString: string = '';
       clearDuplicates: Boolean = False);
 
-    // Graceful shutdown
-    procedure DestroyProcedure();
 
     // Abort only the current in-flight connection (if any), without destroying the object
     // 'OnError' is called with `Request.Status = HTTPErrorCode_ClientClosed`

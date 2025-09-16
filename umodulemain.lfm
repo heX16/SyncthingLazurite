@@ -869,7 +869,7 @@ object ModuleMain: TModuleMain
     Visible = True
     OnDblClick = TrayIconDblClick
     Left = 160
-    Top = 20
+    Top = 24
   end
   object menuTrayIcon: TPopupMenu
     Left = 160
@@ -936,11 +936,9 @@ object ModuleMain: TModuleMain
     end
     object actSetStateRun: TAction
       Caption = 'actSetStateRun'
-      OnExecute = actSetStateRunExecute
     end
     object actSetStateStop: TAction
       Caption = 'actSetStateStop'
-      OnExecute = actSetStateStopExecute
     end
     object actShowEvents: TAction
       Caption = 'actShowEvents'

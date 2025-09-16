@@ -154,18 +154,19 @@ var
   item: TDevInfo;
 begin
   HintText := '';
-  if Core.MapDevInfo.GetValue(Core.ListDevInfo[Node^.Index], item) then
-  begin
-    HintText := HintText + item.Id;
-    if (not item.Connected) and (DaysBetween(item.LastSeen, Now()) < 31*6) then
-      HintText :=  HintText + #13 + cOffline + ': ' + IntToStr(DaysBetween(item.LastSeen, Now())) + ' ' + cDays;
-    if item.Connected then
-    begin
-      HintText :=  HintText + #13 + cAddress + ': ' + item.Address;
-      if IsLocalIP(item.Address) then
-         HintText := HintText + cStrLocal;
-    end;
-  end;
+  // migration: commented Core usage
+  // if Core.MapDevInfo.GetValue(Core.ListDevInfo[Node^.Index], item) then
+  // begin
+  //   HintText := HintText + item.Id;
+  //   if (not item.Connected) and (DaysBetween(item.LastSeen, Now()) < 31*6) then
+  //     HintText :=  HintText + #13 + cOffline + ': ' + IntToStr(DaysBetween(item.LastSeen, Now())) + ' ' + cDays;
+  //   if item.Connected then
+  //   begin
+  //     HintText :=  HintText + #13 + cAddress + ': ' + item.Address;
+  //     if IsLocalIP(item.Address) then
+  //        HintText := HintText + cStrLocal;
+  //   end;
+  // end;
 end;
 
 procedure TfrmMain.treeDevicesGetImageIndex(Sender: TBaseVirtualTree;
@@ -175,16 +176,17 @@ var
   item: TDevInfo;
 begin
   ImageIndex:=0;
-  if Core.Inited and
-     (Column = 0) and
-     (Core.MapDevInfo.GetValue(Core.ListDevInfo[Node^.Index], item)) then
-  begin
-    if item.Connected then
-      ImageIndex:=1;
-
-    if item.Paused then
-      ImageIndex:=2;
-  end;
+  // migration: commented Core usage
+  // if Core.Inited and
+  //    (Column = 0) and
+  //    (Core.MapDevInfo.GetValue(Core.ListDevInfo[Node^.Index], item)) then
+  // begin
+  //   if item.Connected then
+  //     ImageIndex:=1;
+  //
+  //   if item.Paused then
+  //     ImageIndex:=2;
+  // end;
 end;
 
 procedure TfrmMain.treeFoldersGetImageIndex(Sender: TBaseVirtualTree;
@@ -195,25 +197,28 @@ var
 begin
   // WIP
   ImageIndex:=0;
-  if Core.MapFolderInfo.GetValue(Core.ListFolderInfo[Node^.Index], item) then
-  begin
-    (*
-    if not item.DirectoryExists() then
-      ImageIndex:=1;
-
-    if item.Paused then
-      ImageIndex:=2;
-    *)
-  end;
+  // migration: commented Core usage
+  // if Core.MapFolderInfo.GetValue(Core.ListFolderInfo[Node^.Index], item) then
+  // begin
+  //   (*
+  //   if not item.DirectoryExists() then
+  //     ImageIndex:=1;
+  //
+  //   if item.Paused then
+  //     ImageIndex:=2;
+  //   *)
+  // end;
 end;
 
 procedure TfrmMain.treeDevicesGetText(Sender: TBaseVirtualTree;
   Node: PVirtualNode; Column: TColumnIndex; TextType: TVSTTextType;
   var CellText: String);
 begin
-  if Core.Inited and (Column = 0) then
-    CellText := Core.ListDev_GetText(Node^.Index) else
-    CellText := 'ERROR';
+  // migration: commented Core usage
+  // if Core.Inited and (Column = 0) then
+  //   CellText := Core.ListDev_GetText(Node^.Index) else
+  //   CellText := 'ERROR';
+  CellText := '';
 end;
 
 procedure TfrmMain.treeDevicesInitNode(Sender: TBaseVirtualTree; ParentNode,
@@ -232,8 +237,9 @@ begin
   if (Node <> nil) and Sender.MultiLine[Node] then
   begin
     TargetCanvas.Font := Sender.Font;
-    NodeHeight := (Sender as TVirtualStringTree).ComputeNodeHeight(
-        TargetCanvas, Node, 0, Core.ListDev_GetText(Node^.Index) + ' ___') + cDevListAdditionalHeight;
+    // migration: commented Core usage
+    // NodeHeight := (Sender as TVirtualStringTree).ComputeNodeHeight(
+    //     TargetCanvas, Node, 0, Core.ListDev_GetText(Node^.Index) + ' ___') + cDevListAdditionalHeight;
   end;
   // else use default height
 end;
@@ -251,13 +257,15 @@ procedure TfrmMain.treeFoldersGetText(Sender: TBaseVirtualTree;
   Node: PVirtualNode; Column: TColumnIndex; TextType: TVSTTextType;
   var CellText: String);
 begin
-  if Core.Inited and (Node^.Index < Core.ListFolderInfo.Count) then
-  begin
-    CellText := Core.MapFolderInfo[Core.ListFolderInfo[Node^.Index]].Name;
-    if not Core.MapFolderInfo[Core.ListFolderInfo[Node^.Index]].DirectoryExists() then
-      CellText := 'NOT FOUND! ' + CellText;
-  end else
-    CellText := 'ERROR';
+  // migration: commented Core usage
+  // if Core.Inited and (Node^.Index < Core.ListFolderInfo.Count) then
+  // begin
+  //   CellText := Core.MapFolderInfo[Core.ListFolderInfo[Node^.Index]].Name;
+  //   if not Core.MapFolderInfo[Core.ListFolderInfo[Node^.Index]].DirectoryExists() then
+  //     CellText := 'NOT FOUND! ' + CellText;
+  // end else
+  //   CellText := 'ERROR';
+  CellText := '';
 end;
 
 end.

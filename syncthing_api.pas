@@ -55,7 +55,7 @@ type
   // Endpoints enum for REST initial sync
   // Ref: https://docs.syncthing.net/v2.0.0/dev/rest.html
   TSyncthingEndpointId = (
-    epUnknown = 0,
+    epNone = 0,
 
     // Config Endpoints ################
 
@@ -257,7 +257,9 @@ type
     // Ref: https://docs.syncthing.net/v2.0.0/rest/noauth-health-get.html
     epNoauth_Health,
 
-    epEndpointsCount
+    epEndpointsCount,
+
+    epUnknown
   );
 
   // Fired when a branch in the in-memory JSON tree was modified
@@ -273,6 +275,21 @@ const
     epStats_Folder,
     epSystem_Status,
     epSystem_Version
+  );
+
+  // All config endpoints except epConfig
+  SyncthingEndpointsConfig: array of TSyncthingEndpointId = (
+    epConfig_RestartRequired,
+    epConfig_Folders,
+    epConfig_Devices,
+    epConfig_Folders_Subitems,
+    epConfig_Devices_Subitems,
+    epConfig_Defaults_Folder,
+    epConfig_Defaults_Device,
+    epConfig_Defaults_Ignores,
+    epConfig_Options,
+    epConfig_Ldap,
+    epConfig_Gui
   );
 
 type
@@ -333,7 +350,7 @@ type
     // JSON Utils
 
     function ParseJson(Request: THttpRequest; out Json: TJSONData): boolean;
-    procedure SetAtPath(var RootObj: TJSONObject; const JsonPath: UTF8String; NewData: TJSONData);
+    procedure SetJsonNodeAtPath(var RootObj: TJSONObject; const JsonPath: UTF8String; NewData: TJSONData);
     procedure FindAndCreatePathInJsonTree(var RootObj: TJSONObject;
       const JsonPath: UTF8String; out Parent: TJSONObject; out
       Target: TJSONData; out TargetName: UTF8String);
@@ -367,7 +384,7 @@ type
     { Notifies listeners and finalizes JSON tree modification }
     procedure EndTreeModify(); virtual;
     { Replaces a branch in the "JSON Tree" with NewData }
-    procedure JSONTreeNewData(const JsonPath: UTF8String; NewData: TJSONData); virtual;
+    procedure JSONTreeNewDataFromNetwork(const JsonPath: UTF8String; NewData: TJSONData); virtual;
     { Updates typed JSON pointers (config, stats, etc.) by resolving paths in FTreeRoot }
     procedure UpdateJsonPointersFromTree(EndpointId: TSyncthingEndpointId); virtual;
     { Updates all typed JSON pointers using JsonPointerEndpointsList }
@@ -397,8 +414,6 @@ type
     procedure ProcessEvent(EventObj: TJSONObject); virtual;
     { Integrates single event data into the JSON tree }
     procedure IntegrateEvent(const EventObj: TJSONObject); virtual;
-    { Notifies listeners that a tree branch at Path was changed }
-    procedure NotifyTreeChanged(const Path: UTF8String); virtual;
 
     // Maps endpoint id to callback handler
     function GetEndpointCallback(Id: TSyncthingEndpointId): THttpRequestCallbackFunction; virtual;
@@ -444,6 +459,9 @@ type
     function GetConnectingTimeout: Integer; virtual;
     { Sets FSM state and triggers OnStateChanged }
     procedure SetState(Value: TSyncthingFSM_State); virtual;
+
+    { Notifies listeners that a tree branch at Path was changed }
+    procedure NotifyTreeChanged(const Path: UTF8String; id: TSyncthingEndpointId = epNone; CallCallback: boolean = true); virtual;
 
     // Properties
     property ConnectTimeout: Integer read FConnectTimeout write SetConnectTimeout;
@@ -973,13 +991,20 @@ begin
     FOnAfterTreeModify(Self);
 end;
 
-procedure TSyncthingAPI.JSONTreeNewData(const JsonPath: UTF8String; NewData: TJSONData);
+procedure TSyncthingAPI.JSONTreeNewDataFromNetwork(const JsonPath: UTF8String; NewData: TJSONData);
+var
+  id: TSyncthingEndpointId;
 begin
+  id := GetEndpointIdByURI(JsonPath);
   BeginTreeModify;
   try
-    SetAtPath(FTreeRoot, JsonPath, NewData);
-    UpdateJsonPointersFromTree(GetEndpointIdByURI(JsonPath));
-    NotifyTreeChanged(JsonPath);
+    SetJsonNodeAtPath(FTreeRoot, JsonPath, NewData);
+    UpdateJsonPointersFromTree(id);
+    if id = epConfig then
+    begin
+      UpdateAllJsonPointersFromTree();
+    end;
+    NotifyTreeChanged(JsonPath, id);
   finally
     EndTreeModify;
   end;
@@ -1064,7 +1089,7 @@ begin
     if Request.UserString = '' then Exit;
     if ParseJson(Request, j) then
     begin
-      JSONTreeNewData(Request.UserString, j);
+      JSONTreeNewDataFromNetwork(Request.UserString, j);
 
       Command := ssCmdDataReceived;
       FSM_Process();
@@ -1154,6 +1179,8 @@ procedure TSyncthingAPI.ProcessEvent(EventObj: TJSONObject);
 var
   eventType: UTF8String;
 begin
+  // TODO: тут надо переделать на массивы
+
   if not Assigned(EventObj) then Exit;
   if Assigned(FOnEvent) then
     FOnEvent(Self, EventObj);
@@ -1182,15 +1209,14 @@ begin
   Assert(EventObj <> nil);
 end;
 
-procedure TSyncthingAPI.NotifyTreeChanged(const Path: UTF8String);
-var
-  ep: TSyncthingEndpointId;
+procedure TSyncthingAPI.NotifyTreeChanged(const Path: UTF8String;
+  id: TSyncthingEndpointId; CallCallback: boolean);
 begin
-  if Assigned(FOnTreeChanged) then
+  if Assigned(FOnTreeChanged) and CallCallback then
   begin
-    // Resolve endpoint id from URI stored in Path
-    ep := GetEndpointIdByURI(Path);
-    FOnTreeChanged(Self, ep, Path);
+    if id = epNone then
+      id := GetEndpointIdByURI(Path);
+    FOnTreeChanged(Self, id, Path);
   end;
 end;
 
@@ -1407,7 +1433,7 @@ begin
   end;
 end;
 
-procedure TSyncthingAPI.SetAtPath(var RootObj: TJSONObject; const JsonPath: UTF8String; NewData: TJSONData);
+procedure TSyncthingAPI.SetJsonNodeAtPath(var RootObj: TJSONObject; const JsonPath: UTF8String; NewData: TJSONData);
 var
   parent: TJSONObject;
   targetData: TJSONData;

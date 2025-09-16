@@ -85,8 +85,6 @@ type
     procedure actShowOptionsExecute(Sender: TObject);
     procedure actShowRestViewExecute(Sender: TObject);
     procedure actShowWebExecute(Sender: TObject);
-    procedure actSetStateRunExecute(Sender: TObject);
-    procedure actSetStateStopExecute(Sender: TObject);
     procedure DataModuleCreate(Sender: TObject);
     procedure DataModuleDestroy(Sender: TObject);
     procedure TrayIconDblClick(Sender: TObject);
@@ -122,6 +120,7 @@ uses
   uFormJsonView,
   uFormOptions,
   uFormMain,
+  Graphics,
   TypInfo;
 
 { TModuleMain }
@@ -145,11 +144,12 @@ var
   CpText: string;
 begin
   CpText := '';
-  for i in frmMain.treeDevices.SelectedNodes() do begin
-    if Core.MapDevInfo.GetValue(Core.ListDevInfo[i^.Index], d) then begin
-      CpText := CpText + #13 + d.Id;
-    end;
-  end;
+  // migration: commented Core usage
+  // for i in frmMain.treeDevices.SelectedNodes() do begin
+  //   if Core.MapDevInfo.GetValue(Core.ListDevInfo[i^.Index], d) then begin
+  //     CpText := CpText + #13 + d.Id;
+  //   end;
+  // end;
   if (Length(CpText)>1) and (CpText[1]=#13) then
     Delete(CpText, 1, 1);
   Clipboard.AsText:=CpText;
@@ -224,24 +224,6 @@ begin
   OpenURL(Core.SyncthigServer);
 end;
 
-procedure TModuleMain.actSetStateRunExecute(Sender: TObject);
-begin
-  if (Core.State = stStopped) or (Core.State = stStopping) then
-  begin
-    Core.State := stLaunching;
-    // TODO: WIP
-  end;
-end;
-
-procedure TModuleMain.actSetStateStopExecute(Sender: TObject);
-begin
-  if (Core.State = stWork) or (Core.State = stLaunching) then
-  begin
-    Core.State := stStopping;
-    // TODO: WIP
-  end;
-end;
-
 procedure TModuleMain.DataModuleCreate(Sender: TObject);
 begin
   // Create Syncthing API instance manually (do not place on form)
@@ -276,18 +258,37 @@ begin
 end;
 
 procedure TModuleMain.Syn_OnTreeChanged(Sender: TObject; EndpointId: TSyncthingEndpointId; const Path: UTF8String);
+  procedure ChangedEndpoint(EndpointId: TSyncthingEndpointId);
+  begin
+    // React to JSON tree updates: adjust devices tree node count when devices config changes
+    case EndpointId of
+      epConfig_Devices:
+      begin
+        // We are already in UI thread; update directly
+        frmMain.treeDevices.RootNodeCount := FSyncthingAPI.config_devices.Count;
+        writeln(FSyncthingAPI.config_devices.Count);
+        frmMain.treeDevices.Invalidate();
+      end;
+      epConfig_Folders:
+      begin
+        frmMain.treeFolders.RootNodeCount := FSyncthingAPI.config_folders.Count;
+        frmMain.treeFolders.Invalidate();
+      end;
+    end;
+  end;
+var
+  ep: TSyncthingEndpointId;
 begin
   writeln('FSyncthingAPI.OnTreeChanged: ' + 
     GetEnumName(TypeInfo(TSyncthingEndpointId), Ord(EndpointId)));
 
-  // React to JSON tree updates: adjust devices tree node count when devices config changes
-  case EndpointId of
-    epConfig_Devices:
-    begin
-      // We are already in UI thread; update directly
-      frmMain.treeDevices.RootNodeCount := FSyncthingAPI.config_devices.Count;
-      frmMain.treeDevices.Invalidate();
-    end;
+  if EndpointId <> epConfig then
+    ChangedEndpoint(EndpointId)
+  else
+  begin
+    // For epConfig notify all related config endpoints
+    for ep in SyncthingEndpointsConfig do
+      ChangedEndpoint(ep);
   end;
 end;
 
@@ -306,10 +307,29 @@ end;
 procedure TModuleMain.Syn_OnStateChanged(Sender: TObject; NewState: TSyncthingFSM_State);
 var
   s: string;
+  c: TColor;
 begin
   // Print new FSM state to console
   s := GetEnumName(TypeInfo(TSyncthingFSM_State), Ord(NewState));
   writeln('FSyncthingAPI.OnStateChanged: ' + s);
+  // Change status circle color depending on state
+  case NewState of
+    ssOffline:
+      c := clGray; // was used previously for offline
+    ssConnectingInitAndPing, ssConnectingPingWait, ssConnectingWaitData:
+      c := clYellow; // connecting states
+    ssOnline:
+      c := clGreen;  // online
+    ssOnlinePaused:
+      c := clSilver; // paused
+    ssOnlineUnstable:
+      c := clRed;    // unstable/error
+    ssDisconnecting:
+      c := clYellow;   // disconnecting
+  else
+    c := clPurple;
+  end;
+  frmMain.shStatusCircle.Brush.Color := c;
 end;
 
 end.
