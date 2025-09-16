@@ -99,6 +99,10 @@ type
     procedure Syn_OnAfterTreeModify(Sender: TObject);
     procedure Syn_OnStateChanged(Sender: TObject; NewState: TSyncthingFSM_State);
   public
+    // Returns display text for folder node by index using current JSON tree
+    function GetFolderDisplayText(const Index: Integer): string;
+    // Returns display text for device node by index using current JSON tree
+    function GetDeviceDisplayText(const Index: Integer): string;
 
   end;
 
@@ -330,6 +334,78 @@ begin
     c := clPurple;
   end;
   frmMain.shStatusCircle.Brush.Color := c;
+end;
+
+function TModuleMain.GetFolderDisplayText(const Index: Integer): string;
+var
+  obj: TJSONObject;
+  nameField: TJSONData;
+  dirField: TJSONData;
+  nameStr: string;
+  pathStr: string;
+begin
+  Result := '';
+  if (Index >= 0) and (Index < FSyncthingAPI.config_folders.Count) then
+  begin
+    obj := FSyncthingAPI.config_folders.Objects[Index];
+    if obj <> nil then
+    begin
+      nameField := obj.Find('label');
+      if (nameField = nil) or (nameField.JSONType <> jtString) then
+        nameField := obj.Find('id');
+      if (nameField <> nil) and (nameField.JSONType = jtString) then
+        nameStr := nameField.AsString
+      else
+        nameStr := '';
+
+      dirField := obj.Find('path');
+      if (dirField <> nil) and (dirField.JSONType = jtString) then
+        pathStr := dirField.AsString
+      else
+        pathStr := '';
+
+      if (pathStr <> '') and (not DirectoryExists(pathStr)) then
+        Result := 'NOT FOUND! ' + nameStr
+      else
+        Result := nameStr;
+    end;
+  end;
+end;
+
+function TModuleMain.GetDeviceDisplayText(const Index: Integer): string;
+var
+  obj: TJSONObject;
+  nameField: TJSONData;
+  addrField: TJSONData;
+  nameStr: string;
+  addrStr: string;
+begin
+  Result := '';
+  if (Index >= 0) and (Index < FSyncthingAPI.config_devices.Count) then
+  begin
+    obj := FSyncthingAPI.config_devices.Objects[Index];
+    if obj <> nil then
+    begin
+      nameField := obj.Find('name');
+      if (nameField = nil) or (nameField.JSONType <> jtString) or (Trim(nameField.AsString) = '') then
+        nameField := obj.Find('deviceID');
+      if (nameField <> nil) and (nameField.JSONType = jtString) then
+        nameStr := nameField.AsString
+      else
+        nameStr := '';
+
+      addrField := obj.Find('addresses');
+      if (addrField <> nil) and (addrField.JSONType = jtArray) and (TJSONArray(addrField).Count > 0) then
+        addrStr := TJSONArray(addrField).Strings[0]
+      else
+        addrStr := '';
+
+      if addrStr <> '' then
+        Result := nameStr + ' ' + addrStr
+      else
+        Result := nameStr;
+    end;
+  end;
 end;
 
 end.

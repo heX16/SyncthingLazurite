@@ -214,11 +214,10 @@ procedure TfrmMain.treeDevicesGetText(Sender: TBaseVirtualTree;
   Node: PVirtualNode; Column: TColumnIndex; TextType: TVSTTextType;
   var CellText: String);
 begin
-  // migration: commented Core usage
-  // if Core.Inited and (Column = 0) then
-  //   CellText := Core.ListDev_GetText(Node^.Index) else
-  //   CellText := 'ERROR';
-  CellText := '';
+  if Column = 0 then
+    CellText := ModuleMain.GetDeviceDisplayText(Node^.Index)
+  else
+    CellText := '';
 end;
 
 procedure TfrmMain.treeDevicesInitNode(Sender: TBaseVirtualTree; ParentNode,
@@ -257,15 +256,8 @@ procedure TfrmMain.treeFoldersGetText(Sender: TBaseVirtualTree;
   Node: PVirtualNode; Column: TColumnIndex; TextType: TVSTTextType;
   var CellText: String);
 begin
-  // migration: commented Core usage
-  // if Core.Inited and (Node^.Index < Core.ListFolderInfo.Count) then
-  // begin
-  //   CellText := Core.MapFolderInfo[Core.ListFolderInfo[Node^.Index]].Name;
-  //   if not Core.MapFolderInfo[Core.ListFolderInfo[Node^.Index]].DirectoryExists() then
-  //     CellText := 'NOT FOUND! ' + CellText;
-  // end else
-  //   CellText := 'ERROR';
-  CellText := '';
+  // Read from SyncthingAPI JSON pointers via module helper
+  CellText := ModuleMain.GetFolderDisplayText(Node^.Index);
 end;
 
 end.
