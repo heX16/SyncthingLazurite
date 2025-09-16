@@ -55,23 +55,97 @@ type
 
   // Endpoints enum for REST initial sync
   TSyncthingEndpointId = (
-    epConfig,
-    epSystemConnections,
-    epStatsDevice,
-    epStatsFolder,
-    epSystemStatus,
-    epSystemVersion
+    epUnknown = 0, //
+
+    // Config
+    epConfig, //
+    epConfig_RestartRequired, //
+    epConfig_Folders, //
+    epConfig_Devices, //
+    epConfig_Folders_Subitems, //
+    epConfig_Devices_Subitems, //
+    epConfig_Defaults_Folder, //
+    epConfig_Defaults_Device, //
+    epConfig_Defaults_Ignores, //
+    epConfig_Options, //
+    epConfig_Ldap, //
+    epConfig_Gui, //
+
+    // System Endpoints
+    epSystem_Browse, //
+    epSystem_Connections, //
+    epSystem_Debug, //
+    epSystem_Discovery, // (GET,POST)
+    epSystem_Error, //
+    epSystem_Error_Clear, // (POST)
+    epSystem_Log, //
+    epSystem_Logtxt, //
+    epSystem_Loglevels, // (GET,POST)
+    epSystem_Paths, //
+    epSystem_Pause, // (POST)
+    epSystem_Ping, // (GET,POST)
+    epSystem_Reset, // (POST)
+    epSystem_Restart, // (POST)
+    epSystem_Resume, // (POST)
+    epSystem_Shutdown, // (POST)
+    epSystem_Status, //
+    epSystem_Upgrade, // (GET,POST)
+    epSystem_Version, //
+
+    // Cluster
+    epCluster_Pending_Devices, // (GET,DELETE)
+    epCluster_Pending_Folders, // (GET,DELETE)
+
+    // Folder
+    epFolder_Errors, //
+    epFolder_Versions, // (GET,POST)
+
+    // Database
+    epDb_Browse, //
+    epDb_Completion, //
+    epDb_File, //
+    epDb_Ignores, // (GET,POST)
+    epDb_LocalChanged, //
+    epDb_Need, //
+    epDb_Override, // (POST)
+    epDb_Prio, // (POST)
+    epDb_RemoteNeed, //
+    epDb_Revert, // (POST)
+    epDb_Scan, // (POST)
+    epDb_Status, //
+
+    // Events
+    epEvents, //
+    epEvents_Disk, //
+
+    // Statistics
+    epStats_Device, //
+    epStats_Folder, //
+
+    // Misc Services
+    epSvc_DeviceId, //
+    epSvc_Lang, //
+    epSvc_Random_String, //
+    epSvc_Report, //
+
+    // Debug
+    epDebug, //
+
+    // Noauth
+    epNoauth_Health, //
+
+    epEndpointsCount
   );
 
 const
   // Typed constant containing all endpoint ids
   SyncthingEndpointsBasic: array of TSyncthingEndpointId = (
     epConfig,
-    epSystemConnections,
-    epStatsDevice,
-    epStatsFolder,
-    epSystemStatus,
-    epSystemVersion
+    epSystem_Connections,
+    epStats_Device,
+    epStats_Folder,
+    epSystem_Status,
+    epSystem_Version
   );
 
 type
@@ -149,10 +223,6 @@ type
       userString: string);
     // Build endpoints table
     procedure InitEndpointTable;
-    // Maps endpoint id to callback handler
-    function GetEndpointCallback(Id: TSyncthingEndpointId): THttpRequestCallbackFunction; virtual;
-    // Maps endpoint id to "JSON Tree" storage path
-    function GetEndpointJsonTreePath(Id: TSyncthingEndpointId): UTF8String; virtual;
 
   protected
     { Builds base server URL from host/port and scheme }
@@ -197,6 +267,13 @@ type
     { Notifies listeners that a tree branch at Path was changed }
     procedure NotifyTreeChanged(const Path: UTF8String); virtual;
 
+    // Maps endpoint id to callback handler
+    function GetEndpointCallback(Id: TSyncthingEndpointId): THttpRequestCallbackFunction; virtual;
+  public
+    { Maps endpoint id to REST URI (under /rest/) }
+    class function GetEndpointURI(Id: TSyncthingEndpointId): UTF8String; static;
+    // Maps endpoint id to "JSON Tree" storage path
+    function GetEndpointJsonTreePath(Id: TSyncthingEndpointId): UTF8String; virtual;
   public
     { Creates the core object without starting any network activity }
     constructor Create(AOwner: TComponent); override;
@@ -234,8 +311,6 @@ type
 
     { Returns true when FSM is online }
     function IsOnline: Boolean; virtual;
-    { Maps endpoint id to REST URI (under /rest/) }
-    class function GetEndpointURI(Id: TSyncthingEndpointId): UTF8String; static;
     { Current finite state machine state }
     property State: TSyncthingFSM_State read FState;
     { Current finite state machine command }
@@ -513,12 +588,82 @@ end;
 class function TSyncthingAPI.GetEndpointURI(Id: TSyncthingEndpointId): UTF8String;
 begin
   case Id of
-    epConfig:            Exit('config');
-    epSystemConnections: Exit('system/connections');
-    epStatsDevice:       Exit('stats/device');
-    epStatsFolder:       Exit('stats/folder');
-    epSystemStatus:      Exit('system/status');
-    epSystemVersion:     Exit('system/version');
+    // Config
+    epConfig:                      Exit('config');
+    epConfig_RestartRequired:      Exit('config/restart-required');
+    epConfig_Folders:              Exit('config/folders');
+    epConfig_Devices:              Exit('config/devices');
+    epConfig_Folders_Subitems:     Exit('config/folders/subitems');
+    epConfig_Devices_Subitems:     Exit('config/devices/subitems');
+    epConfig_Defaults_Folder:      Exit('config/defaults/folder');
+    epConfig_Defaults_Device:      Exit('config/defaults/device');
+    epConfig_Defaults_Ignores:     Exit('config/defaults/ignores');
+    epConfig_Options:              Exit('config/options');
+    epConfig_Ldap:                 Exit('config/ldap');
+    epConfig_Gui:                  Exit('config/gui');
+
+    // System Endpoints
+    epSystem_Browse:               Exit('system/browse');
+    epSystem_Connections:          Exit('system/connections');
+    epSystem_Debug:                Exit('system/debug');
+    epSystem_Discovery:            Exit('system/discovery'); // (GET,POST)
+    epSystem_Error:                Exit('system/error');
+    epSystem_Error_Clear:          Exit('system/error/clear'); // (POST)
+    epSystem_Log:                  Exit('system/log');
+    epSystem_Logtxt:               Exit('system/logtxt');
+    epSystem_Loglevels:            Exit('system/loglevels'); // (GET,POST)
+    epSystem_Paths:                Exit('system/paths');
+    epSystem_Pause:                Exit('system/pause'); // (POST)
+    epSystem_Ping:                 Exit('system/ping'); // (GET,POST)
+    epSystem_Reset:                Exit('system/reset'); // (POST)
+    epSystem_Restart:              Exit('system/restart'); // (POST)
+    epSystem_Resume:               Exit('system/resume'); // (POST)
+    epSystem_Shutdown:             Exit('system/shutdown'); // (POST)
+    epSystem_Status:               Exit('system/status');
+    epSystem_Upgrade:              Exit('system/upgrade'); // (GET,POST)
+    epSystem_Version:              Exit('system/version');
+
+    // Cluster
+    epCluster_Pending_Devices:     Exit('cluster/pending/devices'); // (GET,DELETE)
+    epCluster_Pending_Folders:     Exit('cluster/pending/folders'); // (GET,DELETE)
+
+    // Folder
+    epFolder_Errors:               Exit('folder/errors');
+    epFolder_Versions:             Exit('folder/versions'); // (GET,POST)
+
+    // Database
+    epDb_Browse:                   Exit('db/browse');
+    epDb_Completion:               Exit('db/completion');
+    epDb_File:                     Exit('db/file');
+    epDb_Ignores:                  Exit('db/ignores'); // (GET,POST)
+    epDb_LocalChanged:             Exit('db/localchanged');
+    epDb_Need:                     Exit('db/need');
+    epDb_Override:                 Exit('db/override'); // (POST)
+    epDb_Prio:                     Exit('db/prio'); // (POST)
+    epDb_RemoteNeed:               Exit('db/remoteneed');
+    epDb_Revert:                   Exit('db/revert'); // (POST)
+    epDb_Scan:                     Exit('db/scan'); // (POST)
+    epDb_Status:                   Exit('db/status');
+
+    // Events
+    epEvents:                      Exit('events');
+    epEvents_Disk:                 Exit('events/disk');
+
+    // Statistics
+    epStats_Device:                Exit('stats/device');
+    epStats_Folder:                Exit('stats/folder');
+
+    // Misc Services
+    epSvc_DeviceId:                Exit('svc/deviceid');
+    epSvc_Lang:                    Exit('svc/lang');
+    epSvc_Random_String:           Exit('svc/random/string');
+    epSvc_Report:                  Exit('svc/report');
+
+    // Debug
+    epDebug:                       Exit('debug');
+
+    // Noauth
+    epNoauth_Health:               Exit('noauth/health');
   end;
   Exit('invalid_endpoint');
 end;
@@ -787,15 +932,15 @@ begin
   else if (eventType = 'DeviceConnected') or (eventType = 'DeviceDisconnected') or
           (eventType = 'DevicePaused') or (eventType = 'DeviceResumed') then
   begin
-    LoadEndpoint(epSystemConnections);
-    LoadEndpoint(epStatsDevice);
+    LoadEndpoint(epSystem_Connections);
+    LoadEndpoint(epStats_Device);
   end
   else if (eventType = 'FolderSummary') or (eventType = 'FolderErrors') or
           (eventType = 'FolderPaused') or (eventType = 'FolderResumed') or
           (eventType = 'FolderCompletion') then
-    LoadEndpoint(epStatsFolder)
+    LoadEndpoint(epStats_Folder)
   else if (eventType = 'StateChanged') then
-    LoadEndpoint(epSystemStatus);
+    LoadEndpoint(epSystem_Status);
 end;
 
 procedure TSyncthingAPI.IntegrateEvent(const EventObj: TJSONObject);
@@ -1025,7 +1170,7 @@ begin
   (*
   case Id of
     // Example of specialization (none at the moment):
-    epSystemStatus: Exit(@CB_SystemStatus);
+    epSystem_Status: Exit(@CB_SystemStatus);
   end;
   *)
   Exit(@CB_HandleEndpoint);
