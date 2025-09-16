@@ -149,7 +149,8 @@ type
     // Factory for worker thread (allows customization in descendants)
     function CreateWorkerThread: TRequestWorkerThread; virtual;
 
-    procedure AbortRequest(AClient: TFPHTTPClient); virtual;
+    // Force stop processing current request
+    procedure HTTPClient_AbortCurrentProcess(AClient: TFPHTTPClient); virtual;
   public
     // User-provided data (not owned by this class)
     UserObject: TObject;
@@ -188,7 +189,7 @@ type
       clearDuplicates: Boolean = False);
 
     // Graceful shutdown
-    procedure Terminate();
+    procedure DestroyProcedure();
 
     // Abort only the current in-flight connection (if any), without destroying the object
     // 'OnError' is called with `Request.Status = HTTPErrorCode_ClientClosed`
@@ -231,11 +232,30 @@ type
 const
   // Client Closed Request
   HTTPErrorCode_ClientClosed = 16499;
-  HTTPErrorCode_HTTPClientException = 16002;
   HTTPErrorCode_UnknownException = 16001;
+  HTTPErrorCode_HTTPClientException = 16002;
+  HTTPErrorCode_Disconnected = 16003;
   HTTPErrorCode_KeepAliveEnded = 16004;
 
+// Close TCP connection (close network socket)
+procedure HTTPClient_DisconnectFromServer(AClient: TFPHTTPClient);
+
 implementation
+
+procedure HTTPClient_DisconnectFromServer(AClient: TFPHTTPClient);
+begin
+  // unfortunately TFPHTTPClient hide the `DisconnectFromServer` function.
+  // so i have to solve this problem with a little hack.
+  {$PUSH}
+  {$OBJECTCHECKS OFF}
+  // disable RunError(219) in compile mode "-CR" (Verify object method call)
+  // ref: https://www.freepascal.org/docs-html/current/prog/progsu57.html
+  // ref: https://www.freepascal.org/docs-html/user/userap1.html
+
+  // now, call protected method:
+  TFPHTTPClientHelper(AClient).DisconnectFromServer();
+  {$POP}
+end;
 
 { TFPHTTPClientHelper }
 
@@ -306,9 +326,8 @@ begin
   Result := TRequestWorkerThread.Create(Self);
 end;
 
-procedure TAsyncHTTP.AbortRequest(AClient: TFPHTTPClient);
+procedure TAsyncHTTP.HTTPClient_AbortCurrentProcess(AClient: TFPHTTPClient);
 begin
-  // Force disconnect to break any blocking read/write and flag terminated
   AClient.Terminate();
 end;
 
@@ -463,7 +482,8 @@ begin
   Self.FOwner.FIsProcessing := True;
   Self.FInvokeKind := iekOpened;
   Self.FInvokeRequest := ARequest;
-  Self.Synchronize(@DoInvokeEvents);
+  if not Self.Terminated then
+    Self.Synchronize(@DoInvokeEvents);
 
   ARequest.HTTPMethod := UpperCase(ARequest.HTTPMethod);
 
@@ -488,37 +508,33 @@ begin
     end;
 
     // Do request (first try)
-    Self.PerformSingleHttpAttempt(ARequest, Client);
-
-    // unfortunately TFPHTTPClient does not support socket closure tracking.
-    // I have to service this moment myself.  =\
-    if (ARequest.Status = HTTPErrorCode_KeepAliveEnded) or
-       (ARequest.Status = HTTPErrorCode_HTTPClientException) then
-    begin
-      // unfortunately TFPHTTPClient hide the `DisconnectFromServer` function.
-      // so i have to solve this problem with a little hack.
-      {$PUSH}
-      {$OBJECTCHECKS OFF}
-      // disable RunError(219) in compile mode "-CR" (Verify object method call)
-      // ref: https://www.freepascal.org/docs-html/current/prog/progsu57.html
-      // ref: https://www.freepascal.org/docs-html/user/userap1.html
-
-      // now, call protected method:
-      TFPHTTPClientHelper(Client).DisconnectFromServer();
-      {$POP}
-      // Do request (first try, again)
-      // the previous attempt does not count because the socket was broken
+    if not Self.Terminated then
       Self.PerformSingleHttpAttempt(ARequest, Client);
-    end;
 
-    if not ARequest.Succeeded then
-      // Do retry the request, if needed
-      for attempt := 1 to Self.FOwner.FRetryCount do
+    if not Self.Terminated then
+    begin
+      // unfortunately TFPHTTPClient does not support socket closure tracking.
+      // I have to service this moment myself.  =\
+      if (ARequest.Status = HTTPErrorCode_KeepAliveEnded) or
+         (ARequest.Status = HTTPErrorCode_HTTPClientException) then
       begin
+        HTTPClient_DisconnectFromServer(Client);
+        // Do request (first try, again)
+        // the previous attempt does not count because the socket was broken
         Self.PerformSingleHttpAttempt(ARequest, Client);
-        if ARequest.Succeeded or Self.Terminated then
-          Break;
-      end; // for
+      end;
+
+      if not ARequest.Succeeded then
+      begin
+        // Do retry the request, if needed
+        for attempt := 1 to Self.FOwner.FRetryCount do
+        begin
+          if ARequest.Succeeded or Self.Terminated then
+            Break;
+          Self.PerformSingleHttpAttempt(ARequest, Client);
+        end; // for
+      end; // if
+    end; // if
 
   finally
     // Clear current client reference
@@ -550,13 +566,15 @@ begin
       Self.FInvokeKind := iekError;
   end;
   Self.FInvokeRequest := ARequest;
-  Self.Synchronize(@DoInvokeEvents);
+  if not Self.Terminated then
+    Self.Synchronize(@DoInvokeEvents);
 
   // Prepare and invoke the user callback in main thread
   ARequest.Response.Position := 0;
   Self.FInvokeRequest := ARequest;
   Self.FInvokeCallbackProc := ARequest.Callback;
-  Self.Synchronize(@DoInvokeCallback);
+  if not Self.Terminated then
+    Self.Synchronize(@DoInvokeCallback);
 
   // After callback returns, cleanup request and OperationName
   FreeRequestAndRemoveFromOperNames(ARequest);
@@ -627,7 +645,8 @@ begin
     begin
       Self.FInvokeKind := iekQueueEmpty;
       Self.FInvokeRequest := nil;
-      Self.Synchronize(@DoInvokeEvents);
+      if not Self.Terminated then
+        Self.Synchronize(@DoInvokeEvents);
     end;
   end;
 
@@ -652,7 +671,7 @@ begin
   Self.FQueueEvent := TEvent.Create(nil, False, False, '');
   Self.FNamedRequestsDict := TDictHttpRequest.Create;
   Self.FNamedRequestsLock := TCriticalSection.Create;
-  Self.FWorker := Self.CreateWorkerThread;
+  Self.FWorker := Self.CreateWorkerThread();
   Self.FCurrentClient := nil;
   Self.FCurrentClientLock := TCriticalSection.Create;
   Self.UserObject := nil;
@@ -661,9 +680,7 @@ end;
 
 destructor TAsyncHTTP.Destroy;
 begin
-  Self.Terminate;
-  Self.UserObject := nil;
-  Self.UserString := '';
+  Self.DestroyProcedure;
   inherited Destroy;
 end;
 
@@ -814,22 +831,22 @@ begin
   Self.EnqueueRequest(req, clearDuplicates);
 end;
 
-procedure TAsyncHTTP.Terminate;
+procedure TAsyncHTTP.DestroyProcedure;
 var
   req: THttpRequest;
 begin
   if Self.FTerminated then Exit;
   Self.FTerminated := True;
-  // Self.Pause := True; // WIP
-  
-  AbortActiveConnection();
 
   if Assigned(Self.FWorker) then
   begin
     Self.FWorker.Terminate;
+    AbortActiveConnection();
     if Assigned(Self.FQueueEvent) then
       Self.FQueueEvent.SetEvent;
+    CheckSynchronize(10);
     Self.FWorker.WaitFor;
+    CheckSynchronize(10);
     FreeAndNil(Self.FWorker);
   end;
 
@@ -846,6 +863,8 @@ begin
     Self.FQueueAndFreeLock.Release;
   end;
 
+  Self.UserObject := nil;
+  Self.UserString := '';
   FreeAndNil(Self.FQueueEvent);
   FreeAndNil(Self.FNamedRequestsDict);
   FreeAndNil(Self.FQueue);
@@ -861,7 +880,8 @@ begin
   try
     if Assigned(Self.FCurrentClient) then
     begin
-      self.AbortRequest(Self.FCurrentClient);
+      self.HTTPClient_AbortCurrentProcess(Self.FCurrentClient);
+      HTTPClient_DisconnectFromServer(Self.FCurrentClient);
     end;
   finally
     Self.FCurrentClientLock.Release;
