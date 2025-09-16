@@ -58,6 +58,8 @@ type
   private
     // tmp
     sync_api: TSyncthingAPI;
+    // Async HTTP client instance
+    http: TAsyncHTTP;
 
   public
     hintList: TStringList;
@@ -259,6 +261,8 @@ begin
 end;
 
 procedure TfrmJSONView.listGetAPIClick(Sender: TObject);
+var
+  ep, url, headers: string;
 begin
   if listEndpoints.ItemIndex>=0 then
   begin
@@ -268,8 +272,18 @@ begin
     if Pos(' (', self.endpoint) > 0 then
       self.endpoint := Copy(self.endpoint, 1, Pos(' (', self.endpoint) - 1);
 
-    // TODO: добавить сюда TAsyncHTTP
-    // REST_API_Get(self.endpoint, @httpGetAPItoTree);
+    // Build full REST URL and headers, then perform GET via TAsyncHTTP
+    ep := Trim(self.endpoint);
+    if (Length(ep) > 0) and (ep[1] = '/') then
+      Delete(ep, 1, 1);
+    if AnsiPos('rest/', LowerCase(ep)) <> 1 then
+      ep := 'rest/' + ep;
+
+    url := Core.SyncthigServer + ep;
+    headers := 'X-API-Key: ' + Core.APIKey + LineEnding +
+               'Accept: application/json';
+
+    http.Get(url, @httpGetAPItoTree, headers);
   end;
 end;
 
@@ -439,12 +453,14 @@ procedure TfrmJSONView.FormCreate(Sender: TObject);
 begin
   hintList := TStringList.Create;
   json := nil;
+  http := TAsyncHTTP.Create;
 end;
 
 procedure TfrmJSONView.FormDestroy(Sender: TObject);
 begin
   FreeAndNil(hintList);
   FreeAndNil(json);
+  FreeAndNil(http);
 end;
 
 procedure TfrmJSONView.mnShowHintPanelClick(Sender: TObject);
