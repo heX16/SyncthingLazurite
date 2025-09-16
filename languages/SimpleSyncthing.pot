@@ -2,6 +2,7 @@ msgid ""
 msgstr "Content-Type: text/plain; charset=UTF-8"
 
 #: tcore.actconnect.caption
+msgctxt "tcore.actconnect.caption"
 msgid "actConnect"
 msgstr ""
 
@@ -84,6 +85,30 @@ msgstr ""
 
 #: tfrmjsonview.mncollapseall.caption
 msgid "mnCollapseAll"
+msgstr ""
+
+#: tfrmjsonview.mncopyexpandrecursive.caption
+msgid "mnCopyExpandRecursive"
+msgstr ""
+
+#: tfrmjsonview.mncopyjsonrecursive.caption
+msgid "mnCopyJsonRecursive"
+msgstr ""
+
+#: tfrmjsonview.mncopyname.caption
+msgid "mnCopyName"
+msgstr ""
+
+#: tfrmjsonview.mncopypath.caption
+msgid "mnCopyPath"
+msgstr ""
+
+#: tfrmjsonview.mncopyvalue.caption
+msgid "mnCopyValue"
+msgstr ""
+
+#: tfrmjsonview.mncopyvaluetext.caption
+msgid "mnCopyValueText"
 msgstr ""
 
 #: tfrmjsonview.mnexpandall.caption
@@ -206,8 +231,17 @@ msgstr ""
 msgid "actCloseGUI"
 msgstr ""
 
+#: tmodulemain.actconnect.caption
+msgctxt "tmodulemain.actconnect.caption"
+msgid "actConnect"
+msgstr ""
+
 #: tmodulemain.actcopyselecteddevid.caption
 msgid "actCopySelectedDevID"
+msgstr ""
+
+#: tmodulemain.actdisconnect.caption
+msgid "actDisconnect"
 msgstr ""
 
 #: tmodulemain.actsetstaterun.caption

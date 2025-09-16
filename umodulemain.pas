@@ -9,7 +9,9 @@ uses
   AsyncHttp,
   Classes, SysUtils, FileUtil, Controls, ExtCtrls, Menus, ActnList,
   VirtualTrees,
+  fpjson,
   UniqueInstance,
+  SyncObjs,
   syncthing_api;
 
 resourcestring
@@ -90,9 +92,12 @@ type
     procedure TrayIconDblClick(Sender: TObject);
   private
     FSyncthingAPI: TSyncthingAPI; // Core Syncthing API instance (created manually)
+    LockJSONTree: TCriticalSection; // Critical section for JSON tree updates
     procedure Syn_OnConnected(Sender: TObject);
     procedure Syn_OnEvent(Sender: TObject; Event: TJSONObject);
     procedure Syn_OnTreeChanged(Sender: TObject; const Path: UTF8String);
+    procedure Syn_OnBeforeTreeModify(Sender: TObject);
+    procedure Syn_OnAfterTreeModify(Sender: TObject);
   public
 
   end;
@@ -108,7 +113,6 @@ uses
   LCLIntf, //OpenURL
   Clipbrd,
   DateUtils,
-  fpjson,
   uModuleCore,
   Forms,
   FormAbout,
@@ -238,11 +242,14 @@ end;
 procedure TModuleMain.DataModuleCreate(Sender: TObject);
 begin
   // Create Syncthing API instance manually (do not place on form)
+  LockJSONTree := TCriticalSection.Create;
   FSyncthingAPI := TSyncthingAPI.Create(Self);
   // Bind event handlers
   FSyncthingAPI.OnConnected := @Syn_OnConnected;
   FSyncthingAPI.OnEvent := @Syn_OnEvent;
   FSyncthingAPI.OnTreeChanged := @Syn_OnTreeChanged;
+  FSyncthingAPI.OnBeforeTreeModify := @Syn_OnBeforeTreeModify;
+  FSyncthingAPI.OnAfterTreeModify := @Syn_OnAfterTreeModify;
 end;
 
 procedure TModuleMain.DataModuleDestroy(Sender: TObject);
@@ -250,6 +257,8 @@ begin
   // Free Syncthing API instance
   if Assigned(FSyncthingAPI) then
     FreeAndNil(FSyncthingAPI);
+  if Assigned(LockJSONTree) then
+    FreeAndNil(LockJSONTree);
 end;
 
 procedure TModuleMain.Syn_OnConnected(Sender: TObject);
@@ -265,6 +274,18 @@ end;
 procedure TModuleMain.Syn_OnTreeChanged(Sender: TObject; const Path: UTF8String);
 begin
   // TODO: react to JSON tree updates (refresh views as needed)
+end;
+
+procedure TModuleMain.Syn_OnBeforeTreeModify(Sender: TObject);
+begin
+  if Assigned(LockJSONTree) then
+    LockJSONTree.Enter;
+end;
+
+procedure TModuleMain.Syn_OnAfterTreeModify(Sender: TObject);
+begin
+  if Assigned(LockJSONTree) then
+    LockJSONTree.Leave;
 end;
 
 end.
