@@ -515,6 +515,7 @@ type
     property OnStateChanged: TStateChangedEvent read FOnStateChanged write FOnStateChanged;
   end;
 
+
 implementation
 
 uses
@@ -1520,5 +1521,4 @@ begin
 end;
 
 end.
-
 
