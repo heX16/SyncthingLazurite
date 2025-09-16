@@ -88,6 +88,8 @@ type
     FInvokeKind: TInvokeEventKind;
     procedure DoInvokeCallback;
     procedure DoInvokeEvents;
+    procedure FreeRequestAndRemoveFromOperNames(ARequest: THttpRequest);
+    function GetRequestFromQueue(): THttpRequest;
     procedure PerformSingleHttpAttempt(ARequest: THttpRequest; Client: TFPHTTPClient
       );
     procedure ProcessRequest(ARequest: THttpRequest; Client: TFPHTTPClient = nil); virtual;
@@ -541,7 +543,8 @@ begin
   else
   begin
     // If there is no HTTP status and not connected, classify as disconnection
-    if (ARequest.Status = 0) and (not ARequest.Succeeded) then
+    if (ARequest.Status = HTTPErrorCode_HTTPClientException) or not Client.Connected then
+      // TODO: I'am not sure if this works correctly
       Self.FInvokeKind := iekDisconnected
     else
       Self.FInvokeKind := iekError;
@@ -555,8 +558,12 @@ begin
   Self.FInvokeCallbackProc := ARequest.Callback;
   Self.Synchronize(@DoInvokeCallback);
 
-  // After callback returns, cleanup
+  // After callback returns, cleanup request and OperationName
+  FreeRequestAndRemoveFromOperNames(ARequest);
+end;
 
+procedure TRequestWorkerThread.FreeRequestAndRemoveFromOperNames(ARequest: THttpRequest);
+begin
   // Remove request name from dictionary if it's the last request with this name
   if Self.FOwner.GetRequestByName(ARequest.OperationName) = ARequest then
     Self.FOwner.RemoveRequestName(ARequest.OperationName);
@@ -570,25 +577,25 @@ begin
   Self.FOwner.FIsProcessing := False;
 end;
 
+function TRequestWorkerThread.GetRequestFromQueue(): THttpRequest;
+begin
+  Result := nil;
+  Self.FOwner.FQueueAndFreeLock.Acquire;
+  try
+    if Self.FOwner.FQueue.Size() > 0 then
+    begin
+      Result := Self.FOwner.FQueue.Front();
+      Self.FOwner.FQueue.PopFront();
+    end;
+  finally
+    Self.FOwner.FQueueAndFreeLock.Release;
+  end;
+end;
+
 procedure TRequestWorkerThread.Execute;
 var
   req: THttpRequest;
   sharedClient: TFPHTTPClient;
-
-  function GetRequestFromQueue(): THttpRequest;
-  begin
-    Result := nil;
-    Self.FOwner.FQueueAndFreeLock.Acquire;
-    try
-      if Self.FOwner.FQueue.Size() > 0 then
-      begin
-        Result := Self.FOwner.FQueue.Front();
-        Self.FOwner.FQueue.PopFront();
-      end;
-    finally
-      Self.FOwner.FQueueAndFreeLock.Release;
-    end;
-  end;
 
 begin
   sharedClient := nil;

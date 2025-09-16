@@ -277,6 +277,9 @@ end;
 
 procedure TModuleMain.Syn_OnTreeChanged(Sender: TObject; EndpointId: TSyncthingEndpointId; const Path: UTF8String);
 begin
+  writeln('FSyncthingAPI.OnTreeChanged: ' + 
+    GetEnumName(TypeInfo(TSyncthingEndpointId), Ord(EndpointId)));
+
   // React to JSON tree updates: adjust devices tree node count when devices config changes
   case EndpointId of
     epConfig_Devices:

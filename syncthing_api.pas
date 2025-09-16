@@ -32,12 +32,13 @@ type
     ssCmdPauseRelease, // user Cmd
     ssCmdConnectingPingAck,
     ssCmdConnectingPingFault,
-    ssCmdConnectingAcceptedData,
     ssCmdConnectingTimeout,
     ssCmdLongPollingTimeToAutoReconnect,
     ssCmdLongPollingDisconnected,
     ssCmdLongPollingTimerRestore,
     ssCmdLongPollingError,
+    ssCmdQueueEmpty,
+    ssCmdDataReceived,
     ssCmdConnectionStable, // user Cmd
     ssCmdConnectionUnstable // user Cmd
   );
@@ -354,7 +355,7 @@ type
     { Builds base server URL from host/port and scheme }
     procedure BuildServerURL; virtual;
     { Creates and configures HTTP clients for REST and long-polling }
-    procedure ConfigureHttpClients(); virtual;
+    procedure ConfigureHttpClient(); virtual;
 
     // JSON tree helpers
     { Creates default JSON root object used before initial sync }
@@ -453,6 +454,8 @@ type
 
     { Returns true when FSM is online }
     function IsOnline: Boolean; virtual;
+    { Returns true if any endpoint from SyncthingEndpointsBasic is queued in FHTTP }
+    function IsAnyBasicEndpointQueued: Boolean; virtual;
     { Current finite state machine state }
     property State: TSyncthingFSM_State read FState;
     { Current finite state machine command }
@@ -563,7 +566,7 @@ begin
       ssConnectingInitAndPing:
         begin
           BuildServerURL();
-          ConfigureHttpClients();
+          ConfigureHttpClient();
           // Start initial ping; CB_CheckOnline drives next transitions
           API_Get('system/ping', @CB_CheckOnline, '');
           FTimerConnectingTimeout.Enabled := True;
@@ -589,9 +592,9 @@ begin
 
       ssConnectingWaitData:
         begin
-          if Command = ssCmdConnectingAcceptedData then
+          if Command = ssCmdDataReceived then
           begin
-            if FHTTP.QueueCount = 0 then
+            if not IsAnyBasicEndpointQueued() then
             begin
               // All data loaded, ready to "online status" ('.')\
               SetState(ssOnline);
@@ -872,7 +875,7 @@ begin
     FServerURL := Format('http://%s:%d/', [FHost, FPort]);
 end;
 
-procedure TSyncthingAPI.ConfigureHttpClients;
+procedure TSyncthingAPI.ConfigureHttpClient;
 begin
   if not Assigned(FHTTP) then
     FHTTP := TAsyncHTTP.Create;
@@ -890,6 +893,7 @@ begin
   FHTTPEvents.IOTimeout := FLongPollingRestartIntervalSec * 1000 + FIOTimeout;
   FHTTPEvents.KeepConnection := True;
   FHTTPEvents.OnOpened := @HttpAddHeader;
+  // TODO: в любом случае будет вызван "request callback". эти обработчики лишние.
   FHTTPEvents.OnDisconnected := @LongPollingDisconnected;
   FHTTPEvents.OnError := @LongPollingError;
 
@@ -973,12 +977,6 @@ procedure TSyncthingAPI.JSONTreeNewData(const JsonPath: UTF8String; NewData: TJS
 begin
   BeginTreeModify;
   try
-    if NewData is TJSONData then
-    begin
-      // TODO: ??? !!!
-    end;
-
-
     SetAtPath(FTreeRoot, JsonPath, NewData);
     UpdateJsonPointersFromTree(GetEndpointIdByURI(JsonPath));
     NotifyTreeChanged(JsonPath);
@@ -1067,6 +1065,9 @@ begin
     if ParseJson(Request, j) then
     begin
       JSONTreeNewData(Request.UserString, j);
+
+      Command := ssCmdDataReceived;
+      FSM_Process();
     end;
   end;
 end;
@@ -1263,7 +1264,7 @@ end;
 procedure TSyncthingAPI.SetLongPollingRestartInterval(Seconds: Integer);
 begin
   FLongPollingRestartIntervalSec := Seconds;
-  ConfigureHttpClients;
+  ConfigureHttpClient;
 end;
 
 procedure TSyncthingAPI.SetConnectTimeout(Value: Integer);
@@ -1315,6 +1316,20 @@ end;
 
 // Internal helpers and callbacks
 
+function TSyncthingAPI.IsAnyBasicEndpointQueued: Boolean;
+var
+  ep: TSyncthingEndpointId;
+begin
+  // Returns True if any of the basic endpoints has a request queued in FHTTP
+  Result := False;
+  if not Assigned(FHTTP) then Exit;
+  for ep in SyncthingEndpointsBasic do
+  begin
+    if FHTTP.RequestInQueueCold(GetEndpointURI(ep)) then
+      Exit(True);
+  end;
+end;
+
 procedure TSyncthingAPI.HttpAddHeader(Request: THttpRequest; Sender: TObject);
 begin
   if Pos('X-API-Key:', Request.HeadersRaw) = 0 then
@@ -1347,7 +1362,7 @@ procedure TSyncthingAPI.OnRestAPIQueueEmpty(Sender: TObject);
 begin
   if Self.State = ssConnectingWaitData then
   begin
-    Command:=ssCmdConnectingAcceptedData;
+    Command:=ssCmdQueueEmpty;
     FSM_Process();
   end;
 end;
