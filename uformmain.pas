@@ -153,20 +153,7 @@ procedure TfrmMain.treeDevicesGetHint(Sender: TBaseVirtualTree;
 var
   item: TDevInfo;
 begin
-  HintText := '';
-  // migration: commented Core usage
-  // if Core.MapDevInfo.GetValue(Core.ListDevInfo[Node^.Index], item) then
-  // begin
-  //   HintText := HintText + item.Id;
-  //   if (not item.Connected) and (DaysBetween(item.LastSeen, Now()) < 31*6) then
-  //     HintText :=  HintText + #13 + cOffline + ': ' + IntToStr(DaysBetween(item.LastSeen, Now())) + ' ' + cDays;
-  //   if item.Connected then
-  //   begin
-  //     HintText :=  HintText + #13 + cAddress + ': ' + item.Address;
-  //     if IsLocalIP(item.Address) then
-  //        HintText := HintText + cStrLocal;
-  //   end;
-  // end;
+  HintText := ModuleMain.GetDeviceHint(Node^.Index);
 end;
 
 procedure TfrmMain.treeDevicesGetImageIndex(Sender: TBaseVirtualTree;
@@ -176,17 +163,8 @@ var
   item: TDevInfo;
 begin
   ImageIndex:=0;
-  // migration: commented Core usage
-  // if Core.Inited and
-  //    (Column = 0) and
-  //    (Core.MapDevInfo.GetValue(Core.ListDevInfo[Node^.Index], item)) then
-  // begin
-  //   if item.Connected then
-  //     ImageIndex:=1;
-  //
-  //   if item.Paused then
-  //     ImageIndex:=2;
-  // end;
+  if Column = 0 then
+    ImageIndex := ModuleMain.GetDeviceIconIndex(Node^.Index);
 end;
 
 procedure TfrmMain.treeFoldersGetImageIndex(Sender: TBaseVirtualTree;

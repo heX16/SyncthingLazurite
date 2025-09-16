@@ -103,6 +103,10 @@ type
     function GetFolderDisplayText(const Index: Integer): string;
     // Returns display text for device node by index using current JSON tree
     function GetDeviceDisplayText(const Index: Integer): string;
+    // Returns icon index for device node (0=offline,1=online,2=paused)
+    function GetDeviceIconIndex(const Index: Integer): Integer;
+    // Returns hint text for device node
+    function GetDeviceHint(const Index: Integer): string;
 
   end;
 
@@ -406,6 +410,83 @@ begin
         Result := nameStr;
     end;
   end;
+end;
+
+function TModuleMain.GetDeviceIconIndex(const Index: Integer): Integer;
+var
+  dev: TJSONObject;
+  pausedField: TJSONData;
+  deviceId: string;
+  connObj: TJSONObject;
+  connected: Boolean;
+begin
+  // Defaults to offline
+  Result := 0;
+  if (Index < 0) or (Index >= FSyncthingAPI.config_devices.Count) then Exit;
+
+  dev := FSyncthingAPI.config_devices.Objects[Index];
+  if dev = nil then Exit;
+
+  // paused flag from config
+  pausedField := dev.Find('paused');
+  if (pausedField <> nil) and (pausedField.JSONType = jtBoolean) and pausedField.AsBoolean then
+    Exit(2);
+
+  // check connection status in system.connections if available in tree root
+  deviceId := dev.Get('deviceID', '');
+  connected := False;
+  if (deviceId <> '') then
+  begin
+    connObj := FSyncthingAPI.TreeRoot.FindPath('system.connections.connections.' + deviceId) as TJSONObject;
+    if connObj <> nil then
+      connected := connObj.Get('connected', False);
+  end;
+
+  if connected then
+    Result := 1
+  else
+    Result := 0;
+end;
+
+function TModuleMain.GetDeviceHint(const Index: Integer): string;
+var
+  dev: TJSONObject;
+  nameStr, deviceId, addrStr: string;
+  lastSeenStr: string;
+  statsDev: TJSONObject;
+  addresses: TJSONArray;
+begin
+  Result := '';
+  if (Index < 0) or (Index >= FSyncthingAPI.config_devices.Count) then Exit;
+
+  dev := FSyncthingAPI.config_devices.Objects[Index];
+  if dev = nil then Exit;
+
+  nameStr := dev.Get('name', '');
+  if nameStr = '' then
+    nameStr := dev.Get('deviceID', '');
+  deviceId := dev.Get('deviceID', '');
+
+  // try to take first address from config
+  addrStr := '';
+  addresses := dev.Arrays['addresses'];
+  if (addresses <> nil) and (addresses.Count > 0) then
+    addrStr := addresses.Strings[0];
+
+  // try lastSeen from stats/device
+  lastSeenStr := '';
+  if (FSyncthingAPI.stats_device <> nil) then
+  begin
+    statsDev := FSyncthingAPI.stats_device.FindPath(deviceId) as TJSONObject;
+    if statsDev <> nil then
+      lastSeenStr := statsDev.Get('lastSeen', '');
+  end;
+
+  Result := nameStr;
+  if lastSeenStr <> '' then
+    Result := Result + LineEnding + 'Offline: ' + lastSeenStr;
+  if addrStr <> '' then
+    Result := Result + LineEnding + 'Address: ' + addrStr;
 end;
 
 end.
