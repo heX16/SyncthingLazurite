@@ -23,8 +23,6 @@ type
     procedure FormCreate(Sender: TObject);
     procedure FormShow(Sender: TObject);
   private
-    { private declarations }
-    procedure httpGetVer(Request: THttpRequest);
   public
     { public declarations }
   end;
@@ -38,7 +36,7 @@ uses
 {$IFDEF MSWINDOWS}
   Windows,
 {$ENDIF}
-  uModuleCore,
+  uModuleMain,
   SysUtils,
   fpjson;
 
@@ -84,35 +82,10 @@ end;
 
 procedure TfrmAbout.FormShow(Sender: TObject);
 begin
-  Core.API_Get('system/version', @httpGetVer);
-end;
-
-procedure TfrmAbout.httpGetVer(Request: THttpRequest);
-var 
-  j: TJSONData;
-  versionStr: string;
-begin
-  if Core.Online() then
-  begin
-    if HttpRequestToJson(Request, j) then
-  try
-    // Extract version information from Syncthing response
-    // JSON structure: {"arch": "amd64", "longVersion": "...", "os": "darwin", "version": "v0.10.27+3-gea8c3de"}
-    if j.FindPath('version') <> nil then
-      versionStr := j.GetPath('version').AsString
-    else
-      versionStr := 'Unknown';
-    
-    // Display version in the form
-    lbSyncthingVersion.Text := versionStr;
-    finally
-      FreeAndNil(j);
-    end;
-  end else
-  begin
-    // Syncthing is offline - show offline status
-    lbSyncthingVersion.Text := 'Unknown (Offline)';
-  end;
+  // Read version from in-memory JSON tree (already present by default)
+  lbSyncthingVersion.Text := ModuleMain.GetSystemVersionString();
+  if lbSyncthingVersion.Text = '' then
+    lbSyncthingVersion.Text := 'Unknown';
 end;
 
 end.

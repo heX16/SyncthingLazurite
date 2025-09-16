@@ -107,7 +107,9 @@ type
     function GetDeviceIconIndex(const Index: Integer): Integer;
     // Returns hint text for device node
     function GetDeviceHint(const Index: Integer): string;
-
+    function BuildOnlineDevicesHint: string;
+    // Returns system version string from JSON tree (empty if not available)
+    function GetSystemVersionString: string;
   end;
 
 var
@@ -118,6 +120,7 @@ implementation
 {$R *.lfm}
 
 uses
+  syncthing_api_utils,
   LCLIntf, //OpenURL
   Clipbrd,
   DateUtils,
@@ -281,6 +284,8 @@ procedure TModuleMain.Syn_OnTreeChanged(Sender: TObject; EndpointId: TSyncthingE
       begin
         frmMain.treeFolders.RootNodeCount := FSyncthingAPI.config_folders.Count;
         frmMain.treeFolders.Invalidate();
+        // Update tray hint when folders data changes
+        TrayIcon.Hint := BuildOnlineDevicesHint();
       end;
     end;
   end;
@@ -487,6 +492,82 @@ begin
     Result := Result + LineEnding + 'Offline: ' + lastSeenStr;
   if addrStr <> '' then
     Result := Result + LineEnding + 'Address: ' + addrStr;
+end;
+
+function TModuleMain.BuildOnlineDevicesHint: string;
+const
+  MaxItemsInHint = 5;
+var
+  i, shown: Integer;
+  onlineCount: Integer;
+  dev: TJSONObject;
+  nameStr: string;
+  addrStr: string;
+  addresses: TJSONArray;
+  deviceId: string;
+  connected: Boolean;
+  connObj: TJSONObject;
+begin
+  onlineCount := 0;
+  shown := 0;
+  Result := '';
+  for i := 0 to FSyncthingAPI.config_devices.Count - 1 do
+  begin
+    dev := FSyncthingAPI.config_devices.Objects[i];
+    if dev = nil then
+      continue;
+
+    // determine connection state via system.connections
+    deviceId := dev.Get('deviceID', '');
+    connected := False;
+    if deviceId <> '' then
+    begin
+      connObj := FSyncthingAPI.TreeRoot.FindPath('system.connections.connections.' + deviceId) as TJSONObject;
+      if connObj <> nil then
+        connected := connObj.Get('connected', False);
+    end;
+
+    if connected then
+    begin
+      Inc(onlineCount);
+      if shown < MaxItemsInHint then
+      begin
+        nameStr := dev.Get('name', '');
+        if nameStr = '' then
+          nameStr := deviceId;
+
+        addrStr := '';
+        addresses := dev.Arrays['addresses'];
+        if (addresses <> nil) and (addresses.Count > 0) then
+          addrStr := addresses.Strings[0];
+
+        if (addrStr <> '') and IsLocalIP(addrStr) then
+          nameStr := nameStr + cStrLocal;
+
+        Result := Result + nameStr + LineEnding;
+        Inc(shown);
+      end;
+    end;
+  end;
+
+  if onlineCount > MaxItemsInHint then
+    Result := Result + '...' + LineEnding;
+
+  Result := 'Online ' + IntToStr(onlineCount) + ' devices:' + LineEnding + Result;
+end;
+
+function TModuleMain.GetSystemVersionString: string;
+var
+  d: TJSONData;
+  ver: string;
+begin
+  // Read version from in-memory JSON tree: system.version.version
+  d := FSyncthingAPI.TreeRoot.FindPath('system.version.version');
+  if (d <> nil) and (d.JSONType = jtString) then
+    ver := d.AsString
+  else
+    ver := '';
+  Result := ver;
 end;
 
 end.

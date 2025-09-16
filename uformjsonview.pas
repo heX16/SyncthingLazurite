@@ -268,7 +268,8 @@ begin
     if Pos(' (', self.endpoint) > 0 then
       self.endpoint := Copy(self.endpoint, 1, Pos(' (', self.endpoint) - 1);
 
-    Core.API_Get(self.endpoint, @httpGetAPItoTree);
+    // TODO: добавить сюда TAsyncHTTP
+    // REST_API_Get(self.endpoint, @httpGetAPItoTree);
   end;
 end;
 
