@@ -148,10 +148,6 @@ msgstr ""
 msgid "grpFolders"
 msgstr ""
 
-#: tfrmmain.lbexcdetected.caption
-msgid "exception"
-msgstr ""
-
 #: tfrmoptions.btnselectdirconfig.caption
 msgctxt "tfrmoptions.btnselectdirconfig.caption"
 msgid "..."

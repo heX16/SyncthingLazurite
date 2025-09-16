@@ -339,6 +339,9 @@ begin
   begin
     TimerInit.Enabled:=false;
 
+    // TODO: temp, удалить выставление ru
+    SetDefaultLang('ru');
+
     self.State := stUnknown;
 
     SyncthigHost:='127.0.0.1';
@@ -348,6 +351,11 @@ begin
     SyncthigExecPath:=GetSyncthigExecPath();
     SyncthigHome:=GetSyncthigHomePath();
     APIKey:=ReadAPIKeyFromCfg();
+
+    if frmOptions.chRunSyncOnStart.Checked then
+    begin
+      ModuleMain.actConnect.Execute;
+    end;
   end;
 end;
 

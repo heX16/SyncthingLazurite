@@ -55,17 +55,6 @@ object frmMain: TfrmMain
       Action = ModuleMain.actShowOptions
       TabOrder = 2
     end
-    object lbExcDetected: TLabel
-      Left = 3
-      Height = 20
-      Top = 13
-      Width = 65
-      Caption = 'exception'
-      Color = clRed
-      ParentColor = False
-      Transparent = False
-      Visible = False
-    end
   end
   object edConsole: TMemo
     Left = 0

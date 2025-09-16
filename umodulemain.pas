@@ -12,7 +12,8 @@ uses
   fpjson,
   UniqueInstance,
   SyncObjs,
-  syncthing_api;
+  syncthing_api,
+  uLogging;
 
 resourcestring
   cStrLocal = ' (local)';
@@ -289,7 +290,6 @@ procedure TModuleMain.Syn_OnTreeChanged(Sender: TObject; EndpointId: TSyncthingE
       begin
         // We are already in UI thread; update directly
         frmMain.treeDevices.RootNodeCount := FSyncthingAPI.config_devices.Count;
-        writeln(FSyncthingAPI.config_devices.Count);
         frmMain.treeDevices.Invalidate();
       end;
       epConfig_Folders:
@@ -304,7 +304,7 @@ procedure TModuleMain.Syn_OnTreeChanged(Sender: TObject; EndpointId: TSyncthingE
 var
   ep: TSyncthingEndpointId;
 begin
-  writeln('FSyncthingAPI.OnTreeChanged: ' + 
+  DebugLog('FSyncthingAPI.OnTreeChanged: ' + 
     GetEnumName(TypeInfo(TSyncthingEndpointId), Ord(EndpointId)));
 
   if EndpointId <> epConfig then
@@ -336,7 +336,7 @@ var
 begin
   // Print new FSM state to console
   s := GetEnumName(TypeInfo(TSyncthingFSM_State), Ord(NewState));
-  writeln('FSyncthingAPI.OnStateChanged: ' + s);
+  DebugLog('FSyncthingAPI.OnStateChanged: ' + s);
   // Change status circle color depending on state
   case NewState of
     ssOffline:
@@ -344,7 +344,7 @@ begin
     ssConnectingInitAndPing, ssConnectingPingWait, ssConnectingWaitData:
       c := clYellow; // connecting states
     ssOnline:
-      c := clGreen;  // online
+      c := TColor($00B000);  // online
     ssOnlinePaused:
       c := clSilver; // paused
     ssOnlineUnstable:

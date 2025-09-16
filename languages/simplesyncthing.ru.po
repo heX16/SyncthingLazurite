@@ -238,3 +238,99 @@ msgctxt "umodulemain.cstrlocal"
 msgid " (local)"
 msgstr " (локально)"
 
+#: tcore.actconnect.caption
+msgctxt "tcore.actconnect.caption"
+msgid "actConnect"
+msgstr "Подключиться"
+
+#: tcore.actstartandconnect.caption
+msgid "actStartAndConnect"
+msgstr "Запустить и подключиться"
+
+#: tcore.actstartorconnect.caption
+msgid "actStartOrConnect"
+msgstr "Запустить или подключиться"
+
+#: tfrmjsonview.btnhintupd.caption
+msgid "Update"
+msgstr "Обновить"
+
+#: tfrmjsonview.edhintfieldslist.editlabel.caption
+msgid "edHintFieldsList"
+msgstr "Список полей подсказки"
+
+#: tfrmjsonview.edserverurl.editlabel.caption
+msgid "edServerURL"
+msgstr "URL сервера"
+
+#: tfrmjsonview.edserverurl.text
+msgid "http://127.0.0.1:8384"
+msgstr "http://127.0.0.1:8384"
+
+#: tfrmjsonview.mncollapseall.caption
+msgid "mnCollapseAll"
+msgstr "Свернуть всё"
+
+#: tfrmjsonview.mncopyexpandrecursive.caption
+msgid "mnCopyExpandRecursive"
+msgstr "Копировать (раскрыть рекурсивно)"
+
+#: tfrmjsonview.mncopyjsonrecursive.caption
+msgid "mnCopyJsonRecursive"
+msgstr "Копировать JSON (рекурсивно)"
+
+#: tfrmjsonview.mncopyname.caption
+msgid "mnCopyName"
+msgstr "Копировать имя"
+
+#: tfrmjsonview.mncopypath.caption
+msgid "mnCopyPath"
+msgstr "Копировать путь"
+
+#: tfrmjsonview.mncopyvalue.caption
+msgid "mnCopyValue"
+msgstr "Копировать значение"
+
+#: tfrmjsonview.mncopyvaluetext.caption
+msgid "mnCopyValueText"
+msgstr "Копировать текст значения"
+
+#: tfrmjsonview.mnexpandall.caption
+msgid "mnExpandAll"
+msgstr "Развернуть всё"
+
+#: tfrmjsonview.mnshowhintpanel.caption
+msgid "mnShowHintPanel"
+msgstr "Показать панель подсказок"
+
+#: tfrmjsonview.mntestconnect.caption
+msgctxt "tfrmjsonview.mntestconnect.caption"
+msgid "mnTestConnect"
+msgstr "Проверить подключение"
+
+#: tfrmjsonview.mntestgrp.caption
+msgid "mnTestGrp"
+msgstr "Тестовая группа"
+
+#: tfrmjsonview.mntestjson.caption
+msgid "mnTestJson"
+msgstr "Тест JSON"
+
+#: tmodulemain.actconnect.caption
+msgctxt "tmodulemain.actconnect.caption"
+msgid "actConnect"
+msgstr "Подключиться"
+
+#: tmodulemain.actdisconnect.caption
+msgid "actDisconnect"
+msgstr "Отключиться"
+
+#: tmodulemain.menuitem22.caption
+msgctxt "tmodulemain.menuitem22.caption"
+msgid "actPause"
+msgstr "Пауза"
+
+#: tmodulemain.menuitem4.caption
+msgctxt "tmodulemain.menuitem4.caption"
+msgid "actPause"
+msgstr "Пауза"

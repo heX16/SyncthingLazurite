@@ -226,3 +226,99 @@ msgctxt "umodulemain.cstrlocal"
 msgid " (local)"
 msgstr " (local)"
 
+#: tcore.actconnect.caption
+msgctxt "tcore.actconnect.caption"
+msgid "actConnect"
+msgstr "Connect"
+
+#: tcore.actstartandconnect.caption
+msgid "actStartAndConnect"
+msgstr "Start and connect"
+
+#: tcore.actstartorconnect.caption
+msgid "actStartOrConnect"
+msgstr "Start or connect"
+
+#: tfrmjsonview.btnhintupd.caption
+msgid "Update"
+msgstr "Update"
+
+#: tfrmjsonview.edhintfieldslist.editlabel.caption
+msgid "edHintFieldsList"
+msgstr "Hint fields list"
+
+#: tfrmjsonview.edserverurl.editlabel.caption
+msgid "edServerURL"
+msgstr "Server URL"
+
+#: tfrmjsonview.edserverurl.text
+msgid "http://127.0.0.1:8384"
+msgstr "http://127.0.0.1:8384"
+
+#: tfrmjsonview.mncollapseall.caption
+msgid "mnCollapseAll"
+msgstr "Collapse all"
+
+#: tfrmjsonview.mncopyexpandrecursive.caption
+msgid "mnCopyExpandRecursive"
+msgstr "Copy (expand recursively)"
+
+#: tfrmjsonview.mncopyjsonrecursive.caption
+msgid "mnCopyJsonRecursive"
+msgstr "Copy JSON recursively"
+
+#: tfrmjsonview.mncopyname.caption
+msgid "mnCopyName"
+msgstr "Copy name"
+
+#: tfrmjsonview.mncopypath.caption
+msgid "mnCopyPath"
+msgstr "Copy path"
+
+#: tfrmjsonview.mncopyvalue.caption
+msgid "mnCopyValue"
+msgstr "Copy value"
+
+#: tfrmjsonview.mncopyvaluetext.caption
+msgid "mnCopyValueText"
+msgstr "Copy value text"
+
+#: tfrmjsonview.mnexpandall.caption
+msgid "mnExpandAll"
+msgstr "Expand all"
+
+#: tfrmjsonview.mnshowhintpanel.caption
+msgid "mnShowHintPanel"
+msgstr "Show hint panel"
+
+#: tfrmjsonview.mntestconnect.caption
+msgctxt "tfrmjsonview.mntestconnect.caption"
+msgid "mnTestConnect"
+msgstr "Test connection"
+
+#: tfrmjsonview.mntestgrp.caption
+msgid "mnTestGrp"
+msgstr "Test group"
+
+#: tfrmjsonview.mntestjson.caption
+msgid "mnTestJson"
+msgstr "Test JSON"
+
+#: tmodulemain.actconnect.caption
+msgctxt "tmodulemain.actconnect.caption"
+msgid "actConnect"
+msgstr "Connect"
+
+#: tmodulemain.actdisconnect.caption
+msgid "actDisconnect"
+msgstr "Disconnect"
+
+#: tmodulemain.menuitem22.caption
+msgctxt "tmodulemain.menuitem22.caption"
+msgid "actPause"
+msgstr "Pause"
+
+#: tmodulemain.menuitem4.caption
+msgctxt "tmodulemain.menuitem4.caption"
+msgid "actPause"
+msgstr "Pause"

@@ -983,7 +983,6 @@ object ModuleMain: TModuleMain
         Caption = '-'
       end
       object MenuItem8: TMenuItem
-        Action = Core.actReloadConfig
       end
       object MenuItem6: TMenuItem
         Caption = '-'

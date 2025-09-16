@@ -67,7 +67,6 @@ type
     grpFolders: TGroupBox;
     grpDevices: TGroupBox;
     IniPropStoragePos: TIniPropStorage;
-    lbExcDetected: TLabel;
     listEvents: TListBox;
     Panel1: TPanel;
     shStatusCircle: TShape;
