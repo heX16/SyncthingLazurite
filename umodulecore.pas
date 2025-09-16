@@ -77,7 +77,6 @@ type
     procedure actInitExecute(Sender: TObject);
     procedure actStartOrConnectExecute(Sender: TObject);
     procedure actStopAndExitExecute(Sender: TObject);
-    procedure actReloadConfigExecute(Sender: TObject);
     procedure actRestartExecute(Sender: TObject);
     procedure actRunSupportProcExecute(Sender: TObject);
     procedure actStartAndConnectExecute(Sender: TObject);
@@ -87,42 +86,16 @@ type
 
     procedure DataModuleDestroy(Sender: TObject);
     procedure TimerAfterStartCheckTimer(Sender: TObject);
-    procedure TimerEventListenTimer(Sender: TObject);
-    procedure TimerEventProcessTimer(Sender: TObject);
 
     procedure TimerInitTimer(Sender: TObject);
     procedure TimerStartOnStartTimer(Sender: TObject);
-    procedure TimerCheckOnlineTimer(Sender: TObject);
     procedure TimerReadStdOutputTimer(Sender: TObject);
     procedure TimerUpdateTimer(Sender: TObject);
   private
     OutputChankStr: UTF8String;
-
-    // call from other thread!
-    procedure aiohttpAddHeader(Request: THttpRequest; Sender: TObject);
-    procedure aiohttpLongPollingDisconnected(Request: THttpRequest; Sender: TObject);
-
   public
-    (*
-    // read devices and folders config
-    TODO: /rest/system/config (DEPRECATED)
-    GET /rest/system/config (DEPRECATED)
-    https://docs.syncthing.net/dev/rest.html#system-endpoints
-    Deprecated since version v1.12.0:
-    This endpoint still works as before but is deprecated.
-    Use /rest/config instead.
-    *)
-    procedure httpReadConfig(Request: THttpRequest);
-
     procedure httpUpdateConnections(Request: THttpRequest);
     procedure httpUpdateDeviceStat(Request: THttpRequest);
-    procedure httpUpdateFolderStat(Request: THttpRequest);
-
-    procedure httpCheckOnline(Request: THttpRequest);
-
-    procedure httpGetVer(Request: THttpRequest);
-
-    procedure httpLongPolling(Request: THttpRequest);
   public
 
     // Flag that core is inited
@@ -143,10 +116,6 @@ type
     // REST API pooling
     aiohttpLongPolling: TAsyncHTTP;
 
-    EventQueue: TSyncthingEventQueue;
-
-    Version: string;
-
     APIKey: string;
     SyncthigExecPath: UTF8String;
 
@@ -158,36 +127,22 @@ type
     SyncthigHost: UTF8String;
     SyncthigPort: integer;
 
-    httpPingInProc: boolean;
-
     EventsLastId: int64;
-
-    MapDevInfo: TMapDevInfo;
-    MapFolderInfo: TMapFolderInfo;
-    ListDevInfo: TStringList;
-    ListFolderInfo: TStringList;
 
     procedure Init(); virtual;
     procedure Done(); virtual;
     procedure EventOnline(); virtual;
     procedure EventOffline(); virtual;
 
-    function ListDev_GetText(NodeIndex: Cardinal): String;
-
     function GetSyncthigExecPath(): UTF8String; virtual;
     function GetSyncthigHomePath(): UTF8String; virtual;
     function ReadAPIKeyFromCfg(): string; virtual;
-    procedure LoadDevices(Json: TJSONData);
-    procedure LoadFolders(Json: TJSONData);
     procedure FillSyncthingExecPath();
     procedure FillSupportExecPath();
-    procedure UpdateSyncthingVersion();
 
     procedure StartAndConnect();
     procedure Stop();
 
-    procedure StartLongPolling();
-    procedure StopLongPolling();
     procedure EventProcess(event: TJSONObject); virtual;
 
     function MakeOnlineHint(): string;
@@ -486,45 +441,13 @@ begin
     '', queueKey);
 end;
 
-procedure TCore.aiohttpAddHeader(Request: THttpRequest; Sender: TObject);
-begin
-  if Pos('X-API-Key:', Request.HeadersRaw) = 0 then
-  begin
-    if Request.HeadersRaw <> '' then
-      Request.HeadersRaw := 'X-API-Key: ' + self.APIKey + LineEnding + Request.HeadersRaw
-    else
-      Request.HeadersRaw := 'X-API-Key: ' + self.APIKey;
-  end;
-end;
-
-procedure TCore.aiohttpLongPollingDisconnected(Request: THttpRequest; Sender: TObject);
-begin
-  //TODO: check `state`
-  self.TimerCheckOnline.Enabled:=true;
-end;
-
-procedure TCore.httpReadConfig(Request: THttpRequest);
-var j: TJSONData;
-begin
-  if HttpRequestToJson(Request, j) then
-  try
-    LoadDevices(j);
-    LoadFolders(j);
-    // OFF: frmMain.treeDevices.RootNodeCount:=ListDevInfo.Count;
-    // OFF: frmMain.treeFolders.RootNodeCount:=ListFolderInfo.Count;
-  finally
-    FreeAndNil(j);
-  end;
-end;
-
 procedure TCore.httpUpdateConnections(Request: THttpRequest);
 var
   JData, j2: TJSONData;
   ij: TJSONEnum;
   d: TDevInfo;
 begin
-  //todo: change logic - first update MapDevInfo and after update DevicesItems
-  //todo: httpUpdateConnections - move to Core!
+  (*
   if HttpRequestToJson(Request, JData) then
   try
     j2 := JData.GetPath('connections');
@@ -548,6 +471,7 @@ begin
   finally
     FreeAndNil(JData);
   end;
+  *)
 end;
 
 procedure TCore.httpUpdateDeviceStat(Request: THttpRequest);
@@ -558,7 +482,7 @@ var
   dt: TDateTime;
   d: TDevInfo;
 begin
-  // Moved from uModuleMain -> Core
+  (*
   if HttpRequestToJson(Request, JData) then
   try
     // enum all device
@@ -582,151 +506,9 @@ begin
   finally
     FreeAndNil(JData);
   end;
+  *)
 end;
 
-procedure TCore.httpUpdateFolderStat(Request: THttpRequest);
-var
-  JData: TJSONData;
-  //ij: TJSONEnum;
-begin
-  // Moved from uModuleMain -> Core
-  if HttpRequestToJson(Request, JData) then
-  try
-    // TODO: WIP...
-  finally
-    JData.Free();
-  end;
-end;
-
-procedure TCore.TimerCheckOnlineTimer(Sender: TObject);
-begin
-  TimerCheckOnline.Enabled:=false;
-  if not Terminated then begin
-    if not aiohttp.RequestInQueue('system/ping') then
-      API_Get('system/ping', @httpCheckOnline);
-  end;
-end;
-
-procedure TCore.httpCheckOnline(Request: THttpRequest);
-begin
-  OnlineTested := true;
-  if not Terminated then
-    // TODO: Request._Connected_ - rename or remove it
-    if Request.Succeeded then
-    begin
-      //todo: check ping result
-      if Request.Status <> 200 then
-      begin
-        if self.State <> stStopped then
-        begin
-          self.State := stStopped;
-          EventOffline();
-        end;
-      end else
-      begin
-        if self.State <> stWork then
-        begin
-          self.State := stWork;
-          EventOnline();
-        end;
-      end;
-    end else
-    begin
-      if self.State <> stStopped then
-      begin
-        self.State := stStopped;
-        EventOffline();
-      end;
-    end;
-end;
-
-procedure TCore.httpGetVer(Request: THttpRequest);
-var 
-  j: TJSONData;
-begin
-  if HttpRequestToJson(Request, j) then
-  try
-    // Extract version information from Syncthing response
-    // JSON structure: {"arch": "amd64", "longVersion": "...", "os": "darwin", "version": "v0.10.27+3-gea8c3de"}
-    if j.FindPath('version') <> nil then
-      Version := j.GetPath('version').AsString
-    else
-      Version := 'Unknown';
-  finally
-    FreeAndNil(j);
-  end;
-end;
-
-procedure TCore.httpLongPolling(Request: THttpRequest);
-var
-  JData: TJSONData;
-  a: TJSONArray;
-  j: TJSONObject;
-  e: TJSONData;
-  i: integer;
-  id: integer;
-  added: Boolean;
-begin
-  added := false;
-  JData := nil;
-  if HttpRequestToJson(Request, JData) then
-  begin
-    try
-      if JData is TJSONArray then
-      begin
-        a := JData as TJSONArray;
-
-        // Extract objects safely without skipping by always taking index 0
-        while a.Count > 0 do
-        begin
-          // remove this object from `JData` tree.
-          // now, this is my object, and i am responsible for free the memory.
-          e := a.Extract(0);
-
-          if (e is TJSONObject) then
-          begin
-            j := e as TJSONObject;
-            id := j.Get('id', -1);
-            if (id >= 0) then
-            begin
-              // valid event, update and send to queue
-              self.EventsLastId := id;
-
-              // TODO: add thread safety   !!!!!!!!!!!!!!!!!!!!
-              self.EventQueue.Push(j);
-              added := true;
-            end;
-          end else
-          begin
-            // invalid record - just burn it
-            FreeAndNil(e);
-          end;
-        end;
-      end;
-    finally
-      FreeAndNil(JData);
-    end;
-  end;
-
-  if added then
-    Self.TimerEventProcess.Enabled:=true;
-
-  self.TimerEventListen.Enabled:=true;
-end;
-
-//todo: TEMP!!!!!!!!!
-function DoFill(Node:TDOMNode): widestring;
-var
-  i: integer;
-begin
-  Result := '';
-  //if not Assigned(Node) then exit;
-  for i:=0 to Node.ChildNodes.Count - 1 do
-  begin
-    Result := Result + Node.ChildNodes[i].NodeName + ', ';
-    Result := Result + ' (' + DoFill(Node.ChildNodes[i]) + '), ';
-  end;
-end;
 
 function GetXml(var Node:TDOMNode; Name: WideString): boolean;
 var N:TDOMNode;
@@ -773,64 +555,6 @@ begin
     Result := frmOptions.edAPIKey.Text;
 end;
 
-procedure TCore.LoadDevices(Json: TJSONData);
-var
-  JData: TJSONData;
-  ij: TJSONEnum;
-  j: TJSONObject;
-  id: string;
-  d: TDevInfo;
-begin
-  JData := Json.FindPath('devices');
-  ListDevInfo.Clear();
-  if JData <> nil then
-    for ij in JData do
-    begin
-      if ij.Value.InheritsFrom(TJSONObject) then
-      begin
-        j := ij.Value as TJSONObject;
-        id := j.Get('deviceID', 'ERROR');
-        if MapDevInfo.contains(id) then begin
-          d := MapDevInfo.Items[id];
-          d.Update(j);
-        end else begin
-          d := TDevInfo.Create(j);
-          MapDevInfo.insert(id, d);
-        end;
-        ListDevInfo.Add(d.Id);
-      end;
-    end;
-end;
-
-procedure TCore.LoadFolders(Json: TJSONData);
-var
-  JData: TJSONData;
-  ij: TJSONEnum;
-  j: TJSONObject;
-  id: string;
-  d: TFolderInfo;
-begin
-  JData := Json.FindPath('folders');
-  ListFolderInfo.Clear();
-  if JData <> nil then
-    for ij in JData do
-    begin
-      if ij.Value.InheritsFrom(TJSONObject) then
-      begin
-        j := ij.Value as TJSONObject;
-        id := j.Get('id', 'ERROR');
-        if MapFolderInfo.contains(id) then begin
-          d := MapFolderInfo.Items[id];
-          d.Update(j);
-        end else begin
-          d := TFolderInfo.Create(j);
-          MapFolderInfo.insert(id, d);
-        end;
-        ListFolderInfo.Add(d.Id);
-      end;
-    end;
-end;
-
 procedure TCore.StartAndConnect();
 begin
   //TODO: добавить поддержку "подключения" к уже запущенному процессу (без консоли разумеется)
@@ -858,54 +582,10 @@ procedure TCore.Stop();
 begin
   // move state to stopping, final state will be set by httpCheckOnline
   self.State := stStopping;
-  // stop long-polling while stopping
-  StopLongPolling();
-  //todo: WIP!!!! - чет не заработал POST метод...
-  //todo: OLD:
-  SendJSON('rest/system/shutdown');
   //aiohttp.Post('rest/system/shutdown', '', nil);
   if ProcessSupport.Active then
     ProcessSupport.Terminate(0);
   //ProcessSyncthing.Terminate(0);
-end;
-
-procedure TCore.StartLongPolling();
-var
-  rest: string;
-begin
-  // Ref:
-  // https://docs.syncthing.net/rest/events-get.html
-
-
-  // TODO: add `Core.State` check (in future...)
-  if not self.Terminated then
-  begin
-    // allow long polling only when stable online and not in transition
-    if self.InTransition() or (not self.Online()) then Exit;
-    if not self.aiohttpLongPolling.RequestInQueue('polling') then
-    begin
-      rest := 'events'+'?'+
-              'since='+IntToStr(self.EventsLastId)+'&'+
-              'limit='+IntToStr(10)+'&'+
-              'timeout='+IntToStr(60);
-
-      self.aiohttpLongPolling.Get(
-        self.SyncthigServer+'rest/' + rest,
-        @httpLongPolling,
-        '',
-        'polling'
-      );
-    end;
-  end;
-end;
-
-procedure TCore.StopLongPolling();
-begin
-  // Abort only current long-poll request; do not free aiohttpLongPolling
-  if Assigned(self.aiohttpLongPolling) then
-    self.aiohttpLongPolling.AbortActiveConnection();
-  // Also stop immediate relaunch until explicitly restarted
-  self.TimerEventListen.Enabled:=false;
 end;
 
 procedure TCore.EventProcess(event: TJSONObject);
@@ -995,6 +675,7 @@ begin
 end;
 
 function TCore.MakeOnlineHint(): string;
+(*
 var
   i: Core.MapDevInfo.TIterator;
   OnlineCount: integer;
@@ -1003,7 +684,9 @@ var
   DeviceAddr: string;
 const
   MaxItemsInHint = 5;
+*)
 begin
+  (*
   i := self.MapDevInfo.Iterator();
   OnlineCount := 0;
   OnlineList := '';
@@ -1029,6 +712,7 @@ begin
     OnlineList := OnlineList + '...' + #13;
 
   Result := 'Online ' + IntToStr(OnlineCount) + ' devices:' + #13 + OnlineList;
+  *)
 end;
 
 procedure TCore.TimerInitTimer(Sender: TObject);
@@ -1068,12 +752,6 @@ procedure TCore.actStopAndExitExecute(Sender: TObject);
 begin
   actStop.Execute();
   Application.Terminate();
-end;
-
-procedure TCore.actReloadConfigExecute(Sender: TObject);
-begin
-  // TODO: depricated!
-  self.API_Get('system/config', @httpReadConfig);
 end;
 
 procedure TCore.actInitExecute(Sender: TObject);
@@ -1124,20 +802,6 @@ end;
 procedure TCore.actUpdateDataExecute(Sender: TObject);
 begin
   if self.Online() then
-  begin
-    actReloadConfig.Execute();
-
-    if not self.aiohttp.RequestInQueue('system/connections') then
-      self.API_Get('system/connections', @self.httpUpdateConnections);
-
-    if not self.aiohttp.RequestInQueue('stats/folder') then
-      self.API_Get('stats/folder', @self.httpUpdateFolderStat);
-
-    if not self.aiohttp.RequestInQueue('stats/device') then
-      self.API_Get('stats/device', @self.httpUpdateDeviceStat);
-  end;
-
-  if self.Online() then
     ModuleMain.TrayIcon.Hint := Core.MakeOnlineHint()
   else
     ModuleMain.TrayIcon.Hint := '';
@@ -1165,64 +829,21 @@ begin
   end;
 end;
 
-procedure TCore.TimerEventListenTimer(Sender: TObject);
-begin
-  self.TimerEventListen.Enabled:=false;
-  if (not self.InTransition()) and self.Online() then
-    self.StartLongPolling();
-end;
-
-procedure TCore.TimerEventProcessTimer(Sender: TObject);
-var
-  ev: TJSONObject;
-begin
-  self.TimerEventProcess.Enabled:=false;
-
-  // Process all queued events
-  while (self.EventQueue.Size() > 0) do
-  begin
-    // Take ownership and remove from queue
-    ev := self.EventQueue.Front();
-    self.EventQueue.Pop();
-    try
-      // Dispatch event to processor
-      self.EventProcess(ev);
-    finally
-      // Free event JSON after processing
-      FreeAndNil(ev);
-    end;
-  end;
-
-  // TODO: WIP...
-  self.TimerUpdate.Enabled:=true;
-end;
-
-
 procedure TCore.Init();
 begin
   self.State := stUnknown;
-
-  MapDevInfo := TMapDevInfo.Create();
-  ListDevInfo := TStringList.Create();
-  EventQueue := uSyncthingTypes.TSyncthingEventQueue.Create();
-
-  MapFolderInfo := TMapFolderInfo.Create();
-  ListFolderInfo := TStringList.Create();
 
   aiohttp := TAsyncHTTP.Create;
   aiohttp.ConnectTimeout:=1000;
   aiohttp.RetryCount:=1;
   aiohttp.IOTimeout:=1000;
   aiohttp.KeepConnection:=true;
-  aiohttp.OnOpened:=@aiohttpAddHeader;
 
   aiohttpLongPolling := TAsyncHTTP.Create;
   aiohttpLongPolling.ConnectTimeout:=1000;
   aiohttpLongPolling.RetryCount:=0;
   aiohttpLongPolling.IOTimeout:=61000;
   aiohttpLongPolling.KeepConnection:=true;
-  aiohttpLongPolling.OnOpened:=@aiohttpAddHeader;
-  aiohttpLongPolling.OnDisconnected:=@aiohttpLongPollingDisconnected;
 
 
   SyncthigHost:='127.0.0.1';
@@ -1254,35 +875,6 @@ begin
   TimerEventProcess.Enabled:=false;
   FreeAndNil(aiohttp);
   FreeAndNil(aiohttpLongPolling);
-
-  FreeAndNil(ListFolderInfo);
-  FreeAndNil(ListDevInfo);
-  FreeAndNil(EventQueue);
-
-  //todo: FUTURE. for i in MapFolderInfo do i.Free(); - https://bugs.freepascal.org/view.php?id=35940
-  i := MapFolderInfo.Iterator();
-  if i <> nil then
-    try
-      repeat
-        i.Value.Free();
-      until not i.Next;
-    finally
-      FreeAndNil(i);
-    end;
-
-  FreeAndNil(MapFolderInfo);
-
-  i2 := MapDevInfo.Iterator();
-  if i2 <> nil then
-    try
-      repeat
-        i2.Value.Free();
-      until not i2.Next;
-    finally
-      FreeAndNil(i2);
-    end;
-
-  FreeAndNil(MapDevInfo);
 end;
 
 procedure TCore.EventOnline();
@@ -1298,16 +890,6 @@ begin
   // OFF: frmMain.shStatusCircle.Brush.Color:=clPurple;
   // stop listening events when offline
   self.TimerEventListen.Enabled:=false;
-end;
-
-function TCore.ListDev_GetText(NodeIndex: Cardinal): String;
-begin
-  if self.Inited and
-     (NodeIndex < Self.ListDevInfo.Count)
-  then
-    ListDev_GetText := Self.MapDevInfo[Self.ListDevInfo[NodeIndex]].Name
-  else
-    ListDev_GetText := '';
 end;
 
 procedure TCore.AddStringToConsole(Str: UTF8String);
@@ -1373,11 +955,6 @@ begin
   //todo: WIP: FillSupportExecPath
   ProcessSupport.Executable := 'D:\NetDrive\AppsPortableHex\Programs\_Net\syncthing\syncthing-inotify.exe';
   ProcessSupport.Parameters.Text := '--home=' + SyncthigHome;
-end;
-
-procedure TCore.UpdateSyncthingVersion();
-begin
-  Self.API_Get('system/version', @Self.httpGetVer);
 end;
 
 end.

@@ -49,7 +49,6 @@ object Core: TCore
   object TimerCheckOnline: TTimer
     Enabled = False
     Interval = 500
-    OnTimer = TimerCheckOnlineTimer
     Left = 472
     Top = 192
   end
@@ -64,7 +63,6 @@ object Core: TCore
     object actReloadConfig: TAction
       Category = 'GUI'
       Caption = 'actReloadConfig'
-      OnExecute = actReloadConfigExecute
     end
     object actUpdateData: TAction
       Category = 'GUI'
@@ -135,7 +133,6 @@ object Core: TCore
   object TimerEventProcess: TTimer
     Enabled = False
     Interval = 100
-    OnTimer = TimerEventProcessTimer
     Left = 296
     Top = 192
   end
@@ -147,7 +144,6 @@ object Core: TCore
   end
   object TimerEventListen: TTimer
     Interval = 100
-    OnTimer = TimerEventListenTimer
     Left = 296
     Top = 136
   end
