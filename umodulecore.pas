@@ -510,8 +510,8 @@ begin
   try
     LoadDevices(j);
     LoadFolders(j);
-    frmMain.treeDevices.RootNodeCount:=ListDevInfo.Count;
-    frmMain.treeFolders.RootNodeCount:=ListFolderInfo.Count;
+    // OFF: frmMain.treeDevices.RootNodeCount:=ListDevInfo.Count;
+    // OFF: frmMain.treeFolders.RootNodeCount:=ListFolderInfo.Count;
   finally
     FreeAndNil(j);
   end;
@@ -543,8 +543,8 @@ begin
         self.MapDevInfo[ij.Key] := d;
       end;
     end;
-    frmMain.treeDevices.RootNodeCount:=j2.Count;
-    frmMain.treeDevices.Invalidate(); //todo: <-optimize
+    // OFF: frmMain.treeDevices.RootNodeCount:=j2.Count;
+    // OFF: frmMain.treeDevices.Invalidate(); //todo: <-optimize
   finally
     FreeAndNil(JData);
   end;
@@ -933,12 +933,12 @@ begin
     info
   ]);
 
-  frmMain.listEvents.Items.Insert(0, s);
+  // OFF: frmMain.listEvents.Items.Insert(0, s);
 
-  while frmMain.listEvents.Items.Count > 100 do
-    frmMain.listEvents.Items.Delete(frmMain.listEvents.Items.Count-1);
+  // OFF: while frmMain.listEvents.Items.Count > 100 do
+  // OFF:   frmMain.listEvents.Items.Delete(frmMain.listEvents.Items.Count-1);
 
-  frmMain.listEvents.ItemIndex := frmMain.listEvents.Items.Count-1;
+  // OFF: frmMain.listEvents.ItemIndex := frmMain.listEvents.Items.Count-1;
 end;
 
 procedure TCore.ReadStdOutput(Proc: TProcessUTF8;
@@ -1287,7 +1287,7 @@ end;
 
 procedure TCore.EventOnline();
 begin
-  frmMain.shStatusCircle.Brush.Color:=clGreen;
+  // OFF: frmMain.shStatusCircle.Brush.Color:=clGreen;
   actUpdateData.Execute();
   // start listening events when we became online
   self.TimerEventListen.Enabled:=true;
@@ -1295,7 +1295,7 @@ end;
 
 procedure TCore.EventOffline();
 begin
-  frmMain.shStatusCircle.Brush.Color:=clPurple;
+  // OFF: frmMain.shStatusCircle.Brush.Color:=clPurple;
   // stop listening events when offline
   self.TimerEventListen.Enabled:=false;
 end;

@@ -30,7 +30,6 @@ object frmMain: TfrmMain
       Width = 160
       Action = ModuleMain.actConnect
       TabOrder = 0
-      OnClick = btnStartClick
     end
     object btnStop: TButton
       Left = 312
@@ -39,7 +38,6 @@ object frmMain: TfrmMain
       Width = 163
       Action = ModuleMain.actDisconnect
       TabOrder = 1
-      OnClick = btnStopClick
     end
     object shStatusCircle: TShape
       Left = 8

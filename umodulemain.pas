@@ -92,12 +92,14 @@ type
     procedure TrayIconDblClick(Sender: TObject);
   private
     FSyncthingAPI: TSyncthingAPI; // Core Syncthing API instance (created manually)
+
     LockJSONTree: TCriticalSection; // Critical section for JSON tree updates
     procedure Syn_OnConnected(Sender: TObject);
     procedure Syn_OnEvent(Sender: TObject; Event: TJSONObject);
-    procedure Syn_OnTreeChanged(Sender: TObject; const Path: UTF8String);
+    procedure Syn_OnTreeChanged(Sender: TObject; EndpointId: TSyncthingEndpointId; const Path: UTF8String);
     procedure Syn_OnBeforeTreeModify(Sender: TObject);
     procedure Syn_OnAfterTreeModify(Sender: TObject);
+    procedure Syn_OnStateChanged(Sender: TObject; NewState: TSyncthingFSM_State);
   public
 
   end;
@@ -119,7 +121,8 @@ uses
   uSyncthingTypes,
   uFormJsonView,
   uFormOptions,
-  uFormMain;
+  uFormMain,
+  TypInfo;
 
 { TModuleMain }
 
@@ -250,6 +253,7 @@ begin
   FSyncthingAPI.OnTreeChanged := @Syn_OnTreeChanged;
   FSyncthingAPI.OnBeforeTreeModify := @Syn_OnBeforeTreeModify;
   FSyncthingAPI.OnAfterTreeModify := @Syn_OnAfterTreeModify;
+  FSyncthingAPI.OnStateChanged := @Syn_OnStateChanged;
 end;
 
 procedure TModuleMain.DataModuleDestroy(Sender: TObject);
@@ -271,9 +275,17 @@ begin
   // TODO: process raw event or forward to UI/log
 end;
 
-procedure TModuleMain.Syn_OnTreeChanged(Sender: TObject; const Path: UTF8String);
+procedure TModuleMain.Syn_OnTreeChanged(Sender: TObject; EndpointId: TSyncthingEndpointId; const Path: UTF8String);
 begin
-  // TODO: react to JSON tree updates (refresh views as needed)
+  // React to JSON tree updates: adjust devices tree node count when devices config changes
+  case EndpointId of
+    epConfig_Devices:
+    begin
+      // We are already in UI thread; update directly
+      frmMain.treeDevices.RootNodeCount := FSyncthingAPI.config_devices.Count;
+      frmMain.treeDevices.Invalidate();
+    end;
+  end;
 end;
 
 procedure TModuleMain.Syn_OnBeforeTreeModify(Sender: TObject);
@@ -286,6 +298,15 @@ procedure TModuleMain.Syn_OnAfterTreeModify(Sender: TObject);
 begin
   if Assigned(LockJSONTree) then
     LockJSONTree.Leave;
+end;
+
+procedure TModuleMain.Syn_OnStateChanged(Sender: TObject; NewState: TSyncthingFSM_State);
+var
+  s: string;
+begin
+  // Print new FSM state to console
+  s := GetEnumName(TypeInfo(TSyncthingFSM_State), Ord(NewState));
+  writeln('FSyncthingAPI.OnStateChanged: ' + s);
 end;
 
 end.

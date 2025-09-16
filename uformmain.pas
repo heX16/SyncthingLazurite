@@ -76,8 +76,6 @@ type
     SplitterEventsBottom: TSplitter;
     treeFolders: TVirtualStringTree;
     treeDevices: TVirtualStringTree;
-    procedure btnStartClick(Sender: TObject);
-    procedure btnStopClick(Sender: TObject);
     procedure FormCreate(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
     procedure FormWindowStateChange(Sender: TObject);
@@ -123,16 +121,6 @@ uses
 
 
 { TfrmMain }
-
-procedure TfrmMain.btnStartClick(Sender: TObject);
-begin
-  Core.StartAndConnect();
-end;
-
-procedure TfrmMain.btnStopClick(Sender: TObject);
-begin
-  Core.Stop();
-end;
 
 procedure TfrmMain.FormCreate(Sender: TObject);
 begin

@@ -823,6 +823,7 @@ begin
   inherited Create(AOwner);
   FState := ssOffline;
   FTreeRoot := CreateDefaultRoot;
+  UpdateAllJsonPointersFromTree();
   FAPIKey := '';
   FHost := '127.0.0.1';
   FPort := 8384;
