@@ -54,85 +54,209 @@ type
   TStateChangedEvent = procedure(Sender: TObject; NewState: TSyncthingFSM_State) of object;
 
   // Endpoints enum for REST initial sync
+  // Ref: https://docs.syncthing.net/v2.0.0/dev/rest.html
   TSyncthingEndpointId = (
-    epUnknown = 0, //
+    epUnknown = 0,
 
-    // Config
-    epConfig, //
-    epConfig_RestartRequired, //
-    epConfig_Folders, //
-    epConfig_Devices, //
-    epConfig_Folders_Subitems, //
-    epConfig_Devices_Subitems, //
-    epConfig_Defaults_Folder, //
-    epConfig_Defaults_Device, //
-    epConfig_Defaults_Ignores, //
-    epConfig_Options, //
-    epConfig_Ldap, //
-    epConfig_Gui, //
+    // Config Endpoints ################
 
-    // System Endpoints
-    epSystem_Browse, //
-    epSystem_Connections, //
-    epSystem_Debug, //
-    epSystem_Discovery, // (GET,POST)
-    epSystem_Error, //
-    epSystem_Error_Clear, // (POST)
-    epSystem_Log, //
-    epSystem_Logtxt, //
-    epSystem_Loglevels, // (GET,POST)
-    epSystem_Paths, //
-    epSystem_Pause, // (POST)
-    epSystem_Ping, // (GET,POST)
-    epSystem_Reset, // (POST)
-    epSystem_Restart, // (POST)
-    epSystem_Resume, // (POST)
-    epSystem_Shutdown, // (POST)
-    epSystem_Status, //
-    epSystem_Upgrade, // (GET,POST)
-    epSystem_Version, //
+    // URI: /rest/config (GET/PUT)
+    // Returns entire config or replaces it
+    // Ref: https://docs.syncthing.net/v2.0.0/rest/config.html
+    epConfig,
+    // URI: /rest/config/restart-required (GET)
+    // Returns whether restart is required for current config to take effect
+    epConfig_RestartRequired,
+    // URI: /rest/config/folders (GET/PUT/POST)
+    // Returns all folders as array, PUT replaces array, POST adds/replaces single folder
+    epConfig_Folders,
+    // URI: /rest/config/devices (GET/PUT/POST)
+    // Returns all devices as array, PUT replaces array, POST adds/replaces single device
+    epConfig_Devices,
+    // URI: /rest/config/folders/*id* (GET/PUT/PATCH/DELETE)
+    // Get/replace/patch/delete specific folder by ID
+    epConfig_Folders_Subitems,
+    // URI: /rest/config/devices/*id* (GET/PUT/PATCH/DELETE)
+    // Get/replace/patch/delete specific device by ID
+    epConfig_Devices_Subitems,
+    // URI: /rest/config/defaults/folder (GET/PUT/PATCH)
+    // Returns template folder config with default values
+    epConfig_Defaults_Folder,
+    // URI: /rest/config/defaults/device (GET/PUT/PATCH)
+    // Returns template device config with default values
+    epConfig_Defaults_Device,
+    // URI: /rest/config/defaults/ignores (GET/PUT)
+    // Returns default ignore patterns for new folders
+    epConfig_Defaults_Ignores,
+    // URI: /rest/config/options (GET/PUT/PATCH)
+    // Global Syncthing options configuration
+    epConfig_Options,
+    // URI: /rest/config/ldap (GET/PUT/PATCH)
+    // LDAP authentication configuration
+    epConfig_Ldap,
+    // URI: /rest/config/gui (GET/PUT/PATCH)
+    // Web interface configuration
+    epConfig_Gui,
 
-    // Cluster
-    epCluster_Pending_Devices, // (GET,DELETE)
-    epCluster_Pending_Folders, // (GET,DELETE)
+    // System Endpoints ################
 
-    // Folder
-    epFolder_Errors, //
-    epFolder_Versions, // (GET,POST)
+    // URI: /rest/system/browse (GET)
+    // Ref: https://docs.syncthing.net/v2.0.0/rest/system-browse-get.html
+    epSystem_Browse,
+    // URI: /rest/system/connections (GET)
+    // Ref: https://docs.syncthing.net/v2.0.0/rest/system-connections-get.html
+    epSystem_Connections,
+    epSystem_Debug,
+    // URI: /rest/system/discovery (GET/POST)
+    // Ref: https://docs.syncthing.net/v2.0.0/rest/system-discovery-get.html
+    epSystem_Discovery,
+    // URI: /rest/system/error (GET/POST)
+    // Ref: https://docs.syncthing.net/v2.0.0/rest/system-error-get.html
+    epSystem_Error,
+    // URI: /rest/system/error/clear (POST)
+    // Ref: https://docs.syncthing.net/v2.0.0/rest/system-error-clear-post.html
+    epSystem_Error_Clear,
+    // URI: /rest/system/log (GET)
+    // Ref: https://docs.syncthing.net/v2.0.0/rest/system-log-get.html
+    epSystem_Log,
+    // URI: /rest/system/log.txt (GET)
+    // Ref: https://docs.syncthing.net/v2.0.0/rest/system-log-get.html#get-rest-system-log-txt
+    epSystem_Logtxt,
+    // URI: /rest/system/loglevels (GET/POST)
+    // Ref: https://docs.syncthing.net/v2.0.0/rest/system-loglevels-get.html
+    epSystem_Loglevels,
+    // URI: /rest/system/paths (GET)
+    // Ref: https://docs.syncthing.net/v2.0.0/rest/system-paths-get.html
+    epSystem_Paths,
+    // URI: /rest/system/pause (POST)
+    // Ref: https://docs.syncthing.net/v2.0.0/rest/system-pause-post.html
+    epSystem_Pause,
+    // URI: /rest/system/ping (GET/POST)
+    // Ref: https://docs.syncthing.net/v2.0.0/rest/system-ping-get.html
+    epSystem_Ping,
+    // URI: /rest/system/reset (POST)
+    // Ref: https://docs.syncthing.net/v2.0.0/rest/system-reset-post.html
+    epSystem_Reset,
+    // URI: /rest/system/restart (POST)
+    // Ref: https://docs.syncthing.net/v2.0.0/rest/system-restart-post.html
+    epSystem_Restart,
+    // URI: /rest/system/resume (POST)
+    // Ref: https://docs.syncthing.net/v2.0.0/rest/system-resume-post.html
+    epSystem_Resume,
+    // URI: /rest/system/shutdown (POST)
+    // Ref: https://docs.syncthing.net/v2.0.0/rest/system-shutdown-post.html
+    epSystem_Shutdown,
+    // URI: /rest/system/status (GET)
+    // Ref: https://docs.syncthing.net/v2.0.0/rest/system-status-get.html
+    epSystem_Status,
+    // URI: /rest/system/upgrade (GET/POST)
+    // Ref: https://docs.syncthing.net/v2.0.0/rest/system-upgrade-get.html
+    epSystem_Upgrade,
+    // URI: /rest/system/version (GET)
+    // Ref: https://docs.syncthing.net/v2.0.0/rest/system-version-get.html
+    epSystem_Version,
 
-    // Database
-    epDb_Browse, //
-    epDb_Completion, //
-    epDb_File, //
-    epDb_Ignores, // (GET,POST)
-    epDb_LocalChanged, //
-    epDb_Need, //
-    epDb_Override, // (POST)
-    epDb_Prio, // (POST)
-    epDb_RemoteNeed, //
-    epDb_Revert, // (POST)
-    epDb_Scan, // (POST)
-    epDb_Status, //
+    // Cluster Endpoints ################
 
-    // Events
-    epEvents, //
-    epEvents_Disk, //
+    // URI: /rest/cluster/pending/devices (GET/DELETE)
+    // Ref: https://docs.syncthing.net/v2.0.0/rest/cluster-pending-devices-get.html
+    epCluster_Pending_Devices,
+    // URI: /rest/cluster/pending/folders (GET/DELETE)
+    // Ref: https://docs.syncthing.net/v2.0.0/rest/cluster-pending-folders-get.html
+    epCluster_Pending_Folders,
 
-    // Statistics
-    epStats_Device, //
-    epStats_Folder, //
+    // Folder Endpoints ################
 
-    // Misc Services
-    epSvc_DeviceId, //
-    epSvc_Lang, //
-    epSvc_Random_String, //
-    epSvc_Report, //
+    // URI: /rest/folder/errors (GET)
+    // Ref: https://docs.syncthing.net/v2.0.0/rest/folder-errors-get.html
+    epFolder_Errors,
+    // URI: /rest/folder/versions (GET/POST)
+    // Ref: https://docs.syncthing.net/v2.0.0/rest/folder-versions-get.html
+    epFolder_Versions,
 
-    // Debug
-    epDebug, //
+    // Database Endpoints ################
 
-    // Noauth
-    epNoauth_Health, //
+    // URI: /rest/db/browse (GET)
+    // Ref: https://docs.syncthing.net/v2.0.0/rest/db-browse-get.html
+    epDb_Browse,
+    // URI: /rest/db/completion (GET)
+    // Ref: https://docs.syncthing.net/v2.0.0/rest/db-completion-get.html
+    epDb_Completion,
+    // URI: /rest/db/file (GET)
+    // Ref: https://docs.syncthing.net/v2.0.0/rest/db-file-get.html
+    epDb_File,
+    // URI: /rest/db/ignores (GET/POST)
+    // Ref: https://docs.syncthing.net/v2.0.0/rest/db-ignores-get.html
+    epDb_Ignores,
+    // URI: /rest/db/localchanged (GET)
+    // Ref: https://docs.syncthing.net/v2.0.0/rest/db-localchanged-get.html
+    epDb_LocalChanged,
+    // URI: /rest/db/need (GET)
+    // Ref: https://docs.syncthing.net/v2.0.0/rest/db-need-get.html
+    epDb_Need,
+    // URI: /rest/db/override (POST)
+    // Ref: https://docs.syncthing.net/v2.0.0/rest/db-override-post.html
+    epDb_Override,
+    // URI: /rest/db/prio (POST)
+    // Ref: https://docs.syncthing.net/v2.0.0/rest/db-prio-post.html
+    epDb_Prio,
+    // URI: /rest/db/remoteneed (GET)
+    // Ref: https://docs.syncthing.net/v2.0.0/rest/db-remoteneed-get.html
+    epDb_RemoteNeed,
+    // URI: /rest/db/revert (POST)
+    // Ref: https://docs.syncthing.net/v2.0.0/rest/db-revert-post.html
+    epDb_Revert,
+    // URI: /rest/db/scan (POST)
+    // Ref: https://docs.syncthing.net/v2.0.0/rest/db-scan-post.html
+    epDb_Scan,
+    // URI: /rest/db/status (GET)
+    // Ref: https://docs.syncthing.net/v2.0.0/rest/db-status-get.html
+    epDb_Status,
+
+    // Event Endpoints ################
+
+    // URI: /rest/events (GET)
+    // Ref: https://docs.syncthing.net/v2.0.0/rest/events-get.html
+    epEvents,
+    // URI: /rest/events/disk (GET)
+    // Ref: https://docs.syncthing.net/v2.0.0/rest/events-get.html#get-rest-events-disk
+    epEvents_Disk,
+
+    // Statistics Endpoints ################
+
+    // URI: /rest/stats/device (GET)
+    // Ref: https://docs.syncthing.net/v2.0.0/rest/stats-device-get.html
+    epStats_Device,
+    // URI: /rest/stats/folder (GET)
+    // Ref: https://docs.syncthing.net/v2.0.0/rest/stats-folder-get.html
+    epStats_Folder,
+
+    // Misc Services Endpoints ################
+
+    // URI: /rest/svc/deviceid (GET)
+    // Ref: https://docs.syncthing.net/v2.0.0/rest/svc-deviceid-get.html
+    epSvc_DeviceId,
+    // URI: /rest/svc/lang (GET)
+    // Ref: https://docs.syncthing.net/v2.0.0/rest/svc-lang-get.html
+    epSvc_Lang,
+    // URI: /rest/svc/random/string (GET)
+    // Ref: https://docs.syncthing.net/v2.0.0/rest/svc-random-string-get.html
+    epSvc_Random_String,
+    // URI: /rest/svc/report (GET)
+    // Ref: https://docs.syncthing.net/v2.0.0/rest/svc-report-get.html
+    epSvc_Report,
+
+    // Debug Endpoints ################
+
+    // URI: /rest/debug/...
+    // Ref: https://docs.syncthing.net/v2.0.0/rest/debug.html
+    epDebug,
+
+    // Noauth Endpoints ################
+
+    // URI: /rest/noauth/health (GET)
+    // Ref: https://docs.syncthing.net/v2.0.0/rest/noauth-health-get.html
+    epNoauth_Health,
 
     epEndpointsCount
   );
