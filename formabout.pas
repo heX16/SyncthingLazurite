@@ -14,12 +14,18 @@ type
   { TfrmAbout }
 
   TfrmAbout = class(TForm)
+    Button1: TButton;
+    Image1: TImage;
     lbAuthor: TLabel;
+    lbProgramVer: TLabel;
     lbSyncthingVersion: TLabeledEdit;
-    lbTranslateAuthor: TLabel;
-    lbNameAndVer: TLabel;
+    lbTranslateAuthorTopCaption: TLabel;
+    lbProgramName: TLabel;
     lbRepURL: TLabeledEdit;
     lbAboutText: TMemo;
+    lbTranslateAuthorName: TLabel;
+    Shape1: TShape;
+    procedure Button1Click(Sender: TObject);
     procedure FormCreate(Sender: TObject);
     procedure FormShow(Sender: TObject);
   private
@@ -27,8 +33,7 @@ type
     { public declarations }
   end;
 
-var
-  frmAbout: TfrmAbout;
+// var frmAbout: TfrmAbout; - disabled, used a dynamic creation
 
 implementation
 
@@ -75,9 +80,14 @@ end;
 
 procedure TfrmAbout.FormCreate(Sender: TObject);
 begin
-  lbNameAndVer.Caption:='Simple Syncthing';
-  lbNameAndVer.Caption:=lbNameAndVer.Caption + '   ver.'+GetMyVersion(4);
+  lbProgramName.Caption:='Simple Syncthing';
+  lbProgramName.Caption:=lbProgramName.Caption + '   ver.'+GetMyVersion(4);
   lbAuthor.Caption:='Author: heXor';
+end;
+
+procedure TfrmAbout.Button1Click(Sender: TObject);
+begin
+  self.Close();
 end;
 
 procedure TfrmAbout.FormShow(Sender: TObject);

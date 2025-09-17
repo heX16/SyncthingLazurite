@@ -38,8 +38,20 @@ msgstr ""
 msgid "actTerminate"
 msgstr ""
 
+#: tfrmabout.button1.caption
+msgid "btnClose"
+msgstr ""
+
 #: tfrmabout.caption
 msgid "About"
+msgstr ""
+
+#: tfrmabout.lbprogramname.caption
+msgid "SyncthingLazurite"
+msgstr ""
+
+#: tfrmabout.lbprogramver.caption
+msgid "vX.X"
 msgstr ""
 
 #: tfrmabout.lbrepurl.editlabel.caption
@@ -59,8 +71,12 @@ msgctxt "tfrmabout.lbsyncthingversion.text"
 msgid "..."
 msgstr ""
 
-#: tfrmabout.lbtranslateauthor.caption
-msgid "Author of localization: -"
+#: tfrmabout.lbtranslateauthorname.caption
+msgid "Alexander Kerner"
+msgstr ""
+
+#: tfrmabout.lbtranslateauthortopcaption.caption
+msgid "Author of localization:"
 msgstr ""
 
 #: tfrmjsonview.btnhintupd.caption

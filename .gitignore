@@ -15,3 +15,6 @@ syncthing folder.lnk
 /doc/**
 *.dbg
 /other/*
+*.png
+*.png~
+/images/*

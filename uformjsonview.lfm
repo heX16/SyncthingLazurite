@@ -8,6 +8,7 @@ object frmJSONView: TfrmJSONView
   ClientWidth = 513
   DesignTimePPI = 120
   Menu = MainMenu
+  LCLVersion = '4.2.0.0'
   OnCreate = FormCreate
   OnDestroy = FormDestroy
   object panelHintFieldsList: TPanel
@@ -18,7 +19,7 @@ object frmJSONView: TfrmJSONView
     Align = alTop
     ClientHeight = 32
     ClientWidth = 513
-    TabOrder = 5
+    TabOrder = 4
     Visible = False
     object edHintFieldsList: TLabeledEdit
       Left = 96
@@ -172,7 +173,7 @@ object frmJSONView: TfrmJSONView
     Align = alClient
     Images = imgJSON
     PopupMenu = PopupMenuJson
-    TabOrder = 2
+    TabOrder = 1
   end
   object Splitter2: TSplitter
     Left = 326
@@ -189,7 +190,7 @@ object frmJSONView: TfrmJSONView
     Width = 182
     Align = alRight
     ScrollBars = ssAutoBoth
-    TabOrder = 4
+    TabOrder = 2
     WordWrap = False
   end
   object imgJSON: TImageList
