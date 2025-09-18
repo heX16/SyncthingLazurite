@@ -19,11 +19,12 @@ type
     lbAuthor: TLabel;
     lbProgramVer: TLabel;
     lbSyncthingVersion: TLabeledEdit;
-    lbTranslateAuthorTopCaption: TLabel;
+    lbSyncthingWebSite: TLabeledEdit;
+    lbTranslateAuthor1: TLabel;
     lbProgramName: TLabel;
     lbRepURL: TLabeledEdit;
     lbAboutText: TMemo;
-    lbTranslateAuthorName: TLabel;
+    lbTranslateAuthor2: TLabel;
     Shape1: TShape;
     procedure Button1Click(Sender: TObject);
     procedure FormCreate(Sender: TObject);
@@ -43,6 +44,7 @@ uses
 {$ENDIF}
   uModuleMain,
   SysUtils,
+  uUtils,
   fpjson;
 
 {$R *.lfm}
@@ -80,9 +82,9 @@ end;
 
 procedure TfrmAbout.FormCreate(Sender: TObject);
 begin
-  lbProgramName.Caption:='Simple Syncthing';
-  lbProgramName.Caption:=lbProgramName.Caption + '   ver.'+GetMyVersion(4);
-  lbAuthor.Caption:='Author: heXor';
+  lbProgramName.Caption:='SyncthingLazurite';
+  lbProgramVer.Caption:='v' + uUtils.StripAfterChar(GetMyVersion(4), '.', true);
+  lbAuthor.Caption:='Author: [ heXor ]';
 end;
 
 procedure TfrmAbout.Button1Click(Sender: TObject);

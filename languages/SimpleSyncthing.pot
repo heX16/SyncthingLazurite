@@ -1,11 +1,6 @@
 msgid ""
 msgstr "Content-Type: text/plain; charset=UTF-8"
 
-#: tcore.actconnect.caption
-msgctxt "tcore.actconnect.caption"
-msgid "actConnect"
-msgstr ""
-
 #: tcore.actinit.caption
 msgid "actInit"
 msgstr ""
@@ -71,12 +66,16 @@ msgctxt "tfrmabout.lbsyncthingversion.text"
 msgid "..."
 msgstr ""
 
-#: tfrmabout.lbtranslateauthorname.caption
-msgid "Alexander Kerner"
+#: tfrmabout.lbsyncthingwebsite.editlabel.caption
+msgid "lbSyncthingWebSite"
 msgstr ""
 
-#: tfrmabout.lbtranslateauthortopcaption.caption
-msgid "Author of localization:"
+#: tfrmabout.lbsyncthingwebsite.text
+msgid "https://syncthing.net/"
+msgstr ""
+
+#: tfrmabout.lbtranslateauthor1.caption
+msgid "Author of localization: Alexander Kerner"
 msgstr ""
 
 #: tfrmjsonview.btnhintupd.caption
@@ -282,11 +281,6 @@ msgstr ""
 
 #: tmodulemain.actshowweb.caption
 msgid "actShowWeb"
-msgstr ""
-
-#: tmodulemain.menuitem22.caption
-msgctxt "tmodulemain.menuitem22.caption"
-msgid "actPause"
 msgstr ""
 
 #: tmodulemain.menuitem4.caption

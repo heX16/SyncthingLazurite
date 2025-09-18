@@ -31,7 +31,8 @@
       <UseVersionInfo Value="True"/>
       <AutoIncrementBuild Value="True"/>
       <MajorVersionNr Value="1"/>
-      <BuildNr Value="109"/>
+      <MinorVersionNr Value="1"/>
+      <BuildNr Value="114"/>
     </VersionInfo>
     <BuildModes Count="4">
       <Item1 Name="Debug" Default="True"/>
@@ -199,7 +200,7 @@
         <PackageName Value="LCL"/>
       </Item7>
     </RequiredPackages>
-    <Units Count="12">
+    <Units Count="13">
       <Unit0>
         <Filename Value="SimpleSyncthing.lpr"/>
         <IsPartOfProject Value="True"/>
@@ -275,6 +276,11 @@
         <Filename Value="syncthing_api.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit11>
+      <Unit12>
+        <Filename Value="uutils.pas"/>
+        <IsPartOfProject Value="True"/>
+        <UnitName Value="uUtils"/>
+      </Unit12>
     </Units>
   </ProjectOptions>
   <CompilerOptions>

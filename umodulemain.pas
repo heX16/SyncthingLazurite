@@ -36,7 +36,6 @@ type
     actShowRestView: TAction;
     actShowOptions: TAction;
     ActionListGUI: TActionList;
-    ImageTrayIcons: TImageList;
     imgTreeViewIcon: TImageList;
     MainMenu1: TMainMenu;
     MenuItem1: TMenuItem;
@@ -71,7 +70,6 @@ type
     mnServer: TMenuItem;
     menuTrayIcon: TPopupMenu;
     miExit: TMenuItem;
-    MenuItem22: TMenuItem;
     menuDevList: TPopupMenu;
     TimerUpdate: TTimer;
     TrayIcon: TTrayIcon;
