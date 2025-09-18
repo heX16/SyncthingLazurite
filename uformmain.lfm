@@ -10,7 +10,6 @@ object frmMain: TfrmMain
   Menu = ModuleMain.MainMenu1
   Position = poDefaultPosOnly
   SessionProperties = 'SplitterLeft.Left;SplitterBottom1.Top;SplitterBottom2.Top'
-  LCLVersion = '4.2.0.0'
   OnCreate = FormCreate
   OnDestroy = FormDestroy
   OnWindowStateChange = FormWindowStateChange
@@ -109,7 +108,7 @@ object frmMain: TfrmMain
         item
           MinWidth = 150
           Position = 0
-          Width = 158
+          Width = 150
         end>
       Header.Options = [hoAutoResize, hoColumnResize, hoDrag]
       HintMode = hmHint
@@ -181,6 +180,7 @@ object frmMain: TfrmMain
       Align = alClient
       ItemHeight = 0
       TabOrder = 0
+      OnDblClick = listEventsClick
     end
   end
   object SplitterEventsBottom: TSplitter

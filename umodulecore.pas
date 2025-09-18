@@ -100,7 +100,6 @@ type
     procedure FillSyncthingExecPath();
     procedure FillSupportExecPath();
 
-    procedure EventProcess(event: TJSONObject); virtual;
 
     procedure ReadStdOutput(Proc: TProcessUTF8; AddProc: TAddConsoleLine; var TextChank: UTF8String);
     procedure AddStringToConsole(Str: UTF8String);
@@ -253,38 +252,6 @@ begin
 end;
 *)
 
-procedure TCore.EventProcess(event: TJSONObject);
-var
-  j2: TJSONData;
-  s, info: UTF8String;
-begin
-  // https://docs.syncthing.net/dev/events.html#event-types
-
-  info := '';
-  j2 := event.FindPath('data.folder');
-  if j2 <> nil then
-  begin
-    info := 'folder:' + j2.AsString;
-  end
-  else
-  begin
-    info := 'json_dump:' + event.AsJSON;
-  end;
-
-  s := Format('id:%d;  type:%s  name:%s  %s', [
-    event.Get('id', 0),
-    event.Get('type', ''),
-    event.Get('name', ''),
-    info
-  ]);
-
-  // OFF: frmMain.listEvents.Items.Insert(0, s);
-
-  // OFF: while frmMain.listEvents.Items.Count > 100 do
-  // OFF:   frmMain.listEvents.Items.Delete(frmMain.listEvents.Items.Count-1);
-
-  // OFF: frmMain.listEvents.ItemIndex := frmMain.listEvents.Items.Count-1;
-end;
 
 procedure TCore.ReadStdOutput(Proc: TProcessUTF8;
   AddProc: TAddConsoleLine; var TextChank: UTF8String);

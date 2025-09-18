@@ -308,8 +308,8 @@ type
     FUseTLS: Boolean;              // Use HTTPS if true
     FServerURL: UTF8String;        // Built base URL (scheme://host:port/), see `BuildServerURL`
 
-    FHTTP: TAsyncHTTP;             // REST client
-    FHTTPEvents: TAsyncHTTP;       // Long-polling client
+    FHTTP: TAsyncHTTP;             // REST client (RestAPI)
+    FHTTPEvents: TAsyncHTTP;       // Long-polling client (EventAPI)
 
     FEventsLastId: Int64;          // Last seen event id
     FLongPollingRestartIntervalSec: Integer; // Periodic restart interval
@@ -357,9 +357,9 @@ type
 
     // REST callbacks
     procedure CB_CheckOnline(Request: THttpRequest);
-    procedure CB_HandleEndpoint(Request: THttpRequest);
+    procedure HTTPHandle_RestAPI(Request: THttpRequest);
     // Events callbacks
-    procedure CB_Events(Request: THttpRequest);
+    procedure HTTPHandle_EventAPI(Request: THttpRequest);
     // REST helper
     procedure API_Get(
       const Api: UTF8String;
@@ -390,8 +390,14 @@ type
     { Updates all typed JSON pointers using JsonPointerEndpointsList }
     procedure UpdateAllJsonPointersFromTree; virtual;
 
-    { Load all data from REST resources to JSON tree }
-    procedure LoadAllData(); virtual;
+    { Load all data from REST resources to JSON tree
+    see: `IsAnyBasicEndpointQueued`
+    }
+    procedure LoadAllBasicEndpoints(); virtual;
+    { Returns true if any endpoint from SyncthingEndpointsBasic is queued in FHTTP
+    see: `LoadAllBasicEndpoints`
+    }
+    function IsAnyBasicEndpointQueued: Boolean; virtual;
     {
     Loads a single endpoint identified by Id to JSON tree
     }
@@ -409,11 +415,19 @@ type
 
     // Long-polling processing
     { Parses and processes events array returned by Event API }
-    procedure HandleLongPollingResponse(EventsArray: TJSONArray); virtual;
+    procedure HandleIncommingDataFromEventAPI(EventsArray: TJSONArray); virtual;
     { Dispatches single event to user handler before internal integration }
     procedure ProcessEvent(EventObj: TJSONObject); virtual;
     { Integrates single event data into the JSON tree }
     procedure IntegrateEvent(const EventObj: TJSONObject); virtual;
+
+    procedure SetLongPollingRestartInterval(Seconds: Integer); virtual;
+    procedure SetConnectTimeout(Value: Integer); virtual;
+    procedure SetIOTimeout(Value: Integer); virtual;
+    procedure SetConnectingTimeout(Value: Integer); virtual;
+    function GetConnectingTimeout: Integer; virtual;
+    { Sets FSM state and triggers OnStateChanged }
+    procedure SetState(Value: TSyncthingFSM_State); virtual;
 
     // Maps endpoint id to callback handler
     function GetEndpointCallback(Id: TSyncthingEndpointId): THttpRequestCallbackFunction; virtual;
@@ -424,6 +438,7 @@ type
     class function GetEndpointIdByURI(const URI: UTF8String): TSyncthingEndpointId; static;
     // Maps endpoint id to "JSON Tree" storage path
     function GetEndpointJsonTreePath(Id: TSyncthingEndpointId): UTF8String; virtual;
+
   public
     config: TJSONObject;
     config_folders: TJSONArray;
@@ -452,15 +467,9 @@ type
     { Sets X-API-Key for authenticated requests }
     procedure SetAPIKey(const Key: UTF8String); virtual;
     { Sets periodic restart interval for long-polling (0 to disable) }
-    procedure SetLongPollingRestartInterval(Seconds: Integer); virtual;
-    procedure SetConnectTimeout(Value: Integer); virtual;
-    procedure SetIOTimeout(Value: Integer); virtual;
-    procedure SetConnectingTimeout(Value: Integer); virtual;
-    function GetConnectingTimeout: Integer; virtual;
-    { Sets FSM state and triggers OnStateChanged }
-    procedure SetState(Value: TSyncthingFSM_State); virtual;
 
     { Notifies listeners that a tree branch at Path was changed }
+    { if CallCallback=true then will call `OnTreeChanged` }
     procedure NotifyTreeChanged(const Path: UTF8String; id: TSyncthingEndpointId = epNone; CallCallback: boolean = true); virtual;
 
     // Properties
@@ -472,16 +481,12 @@ type
 
     { Returns true when FSM is online }
     function IsOnline: Boolean; virtual;
-    { Returns true if any endpoint from SyncthingEndpointsBasic is queued in FHTTP }
-    function IsAnyBasicEndpointQueued: Boolean; virtual;
     { Current finite state machine state }
     property State: TSyncthingFSM_State read FState;
     { Current finite state machine command }
     property Command: TSyncthingFSM_Command read FStateCommand write FStateCommand;
     { In-memory JSON root with all synchronized data }
     property TreeRoot: TJSONObject read FTreeRoot;
-    { Last seen event id (from Event API) }
-    property EventsLastId: Int64 read FEventsLastId;
 
     // Callbacks
 
@@ -605,7 +610,7 @@ begin
           if Command = ssCmdConnectingPingAck then
           begin
             SetState(ssConnectingWaitData);
-            LoadAllData();
+            LoadAllBasicEndpoints();
           end;
         end;
 
@@ -1061,7 +1066,7 @@ begin
   end;
 end;
 
-procedure TSyncthingAPI.LoadAllData();
+procedure TSyncthingAPI.LoadAllBasicEndpoints();
 var
   ep: TSyncthingEndpointId;
 begin
@@ -1072,16 +1077,16 @@ end;
 
 procedure TSyncthingAPI.LoadEndpoint(Id: TSyncthingEndpointId);
 begin
-  // Note: pass "JSON target" path via UserString, see `CB_HandleEndpoint`
+  // Note: pass "JSON target" path via UserString, see `HTTPHandle_RestAPI`
 
   API_Get(
     GetEndpointURI(Id), // REST API Endpoint
-    GetEndpointCallback(Id), // callback: usually `CB_HandleEndpoint`
+    GetEndpointCallback(Id), // callback: usually `HTTPHandle_RestAPI`
     GetEndpointURI(Id)  // userString: send JSON-tree target path
   );
 end;
 
-procedure TSyncthingAPI.CB_HandleEndpoint(Request: THttpRequest);
+procedure TSyncthingAPI.HTTPHandle_RestAPI(Request: THttpRequest);
 var
   j: TJSONData;
 begin
@@ -1111,7 +1116,7 @@ begin
 
   FHTTPEvents.Get(
     FServerURL + 'rest/events?since=' + IntToStr(FEventsLastId) + '&limit=10&timeout=60',
-    @CB_Events,
+    @HTTPHandle_EventAPI,
     '',
     'polling'
   );
@@ -1156,7 +1161,7 @@ begin
   FSM_Process();
 end;
 
-procedure TSyncthingAPI.HandleLongPollingResponse(EventsArray: TJSONArray);
+procedure TSyncthingAPI.HandleIncommingDataFromEventAPI(EventsArray: TJSONArray);
 var
   i: Integer;
   ev: TJSONObject;
@@ -1477,7 +1482,7 @@ begin
     epSystem_Status: Exit(@CB_SystemStatus);
   end;
   *)
-  Exit(@CB_HandleEndpoint);
+  Exit(@HTTPHandle_RestAPI);
 end;
 
 procedure TSyncthingAPI.CB_CheckOnline(Request: THttpRequest);
@@ -1497,7 +1502,7 @@ begin
   end;
 end;
 
-procedure TSyncthingAPI.CB_Events(Request: THttpRequest);
+procedure TSyncthingAPI.HTTPHandle_EventAPI(Request: THttpRequest);
 var
   j: TJSONData;
   a: TJSONArray;
@@ -1508,7 +1513,7 @@ begin
     if (j is TJSONArray) then
     begin
       a := TJSONArray(j);
-      HandleLongPollingResponse(a);
+      HandleIncommingDataFromEventAPI(a);
     end;
   finally
     if Assigned(j) then

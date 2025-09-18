@@ -78,6 +78,7 @@ type
     procedure FormCreate(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
     procedure FormWindowStateChange(Sender: TObject);
+    procedure listEventsClick(Sender: TObject);
     procedure miShowClick(Sender: TObject);
     procedure treeDevicesGetHint(Sender: TBaseVirtualTree; Node: PVirtualNode;
       Column: TColumnIndex; var LineBreakStyle: TVTTooltipLineBreakStyle;
@@ -114,7 +115,8 @@ implementation
 uses
   dateutils,
   uSyncthingTypes,
-  uModuleMain;
+  uModuleMain,
+  Clipbrd;
 
 {$R *.lfm}
 
@@ -138,6 +140,16 @@ procedure TfrmMain.FormWindowStateChange(Sender: TObject);
 begin
   if WindowState = wsMinimized then
     Hide();
+end;
+
+procedure TfrmMain.listEventsClick(Sender: TObject);
+var
+  idx: Integer;
+begin
+  // Copy selected event line to clipboard on double-click
+  idx := listEvents.ItemIndex;
+  if idx >= 0 then
+    Clipboard.AsText := listEvents.Items[idx];
 end;
 
 procedure TfrmMain.miShowClick(Sender: TObject);

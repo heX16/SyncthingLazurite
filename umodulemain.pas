@@ -91,6 +91,7 @@ type
     FSyncthingAPI: TSyncthingAPI; // Core Syncthing API instance (created manually)
 
     LockJSONTree: TCriticalSection; // Critical section for JSON tree updates
+    procedure AddLineToEventsLog(const Line: string);
     procedure Syn_OnConnected(Sender: TObject);
     procedure Syn_OnEvent(Sender: TObject; Event: TJSONObject);
     procedure Syn_OnTreeChanged(Sender: TObject; EndpointId: TSyncthingEndpointId; const Path: UTF8String);
@@ -134,6 +135,13 @@ uses
   TypInfo;
 
 { TModuleMain }
+
+procedure TModuleMain.AddLineToEventsLog(const Line: string);
+begin
+  frmMain.listEvents.Items.Insert(0, Line);
+  while frmMain.listEvents.Items.Count > 100 do
+    frmMain.listEvents.Items.Delete(frmMain.listEvents.Items.Count - 1);
+end;
 
 procedure TModuleMain.TrayIconDblClick(Sender: TObject);
 begin
@@ -275,8 +283,42 @@ begin
 end;
 
 procedure TModuleMain.Syn_OnEvent(Sender: TObject; Event: TJSONObject);
+var
+  j2: TJSONData;
+  s, info: UTF8String;
+  id: Int64;
+  eventType, eventName: UTF8String;
+  jsonStr: UTF8String;
 begin
-  // TODO: process raw event or forward to UI/log
+  // Build short human-readable line for visual log
+  info := '';
+  j2 := Event.FindPath('data.folder');
+  if j2 <> nil then
+    info := 'folder:' + j2.AsString;
+
+  id := Event.Get('id', 0);
+  eventType := Event.Get('type', '');
+  eventName := Event.Get('name', '');
+
+  s := Format('id:%d;  type:%s  name:%s  %s', [id, eventType, eventName, info]);
+
+  // Append compact JSON dump (truncated to 255 chars)
+  try
+    jsonStr := Event.AsJSON;
+    // Use AsJSON for compact single-line representation
+    // Fallback to FormatJSON if needed
+    if Length(jsonStr) = 0 then
+      jsonStr := Event.FormatJSON();
+    if Length(jsonStr) > 255 then
+      SetLength(jsonStr, 255);
+    s := s + '  json:' + jsonStr;
+  except
+    on E: Exception do
+      s := s + '  json:<error>';
+  end;
+
+  // Add to visual log
+  AddLineToEventsLog(s);
 end;
 
 procedure TModuleMain.Syn_OnTreeChanged(Sender: TObject; EndpointId: TSyncthingEndpointId; const Path: UTF8String);
@@ -301,9 +343,15 @@ procedure TModuleMain.Syn_OnTreeChanged(Sender: TObject; EndpointId: TSyncthingE
   end;
 var
   ep: TSyncthingEndpointId;
+  logStr: string;
 begin
   DebugLog('FSyncthingAPI.OnTreeChanged: ' + 
     GetEnumName(TypeInfo(TSyncthingEndpointId), Ord(EndpointId)));
+
+  // Add TreeChanged entry to visual log with JSON path
+  logStr := 'TreeChanged: ' + GetEnumName(TypeInfo(TSyncthingEndpointId), Ord(EndpointId)) +
+    '  JSONTreePath:' + Path;
+  AddLineToEventsLog(logStr);
 
   if EndpointId <> epConfig then
     ChangedEndpoint(EndpointId)
