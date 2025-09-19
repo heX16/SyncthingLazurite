@@ -1,6 +1,6 @@
 ### SyncthingLazurite
 
-SyncthingLazurite is a lightweight desktop companion for Syncthing. It is a compiled native app optimized for very low memory and CPU usage. It connects to your local Syncthing and shows devices, folders, and recent activity in a simple window with a tray icon.
+SyncthingLazurite is a lightweight desktop companion for Syncthing, built with Lazarus/FreePascal. It is a cross-platform compiled native app (Windows, Linux, macOS) optimized for very low memory and CPU usage. It connects to your local Syncthing and shows devices, folders, and recent activity in a simple window with a tray icon.
 
 #### What it does
  - Shows your Syncthing devices and folders at a glance
@@ -9,9 +9,10 @@ SyncthingLazurite is a lightweight desktop companion for Syncthing. It is a comp
  - Lets you quickly connect/disconnect and view details
 
 #### Key features
- - Tray icon hint with list of online devices
- - Lightweight and simple UI
- - Native compiled app (Lazarus/FreePascal) with very low memory and CPU usage
+- Cross-platform support (Windows, Linux, macOS)
+- Tray icon hint with list of online devices
+- Lightweight and simple UI
+- Native compiled app (Lazarus/FreePascal) with very low memory and CPU usage
 
 #### Getting started
 1. Install and run Syncthing on your computer. By default it listens on `http://127.0.0.1:8384` and has an API key in its settings.

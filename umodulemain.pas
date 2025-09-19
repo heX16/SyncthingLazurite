@@ -92,7 +92,9 @@ type
     FSyncthingAPI: TSyncthingAPI; // Core Syncthing API instance (created manually)
 
     procedure AddLineToEventsLog(const Line: string);
+    function MapHttpErrorCodeToText(const Code: Integer): string;
     procedure Syn_OnConnected(Sender: TObject);
+    procedure Syn_OnConnectError(Sender: TObject; StatusCode: Integer);
     procedure Syn_OnEvent(Sender: TObject; Event: TJSONObject);
     procedure Syn_OnTreeChanged(Sender: TObject; EndpointId: TSyncthingEndpointId; const Path: UTF8String);
     procedure Syn_OnStateChanged(Sender: TObject; NewState: TSyncthingFSM_State);
@@ -258,6 +260,7 @@ begin
   FSyncthingAPI := TSyncthingAPI.Create(Self);
   // Bind event handlers
   FSyncthingAPI.OnConnected := @Syn_OnConnected;
+  FSyncthingAPI.OnConnectError := @Syn_OnConnectError;
   FSyncthingAPI.OnEvent := @Syn_OnEvent;
   FSyncthingAPI.OnTreeChanged := @Syn_OnTreeChanged;
   FSyncthingAPI.OnStateChanged := @Syn_OnStateChanged;
@@ -273,6 +276,43 @@ end;
 procedure TModuleMain.Syn_OnConnected(Sender: TObject);
 begin
   // TODO: add UI updates or logging on successful connection
+end;
+
+function TModuleMain.MapHttpErrorCodeToText(const Code: Integer): string;
+begin
+  case Code of
+    HTTPErrorCode_SocketHostNotFound:
+      Exit('Host not found');
+    HTTPErrorCode_SocketCreationFailed:
+      Exit('Socket creation failed');
+    HTTPErrorCode_SocketConnectFailed:
+      Exit('Socket connect failed');
+    HTTPErrorCode_SocketConnectTimeout:
+      Exit('Connect timeout - syncthing is disabled or unavailable');
+    HTTPErrorCode_SocketIOTimeout:
+      Exit('Socket I/O timeout');
+    HTTPErrorCode_UnknownException:
+      Exit('Unknown exception in HTTP client');
+    HTTPErrorCode_HTTPClientException:
+      Exit('HTTP client exception');
+    HTTPErrorCode_Disconnected:
+      Exit('Connection was disconnected');
+    HTTPErrorCode_KeepAliveEnded:
+      Exit('Keep-Alive connection was closed by server');
+  else
+    if (Code >= 100) and (Code <= 599) then
+      Exit('HTTP status ' + IntToStr(Code))
+    else
+      Exit('Unknown error (' + IntToStr(Code) + ')');
+  end;
+end;
+
+procedure TModuleMain.Syn_OnConnectError(Sender: TObject; StatusCode: Integer);
+var
+  msg: string;
+begin
+  msg := MapHttpErrorCodeToText(StatusCode);
+  AddLineToEventsLog('Connect error: ' + msg + '  [' + IntToStr(StatusCode) + ']');
 end;
 
 procedure TModuleMain.Syn_OnEvent(Sender: TObject; Event: TJSONObject);

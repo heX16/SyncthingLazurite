@@ -2,6 +2,8 @@ unit syncthing_api;
 
 {$mode objfpc}{$H+}
 
+// TODO: add support "invalid API Key" error handling
+
 interface
 
 uses
@@ -45,7 +47,7 @@ type
 
   // Event types (callbacks)
   TNotifyEventObj = procedure(Sender: TObject) of object;
-  TConnectErrorEvent = procedure(Sender: TObject; const MessageText: UTF8String) of object;
+  TConnectErrorEvent = procedure(Sender: TObject; StatusCode: Integer) of object;
   TEventJsonEvent = procedure(Sender: TObject; Event: TJSONObject) of object;
   TBeforeAfterTreeModifyEvent = procedure(Sender: TObject) of object;
   TLongPollingDropHandler = procedure(Sender: TObject) of object;
@@ -351,6 +353,8 @@ type
     // Ping state (for synchronous Ping)
     FPingInProgress: boolean;
     FPingResult: boolean;
+    // Last connection error code (for emitting OnConnectError from FSM)
+    FLastConnectErrorCode: Integer;
     // State process. (FSM)
     procedure FSM_Process();
     // Internal helpers
@@ -608,6 +612,17 @@ procedure TSyncthingAPI.FSM_Process();
     end;
   end;
 
+  procedure OnGotoOffline();
+  begin
+    FHTTP.CancelAll();
+    // Emit OnConnectError when leaving connecting due to fault/timeout
+    if (Command = ssCmdConnectingPingFault) or (Command = ssCmdConnectingTimeout) then
+    begin
+      if Assigned(FOnConnectError) then
+        FOnConnectError(Self, FLastConnectErrorCode);
+    end;
+  end;
+
 begin
   while True do
   begin
@@ -631,7 +646,7 @@ begin
           then
           begin
             SetState(ssOffline);
-            FHTTP.CancelAll();
+            OnGotoOffline();
           end;
           if Command = ssCmdConnectingPingAck then
           begin
@@ -662,7 +677,7 @@ begin
           then
           begin
             SetState(ssOffline);
-            FHTTP.CancelAll();
+            OnGotoOffline();
           end;
         end;
 
@@ -901,6 +916,7 @@ begin
   // Ping state init
   FPingInProgress := false;
   FPingResult := false;
+  FLastConnectErrorCode := 0;
 end;
 
 destructor TSyncthingAPI.Destroy;
@@ -1186,6 +1202,8 @@ end;
 procedure TSyncthingAPI.ConnectingTimeoutTimerHandler(Sender: TObject);
 begin
   Command:=ssCmdConnectingTimeout;
+  // Mark timeout as error for FSM handler
+  FLastConnectErrorCode := HTTPErrorCode_SocketConnectTimeout;
   FSM_Process();
 end;
 
@@ -1572,10 +1590,13 @@ begin
   end
   else
   begin
+    // Store error code, FSM will emit OnConnectError
+    if Request = nil then
+      FLastConnectErrorCode := 0
+    else
+      FLastConnectErrorCode := Request.Status;
     Command:=ssCmdConnectingPingFault;
     FSM_Process();
-    if Assigned(FOnConnectError) then
-      FOnConnectError(Self, 'Ping failed or not connected');
   end;
 end;
 
