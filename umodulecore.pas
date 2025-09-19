@@ -64,8 +64,6 @@ type
     TimerAfterStartCheckRunError: TTimer;
     TimerInit: TTimer;
     TimerReadStdOutput: TTimer;
-    procedure actConnectExecute(Sender: TObject);
-    procedure actInitExecute(Sender: TObject);
     procedure actStopAndExitExecute(Sender: TObject);
     procedure actRestartExecute(Sender: TObject);
     procedure actTerminateExecute(Sender: TObject);
@@ -344,15 +342,6 @@ procedure TCore.actStopAndExitExecute(Sender: TObject);
 begin
   actStop.Execute();
   Application.Terminate();
-end;
-
-procedure TCore.actConnectExecute(Sender: TObject);
-begin
-
-end;
-
-procedure TCore.actInitExecute(Sender: TObject);
-begin
 end;
 
 procedure TCore.actTerminateExecute(Sender: TObject);

@@ -23,7 +23,7 @@ type
     ssDisconnecting   // Graceful disconnect in progress
   );
 
-  // ###
+  // Commands for the finite state machine
   TSyncthingFSM_Command = (
     ssCmdNone,
     ssCmdConnect, // user Cmd
@@ -267,7 +267,8 @@ type
   TTreeChangedEvent = procedure(Sender: TObject; EndpointId: TSyncthingEndpointId; const Path: UTF8String) of object;
 
 const
-  // Typed constant containing all endpoint ids
+  // List of the "Base" endpoints.
+  // This Endpoints is a `JSONTree`.
   SyncthingEndpointsBasic: array of TSyncthingEndpointId = (
     epConfig,
     epSystem_Connections,
@@ -277,7 +278,7 @@ const
     epSystem_Version
   );
 
-  // All config endpoints except epConfig
+  // All "config" endpoints except the `epConfig`
   SyncthingEndpointsConfig: array of TSyncthingEndpointId = (
     epConfig_RestartRequired,
     epConfig_Folders,
@@ -296,6 +297,16 @@ type
   { TSyncthingAPI }
 
   // Core class for interacting with Syncthing (REST + Event API) and maintaining JSON tree
+  //
+  // THREADING MODEL:
+  // All callbacks, event handlers, and tree modification operations are executed 
+  // in the main (GUI) thread via the underlying `TAsyncHttp` implementation.
+  // This means:
+  // - `OnConnected`, `OnEvent`, `OnTreeChanged` and other callbacks are main-thread safe
+  // - JSON tree can be safely accessed from event handlers without synchronization
+  // - GUI components can be directly updated from any callback
+  // - `OnBeginTreeModify`/`OnEndTreeModify` are NOT for GUI synchronization, but only
+  //   needed if you have additional threads that access the JSON tree concurrently
   TSyncthingAPI = class(TComponent)
   private
     FState: TSyncthingFSM_State;
@@ -358,12 +369,13 @@ type
       const JsonPath: UTF8String; out Parent: TJSONObject; out
       Target: TJSONData; out TargetName: UTF8String);
 
-    // REST callbacks
-    procedure CB_CheckOnline(Request: THttpRequest);
-    procedure CB_Ping(Request: THttpRequest);
-    procedure HTTPHandle_RestAPI(Request: THttpRequest);
+    // REST callbacks:
+
+    procedure HTTP_CheckOnline(Request: THttpRequest);
+    procedure HTTP_Ping(Request: THttpRequest);
+    procedure HTTP_RestAPI(Request: THttpRequest);
     // Events callbacks
-    procedure HTTPHandle_EventAPI(Request: THttpRequest);
+    procedure HTTP_EventAPI(Request: THttpRequest);
     // REST helper
     procedure API_Get(
       const Api: UTF8String;
@@ -378,6 +390,15 @@ type
     { Creates and configures HTTP clients for REST and long-polling }
     procedure ConfigureHttpClient(); virtual;
 
+    // JSON Tree proc:
+
+    { Replaces a branch in the "JSON Tree" with NewData }
+    procedure JSONTreeNewDataFromNetwork(const JsonPath: UTF8String; NewData: TJSONData); virtual;
+    { Updates typed JSON pointers (config, stats, etc.) by resolving paths in FTreeRoot }
+    procedure UpdateJsonPointer(EndpointId: TSyncthingEndpointId); virtual;
+    { Updates all typed JSON pointers using JsonPointerEndpointsList }
+    procedure UpdateAllJsonPointers; virtual;
+
     // JSON tree helpers
     { Creates default JSON root object used before initial sync }
     function CreateDefaultRoot: TJSONObject; virtual;
@@ -387,12 +408,6 @@ type
     procedure BeginTreeModify(); virtual;
     { Notifies listeners and finalizes JSON tree modification }
     procedure EndTreeModify(); virtual;
-    { Replaces a branch in the "JSON Tree" with NewData }
-    procedure JSONTreeNewDataFromNetwork(const JsonPath: UTF8String; NewData: TJSONData); virtual;
-    { Updates typed JSON pointers (config, stats, etc.) by resolving paths in FTreeRoot }
-    procedure UpdateJsonPointersFromTree(EndpointId: TSyncthingEndpointId); virtual;
-    { Updates all typed JSON pointers using JsonPointerEndpointsList }
-    procedure UpdateAllJsonPointersFromTree; virtual;
 
     { Load all data from REST resources to JSON tree
     see: `IsAnyBasicEndpointQueued`
@@ -478,6 +493,8 @@ type
     { Notifies listeners that a tree branch at Path was changed }
     { if CallCallback=true then will call `OnTreeChanged` }
     procedure NotifyTreeChanged(const Path: UTF8String; id: TSyncthingEndpointId = epNone; CallCallback: boolean = true); virtual;
+    procedure JSONTreeSetNewData(const JsonPath: UTF8String;
+      NewData: TJSONData; CallCallback: boolean=true);
 
     // Properties
     property ConnectTimeout: Integer read FConnectTimeout write SetConnectTimeout;
@@ -519,9 +536,11 @@ type
     property OnEvent: TEventJsonEvent read FOnEvent write FOnEvent;
     { Called after integration when a JSON tree path was updated }
     property OnTreeChanged: TTreeChangedEvent read FOnTreeChanged write FOnTreeChanged;
-    { Called before modifying the JSON tree }
+    { Called before modifying the JSON tree.
+      NOT needed for GUI synchronization - only use if you have additional threads accessing the tree. }
     property OnBeforeTreeModify: TBeforeAfterTreeModifyEvent read FOnBeforeTreeModify write FOnBeforeTreeModify;
-    { Called after modifying the JSON tree }
+    { Called after modifying the JSON tree.
+      NOT needed for GUI synchronization - only use if you have additional threads accessing the tree. }
     property OnAfterTreeModify: TBeforeAfterTreeModifyEvent read FOnAfterTreeModify write FOnAfterTreeModify;
     { Called when FSM state changes }
     property OnStateChanged: TStateChangedEvent read FOnStateChanged write FOnStateChanged;
@@ -598,8 +617,8 @@ begin
         begin
           BuildServerURL();
           ConfigureHttpClient();
-          // Start initial ping; CB_CheckOnline drives next transitions
-          API_Get('system/ping', @CB_CheckOnline, '');
+          // Start initial ping; HTTP_CheckOnline drives next transitions
+          API_Get('system/ping', @HTTP_CheckOnline, '');
           FTimerConnectingTimeout.Enabled := True;
           SetState(ssConnectingPingWait);
         end;
@@ -857,7 +876,7 @@ begin
   inherited Create(AOwner);
   FState := ssOffline;
   FTreeRoot := CreateDefaultRoot;
-  UpdateAllJsonPointersFromTree();
+  UpdateAllJsonPointers();
   FAPIKey := '';
   FHost := '127.0.0.1';
   FPort := 8384;
@@ -1007,26 +1026,31 @@ begin
     FOnAfterTreeModify(Self);
 end;
 
-procedure TSyncthingAPI.JSONTreeNewDataFromNetwork(const JsonPath: UTF8String; NewData: TJSONData);
+procedure TSyncthingAPI.JSONTreeSetNewData(const JsonPath: UTF8String; NewData: TJSONData; CallCallback: boolean = true);
 var
   id: TSyncthingEndpointId;
 begin
+  SetJsonNodeAtPath(FTreeRoot, JsonPath, NewData);
+
   id := GetEndpointIdByURI(JsonPath);
+  UpdateJsonPointer(id);
+  if id = epConfig then
+    UpdateAllJsonPointers();
+
+  NotifyTreeChanged(JsonPath, id, CallCallback);
+end;
+
+procedure TSyncthingAPI.JSONTreeNewDataFromNetwork(const JsonPath: UTF8String; NewData: TJSONData);
+begin
   BeginTreeModify;
   try
-    SetJsonNodeAtPath(FTreeRoot, JsonPath, NewData);
-    UpdateJsonPointersFromTree(id);
-    if id = epConfig then
-    begin
-      UpdateAllJsonPointersFromTree();
-    end;
-    NotifyTreeChanged(JsonPath, id);
+    JSONTreeSetNewData(JsonPath, NewData, true);
   finally
     EndTreeModify;
   end;
 end;
 
-procedure TSyncthingAPI.UpdateAllJsonPointersFromTree;
+procedure TSyncthingAPI.UpdateAllJsonPointers;
 const 
   JsonPointerEndpointsList: array of TSyncthingEndpointId = (
     epConfig,
@@ -1040,10 +1064,10 @@ var
   ep: TSyncthingEndpointId;
 begin
   for ep in JsonPointerEndpointsList do
-    UpdateJsonPointersFromTree(ep);
+    UpdateJsonPointer(ep);
 end;
 
-procedure TSyncthingAPI.UpdateJsonPointersFromTree(EndpointId: TSyncthingEndpointId);
+procedure TSyncthingAPI.UpdateJsonPointer(EndpointId: TSyncthingEndpointId);
   function FindByEndpointId(const EndpointId: TSyncthingEndpointId): TJSONData;
   begin
     Result := FTreeRoot.FindPath(
@@ -1087,16 +1111,16 @@ end;
 
 procedure TSyncthingAPI.LoadEndpoint(Id: TSyncthingEndpointId);
 begin
-  // Note: pass "JSON target" path via UserString, see `HTTPHandle_RestAPI`
+  // Note: pass "JSON target" path via UserString, see `HTTP_RestAPI`
 
   API_Get(
     GetEndpointURI(Id), // REST API Endpoint
-    GetEndpointCallback(Id), // callback: usually `HTTPHandle_RestAPI`
+    GetEndpointCallback(Id), // callback: usually `HTTP_RestAPI`
     GetEndpointURI(Id)  // userString: send JSON-tree target path
   );
 end;
 
-procedure TSyncthingAPI.HTTPHandle_RestAPI(Request: THttpRequest);
+procedure TSyncthingAPI.HTTP_RestAPI(Request: THttpRequest);
 var
   j: TJSONData;
 begin
@@ -1126,7 +1150,7 @@ begin
 
   FHTTPEvents.Get(
     FServerURL + 'rest/events?since=' + IntToStr(FEventsLastId) + '&limit=10&timeout=60',
-    @HTTPHandle_EventAPI,
+    @HTTP_EventAPI,
     '',
     'polling'
   );
@@ -1178,6 +1202,7 @@ var
   id: Int64;
 begin
   if not Assigned(EventsArray) then Exit;
+  // TODO: check sequence - forward and backward?
   for i := 0 to EventsArray.Count - 1 do
   begin
     if (EventsArray.Items[i] is TJSONObject) then
@@ -1195,9 +1220,19 @@ procedure TSyncthingAPI.ProcessEvent(EventObj: TJSONObject);
 var
   eventType: UTF8String;
 begin
-  // TODO: тут надо переделать на массивы
+  // TODO: TSyncthingAPI.ProcessEvent
+  (* TODO:
+  1. тут надо строковые константы переделать,
+     сделать по образу и подобию: GetEndpointCallback GetEndpointURI GetEndpointJsonTreePath
 
-  if not Assigned(EventObj) then Exit;
+  2. перепроверить все eventType - скорее всего мы чтото пропустили.
+
+  3. сделать список соответствия  eventType -> "JSONTree path"
+
+  4. сделать список событий которые не попадают в "JSONTree path"
+     и подумать что можно/нужно делать с такими событиями
+  *)
+
   if Assigned(FOnEvent) then
     FOnEvent(Self, EventObj);
 
@@ -1304,7 +1339,7 @@ begin
   FPingResult := false;
 
   // Fire async request
-  API_Get('system/ping', @CB_Ping, '');
+  API_Get('system/ping', @HTTP_Ping, '');
 
   // Block current thread until ping completes or times out
   // Use IOTimeout as maximum wait budget; fall back to ConnectTimeout if zero
@@ -1524,10 +1559,10 @@ begin
     epSystem_Status: Exit(@CB_SystemStatus);
   end;
   *)
-  Exit(@HTTPHandle_RestAPI);
+  Exit(@HTTP_RestAPI);
 end;
 
-procedure TSyncthingAPI.CB_CheckOnline(Request: THttpRequest);
+procedure TSyncthingAPI.HTTP_CheckOnline(Request: THttpRequest);
 begin
   if (Request <> nil) and (Request.Status = 200) and (Request.Succeeded) then
   begin
@@ -1544,14 +1579,14 @@ begin
   end;
 end;
 
-procedure TSyncthingAPI.CB_Ping(Request: THttpRequest);
+procedure TSyncthingAPI.HTTP_Ping(Request: THttpRequest);
 begin
   // Set result based on HTTP status and success flag
   FPingResult := (Request <> nil) and (Request.Status = 200) and (Request.Succeeded);
   FPingInProgress := false;
 end;
 
-procedure TSyncthingAPI.HTTPHandle_EventAPI(Request: THttpRequest);
+procedure TSyncthingAPI.HTTP_EventAPI(Request: THttpRequest);
 var
   j: TJSONData;
   a: TJSONArray;

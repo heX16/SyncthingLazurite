@@ -108,6 +108,14 @@ type
   // Main class exposed to users
 
   { TAsyncHTTP }
+  //
+  // THREADING MODEL:
+  // This class uses internal worker threads for HTTP operations but ensures
+  // all user callbacks are executed in the main (GUI) thread via `Synchronize`.
+  // This means:
+  // - All callback functions (`OnSuccess`, `OnError`, `OnOpened`, etc.) are main-thread safe
+  // - GUI components can be directly updated from callbacks without synchronization
+  // - No need to use `QueueAsyncCall`, `Synchronize` or similar in callback handlers
 
   TAsyncHTTP = class
   private

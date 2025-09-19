@@ -91,13 +91,10 @@ type
   private
     FSyncthingAPI: TSyncthingAPI; // Core Syncthing API instance (created manually)
 
-    LockJSONTree: TCriticalSection; // Critical section for JSON tree updates
     procedure AddLineToEventsLog(const Line: string);
     procedure Syn_OnConnected(Sender: TObject);
     procedure Syn_OnEvent(Sender: TObject; Event: TJSONObject);
     procedure Syn_OnTreeChanged(Sender: TObject; EndpointId: TSyncthingEndpointId; const Path: UTF8String);
-    procedure Syn_OnBeforeTreeModify(Sender: TObject);
-    procedure Syn_OnAfterTreeModify(Sender: TObject);
     procedure Syn_OnStateChanged(Sender: TObject; NewState: TSyncthingFSM_State);
   public
     // Returns display text for folder node by index using current JSON tree
@@ -258,14 +255,11 @@ begin
 
 
   // Create Syncthing API instance manually (do not place on form)
-  LockJSONTree := TCriticalSection.Create;
   FSyncthingAPI := TSyncthingAPI.Create(Self);
   // Bind event handlers
   FSyncthingAPI.OnConnected := @Syn_OnConnected;
   FSyncthingAPI.OnEvent := @Syn_OnEvent;
   FSyncthingAPI.OnTreeChanged := @Syn_OnTreeChanged;
-  FSyncthingAPI.OnBeforeTreeModify := @Syn_OnBeforeTreeModify;
-  FSyncthingAPI.OnAfterTreeModify := @Syn_OnAfterTreeModify;
   FSyncthingAPI.OnStateChanged := @Syn_OnStateChanged;
 end;
 
@@ -274,8 +268,6 @@ begin
   // Free Syncthing API instance
   if Assigned(FSyncthingAPI) then
     FreeAndNil(FSyncthingAPI);
-  if Assigned(LockJSONTree) then
-    FreeAndNil(LockJSONTree);
 end;
 
 procedure TModuleMain.Syn_OnConnected(Sender: TObject);
@@ -366,18 +358,6 @@ begin
     for ep in SyncthingEndpointsConfig do
       ChangedEndpoint(ep);
   end;
-end;
-
-procedure TModuleMain.Syn_OnBeforeTreeModify(Sender: TObject);
-begin
-  if Assigned(LockJSONTree) then
-    LockJSONTree.Enter;
-end;
-
-procedure TModuleMain.Syn_OnAfterTreeModify(Sender: TObject);
-begin
-  if Assigned(LockJSONTree) then
-    LockJSONTree.Leave;
 end;
 
 procedure TModuleMain.Syn_OnStateChanged(Sender: TObject; NewState: TSyncthingFSM_State);

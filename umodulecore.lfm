@@ -95,7 +95,6 @@ object Core: TCore
       Category = 'Core'
       Caption = 'actInit'
       Visible = False
-      OnExecute = actInitExecute
     end
   end
   object TimerInit: TTimer
