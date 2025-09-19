@@ -16,6 +16,7 @@ uses
   uLogging;
 
 resourcestring
+  cProgramName = 'SyncthingLazurite';
   cStrLocal = ' (local)';
 
 type
@@ -326,18 +327,22 @@ procedure TModuleMain.Syn_OnTreeChanged(Sender: TObject; EndpointId: TSyncthingE
   begin
     // React to JSON tree updates: adjust devices tree node count when devices config changes
     case EndpointId of
-      epConfig_Devices:
+      epConfig_Devices, epStats_Device:
       begin
         // We are already in UI thread; update directly
         frmMain.treeDevices.RootNodeCount := FSyncthingAPI.config_devices.Count;
+        //frmMain.treeDevices.Repaint;
         frmMain.treeDevices.Invalidate();
+        // Update tray hint when device data changes
+        TrayIcon.Hint := BuildOnlineDevicesHint();
+        AddLineToEventsLog('UPD: Devices');
       end;
-      epConfig_Folders:
+      epConfig_Folders, epStats_Folder:
       begin
         frmMain.treeFolders.RootNodeCount := FSyncthingAPI.config_folders.Count;
+        //frmMain.treeFolders.Repaint;
         frmMain.treeFolders.Invalidate();
-        // Update tray hint when folders data changes
-        TrayIcon.Hint := BuildOnlineDevicesHint();
+        AddLineToEventsLog('UPD: Folders');
       end;
     end;
   end;
@@ -465,16 +470,7 @@ begin
       else
         nameStr := '';
 
-      addrField := obj.Find('addresses');
-      if (addrField <> nil) and (addrField.JSONType = jtArray) and (TJSONArray(addrField).Count > 0) then
-        addrStr := TJSONArray(addrField).Strings[0]
-      else
-        addrStr := '';
-
-      if addrStr <> '' then
-        Result := nameStr + ' ' + addrStr
-      else
-        Result := nameStr;
+      Result := nameStr;
     end;
   end;
 end;
@@ -623,7 +619,13 @@ begin
   if onlineCount > MaxItemsInHint then
     Result := Result + '...' + LineEnding;
 
-  Result := 'Online ' + IntToStr(onlineCount) + ' devices:' + LineEnding + Result;
+  if onlineCount = 0 then
+    Result := cProgramName
+  else
+    Result :=
+           cProgramName + LineEnding +
+           'Online ' + IntToStr(onlineCount) + ' devices:' + LineEnding +
+           Result;
 end;
 
 function TModuleMain.GetSystemVersionString: string;

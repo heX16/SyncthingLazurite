@@ -225,9 +225,8 @@ begin
   if (Node <> nil) and Sender.MultiLine[Node] then
   begin
     TargetCanvas.Font := Sender.Font;
-    // migration: commented Core usage
-    // NodeHeight := (Sender as TVirtualStringTree).ComputeNodeHeight(
-    //     TargetCanvas, Node, 0, Core.ListDev_GetText(Node^.Index) + ' ___') + cDevListAdditionalHeight;
+    NodeHeight := (Sender as TVirtualStringTree).ComputeNodeHeight(
+        TargetCanvas, Node, 0, ModuleMain.GetDeviceDisplayText(Node^.Index) + ' ___') + cDevListAdditionalHeight;
   end;
   // else use default height
 end;

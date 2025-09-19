@@ -1,0 +1,37 @@
+### SyncthingLazurite
+
+SyncthingLazurite is a lightweight desktop companion for Syncthing, built with Lazarus/FreePascal. It is a compiled native app optimized for very low memory and CPU usage. It connects to your local Syncthing and shows devices, folders, and recent activity in a simple window with a tray icon.
+
+#### What it does
+ - Shows your Syncthing devices and folders at a glance
+ - Indicates connection status (online, paused, issues)
+ - Displays a compact event log for recent activity
+ - Lets you quickly connect/disconnect and view details
+
+#### Key features
+ - Live status updates from Syncthing
+ - Tray icon hint with online devices
+ - Lightweight and simple UI
+ - Native compiled app (Lazarus/FreePascal) with very low memory and CPU usage
+
+#### Getting started
+1. Install and run Syncthing on your computer. By default it listens on `http://127.0.0.1:8384` and has an API key in its settings.
+   NOTE:
+   In the future, the SyncthingLazurite program will automatically download Syncthing if it does not find them, and there will also be a build containing Syncthing in the installation kit.
+2. Start SyncthingLazurite.
+3. Open Options and **set Syncthing API key**.
+   NOTE: the app can read the key from Syncthing’s config if you point it to the config folder.
+4. Click Connect. You should see your devices and folders populate within a few seconds.
+
+#### Everyday use
+ - Keep SyncthingLazurite running in the background; the tray icon shows a quick hint of online devices.
+ - Use the Events panel to glance at recent changes.
+ - Pause or disconnect from Syncthing when you need to temporarily stop updates.
+
+#### Privacy & security
+ - SyncthingLazurite talks only to your local Syncthing instance using your API key. No data is sent to any cloud services by this app.
+ - Keep your Syncthing GUI/API protected (use a strong password and do not expose it to untrusted networks).
+
+#### Feedback
+Issues and suggestions are welcome. Please open an issue on the repository’s tracker.
+

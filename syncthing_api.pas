@@ -337,6 +337,9 @@ type
     FOnBeforeTreeModify: TBeforeAfterTreeModifyEvent;
     FOnAfterTreeModify: TBeforeAfterTreeModifyEvent;
     FOnStateChanged: TStateChangedEvent;
+    // Ping state (for synchronous Ping)
+    FPingInProgress: boolean;
+    FPingResult: boolean;
     // State process. (FSM)
     procedure FSM_Process();
     // Internal helpers
@@ -357,6 +360,7 @@ type
 
     // REST callbacks
     procedure CB_CheckOnline(Request: THttpRequest);
+    procedure CB_Ping(Request: THttpRequest);
     procedure HTTPHandle_RestAPI(Request: THttpRequest);
     // Events callbacks
     procedure HTTPHandle_EventAPI(Request: THttpRequest);
@@ -460,6 +464,9 @@ type
     procedure Disconnect(); virtual;
     procedure Pause(); virtual;
     procedure PauseRelease(); virtual;
+    // Ping. Allows checking if Syncthing is reachable without establishing a full connection.
+    // Synchronous operation - the call blocks the current thread until completion or timeout.
+    function Ping(): boolean; virtual;
 
     // Configuration
     { Sets endpoint (host, port, TLS flag) and rebuilds base URL }
@@ -872,6 +879,9 @@ begin
   FTimerLongPollingErrorRestore.OnTimer := @LongPollingErrorRestoreTimerHandler;
   FTimerLongPollingErrorRestore.Interval := 5000;
   InitEndpointTable;
+  // Ping state init
+  FPingInProgress := false;
+  FPingResult := false;
 end;
 
 destructor TSyncthingAPI.Destroy;
@@ -1280,6 +1290,38 @@ begin
   end;
 end;
 
+function TSyncthingAPI.Ping(): boolean;
+var timeoutMs: Integer;
+var elapsed: Integer;
+var sleepMs: Integer;
+begin
+  // Ensure HTTP client and base URL are configured
+  BuildServerURL();
+  ConfigureHttpClient();
+
+  // Set initial state for ping
+  FPingInProgress := true;
+  FPingResult := false;
+
+  // Fire async request
+  API_Get('system/ping', @CB_Ping, '');
+
+  // Block current thread until ping completes or times out
+  // Use IOTimeout as maximum wait budget; fall back to ConnectTimeout if zero
+  // Minimal sleep to reduce CPU load while allowing callbacks to execute
+  timeoutMs := FIOTimeout + FConnectTimeout;
+  elapsed := 0;
+  sleepMs := 10;
+  while FPingInProgress and (elapsed < timeoutMs) do
+  begin
+    CheckSynchronize(1);
+    Sleep(sleepMs);
+    Inc(elapsed, sleepMs);
+  end;
+
+  Result := FPingResult;
+end;
+
 procedure TSyncthingAPI.SetEndpoint(const Host: UTF8String; Port: Integer; UseTLS: Boolean);
 begin
   FHost := Host;
@@ -1500,6 +1542,13 @@ begin
     if Assigned(FOnConnectError) then
       FOnConnectError(Self, 'Ping failed or not connected');
   end;
+end;
+
+procedure TSyncthingAPI.CB_Ping(Request: THttpRequest);
+begin
+  // Set result based on HTTP status and success flag
+  FPingResult := (Request <> nil) and (Request.Status = 200) and (Request.Succeeded);
+  FPingInProgress := false;
 end;
 
 procedure TSyncthingAPI.HTTPHandle_EventAPI(Request: THttpRequest);
