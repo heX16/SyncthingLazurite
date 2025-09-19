@@ -116,6 +116,13 @@ type
   // - All callback functions (`OnSuccess`, `OnError`, `OnOpened`, etc.) are main-thread safe
   // - GUI components can be directly updated from callbacks without synchronization
   // - No need to use `QueueAsyncCall`, `Synchronize` or similar in callback handlers
+  //
+  // CALLBACK BEHAVIOR:
+  // - Request callback is ALWAYS called, even on errors
+  // - On error: Request.Status contains HTTPErrorCode_* and Request.Succeeded = false
+  // - On success: Request.Status contains HTTP status code and Request.Succeeded = true
+  // - `OnOpened`, `OnError`, `OnLoadDone` are global handlers called for ALL requests
+  // - Global handlers are optional - using individual request callbacks is sufficient
 
   TAsyncHTTP = class
   private
@@ -225,8 +232,11 @@ type
     property RetryCount: Integer read FRetryCount write FRetryCount;
     // When true, reuse one HTTP client (keep-alive) within the worker thread
     property KeepConnection: Boolean read FKeepConnection write FKeepConnection;
+    { Global handler called when request starts. Optional - individual callbacks are sufficient. }
     property OnOpened: TAsyncHttpRequestEvent read FOnOpened write FOnOpened;
+    { Global handler called on successful requests. Optional - individual callbacks are sufficient. }
     property OnLoadDone: TAsyncHttpRequestEvent read FOnLoadDone write FOnLoadDone;
+    { Global handler called on request errors. Optional - individual callbacks are sufficient. }
     property OnError: TAsyncHttpRequestEvent read FOnError write FOnError;
     // Fired when low-level connection was interrupted and no HTTP status code received
     property OnDisconnected: TAsyncHttpRequestEvent read FOnDisconnected write FOnDisconnected;
@@ -243,11 +253,20 @@ const
   HTTPErrorCode_HTTPClientException = 16002;
   HTTPErrorCode_Disconnected = 16003;
   HTTPErrorCode_KeepAliveEnded = 16004;
+  // Socket-level errors (no HTTP status returned)
+  HTTPErrorCode_SocketHostNotFound   = 16005;
+  HTTPErrorCode_SocketCreationFailed = 16006;
+  HTTPErrorCode_SocketConnectFailed  = 16007;
+  HTTPErrorCode_SocketConnectTimeout = 16008;
+  HTTPErrorCode_SocketIOTimeout      = 16009;
 
 // Close TCP connection (close network socket)
 procedure HTTPClient_DisconnectFromServer(AClient: TFPHTTPClient);
 
 implementation
+
+uses
+  ssockets;
 
 procedure HTTPClient_DisconnectFromServer(AClient: TFPHTTPClient);
 begin
@@ -449,6 +468,17 @@ begin
       );
       ARequest.Status := Client.ResponseStatusCode;
     except
+      on E: ESocketError do
+      begin
+        case E.Code of
+          // Map socket errors to custom HTTP-like error codes
+          seHostNotFound:   ARequest.Status := HTTPErrorCode_SocketHostNotFound;
+          seCreationFailed: ARequest.Status := HTTPErrorCode_SocketCreationFailed;
+          seConnectFailed:  ARequest.Status := HTTPErrorCode_SocketConnectFailed;
+          seConnectTimeOut: ARequest.Status := HTTPErrorCode_SocketConnectTimeout;
+          seIOTimeOut:      ARequest.Status := HTTPErrorCode_SocketIOTimeout;
+        end;
+      end;
       on E: EHTTPClient do
       begin
         if Client.Terminated then
