@@ -5,7 +5,7 @@ unit AsyncHTTP;
 interface
 
 uses
-  Classes, SysUtils, SyncObjs, fphttpclient, ghashmap, HashMapStr, gdeque;
+  Classes, SysUtils, SyncObjs, fphttpclient_fixed, ghashmap, HashMapStr, gdeque;
 
 type
   // Operation status for CheckOperation
@@ -123,6 +123,21 @@ type
   // - On success: Request.Status contains HTTP status code and Request.Succeeded = true
   // - `OnOpened`, `OnError`, `OnLoadDone` are global handlers called for ALL requests
   // - Global handlers are optional - using individual request callbacks is sufficient
+  //
+  // EVENT FIRING ORDER:
+  // 1. OnOpened is fired when request starts processing
+  // 2. OnLoadDone is fired for successful responses (status 200-399)
+  //    OnError is fired for HTTP error responses (status 400+ or connection errors)
+  // 3. OnDisconnected is fired ADDITIONALLY when TCP connection is closed by server
+  //    (regardless of whether the request succeeded or failed)
+  // 4. Individual request callback is fired last
+  //
+  // EXAMPLES:
+  // - GET /ok → Connection: keep-alive → OnOpened → OnLoadDone → callback
+  // - GET /ok → Connection: close → OnOpened → OnLoadDone → OnDisconnected → callback
+  // - GET /404 → Connection: keep-alive → OnOpened → OnError → callback
+  // - GET /404 → Connection: close → OnOpened → OnError → OnDisconnected → callback
+  // - Network timeout → OnOpened → OnError → OnDisconnected → callback
 
   TAsyncHTTP = class
   private
@@ -148,6 +163,8 @@ type
     FCurrentClientLock: TCriticalSection;
     // True while a request is actively being processed
     FIsProcessing: Boolean;
+    // True when CancelAll is in progress
+    FCancellingInProcess: Boolean;
     procedure EnqueueRequest(const ARequest: THttpRequest; const ClearDuplicates: Boolean = False);
     function GetRequestByName(const OperationName: string): THttpRequest;
     procedure AddRequestName(const ARequest: THttpRequest);
@@ -238,7 +255,7 @@ type
     property OnLoadDone: TAsyncHttpRequestEvent read FOnLoadDone write FOnLoadDone;
     { Global handler called on request errors. Optional - individual callbacks are sufficient. }
     property OnError: TAsyncHttpRequestEvent read FOnError write FOnError;
-    // Fired when low-level connection was interrupted and no HTTP status code received
+    { Global handler called when TCP connection is closed by server, regardless of request success/failure. Optional - individual callbacks are sufficient. }
     property OnDisconnected: TAsyncHttpRequestEvent read FOnDisconnected write FOnDisconnected;
     // Fired when the queue becomes empty after processing requests
     property OnQueueEmpty: TNotifyEvent read FOnQueueEmpty write FOnQueueEmpty;
@@ -259,6 +276,7 @@ const
   HTTPErrorCode_SocketConnectFailed  = 16007;
   HTTPErrorCode_SocketConnectTimeout = 16008;
   HTTPErrorCode_SocketIOTimeout      = 16009;
+  HTTPErrorCode_HTTPClientSocketError = 16010;
 
 // Close TCP connection (close network socket)
 procedure HTTPClient_DisconnectFromServer(AClient: TFPHTTPClient);
@@ -320,14 +338,14 @@ procedure TAsyncHTTP.ConfigureHttpClient(AClient: TFPHTTPClient; const ARequest:
           AClientInner.AddHeader(key, value);
       end;
     finally
-      lines.Free;
+      FreeAndNil(lines);
     end;
   end;
 begin
   // AClient.AddHeader('Connection', 'close');
   AClient.AllowRedirect := True;
   AClient.KeepConnection := self.KeepConnection;
-  
+
   if Self.FConnectTimeout > 0 then
     AClient.ConnectTimeout := Self.FConnectTimeout;
   if Self.FIOTimeout > 0 then
@@ -476,17 +494,52 @@ begin
           seCreationFailed: ARequest.Status := HTTPErrorCode_SocketCreationFailed;
           seConnectFailed:  ARequest.Status := HTTPErrorCode_SocketConnectFailed;
           seConnectTimeOut: ARequest.Status := HTTPErrorCode_SocketConnectTimeout;
-          seIOTimeOut:      ARequest.Status := HTTPErrorCode_SocketIOTimeout;
+          seIOTimeOut:
+            if Client.Terminated or Self.FOwner.FCancellingInProcess then
+              // Client-cancelled request
+              ARequest.Status := HTTPErrorCode_ClientClosed
+            else
+              ARequest.Status := HTTPErrorCode_SocketIOTimeout;
         end;
       end;
       on E: EHTTPClient do
       begin
-        if Client.Terminated then
+        
+        // Check if client was terminated (cancelled) first - this takes priority
+        if Client.Terminated or Self.FOwner.FCancellingInProcess then
+        begin
           // Client-cancelled request
-          ARequest.Status := HTTPErrorCode_ClientClosed
+          ARequest.Status := HTTPErrorCode_ClientClosed;
+        end
+        else if E is EHTTPClientTimeout then
+        begin
+          ARequest.Status := HTTPErrorCode_SocketIOTimeout;
+        end
+        else if E is EHTTPClientConnectionLost then
+        begin
+          ARequest.Status := HTTPErrorCode_Disconnected;
+        end
+        else if E is EHTTPClientHostNotFound then
+        begin
+          ARequest.Status := HTTPErrorCode_SocketHostNotFound;
+        end
+        else if E is EHTTPClientConnectFailed then
+        begin
+          ARequest.Status := HTTPErrorCode_SocketConnectFailed;
+        end
+        else if E is EHTTPClientConnectTimeout then
+        begin
+          ARequest.Status := HTTPErrorCode_SocketConnectTimeout;
+        end
+        else if E is EHTTPClientSocketError then
+        begin
+          ARequest.Status := HTTPErrorCode_HTTPClientSocketError;
+        end
         else
+        begin
           // Unknown HTTP error
           ARequest.Status := HTTPErrorCode_HTTPClientException;
+        end;
       end;
       on E: EWriteError do
       begin
@@ -499,7 +552,9 @@ begin
   except
     // Other exceptions: mark as failure and allow retry attempts
     on E: Exception do
+    begin
       ARequest.Status := HTTPErrorCode_UnknownException;
+    end;
   end; // try
 
   Client.RequestBody := nil;
@@ -514,6 +569,7 @@ procedure TRequestWorkerThread.ProcessRequest(ARequest: THttpRequest;
 var
   attempt: Integer;
   clientNeedFree: Boolean;
+  ClientWasConnected: boolean;
 begin
   // Mark started and fire OnOpened on the main thread
   Self.FOwner.FIsProcessing := True;
@@ -550,6 +606,9 @@ begin
 
     if not Self.Terminated then
     begin
+      if Client.Terminated then
+        ARequest.Status := HTTPErrorCode_ClientClosed;
+
       // unfortunately TFPHTTPClient does not support socket closure tracking.
       // I have to service this moment myself.  =\
       if (ARequest.Status = HTTPErrorCode_KeepAliveEnded) or
@@ -583,28 +642,31 @@ begin
       Self.FOwner.FCurrentClientLock.Release;
     end;
 
+    ClientWasConnected := Client.Connected;
     if clientNeedFree then
-      Client.Free;
+      FreeAndNil(Client);
   end; // try
 
   // Mark as done before invoking callback; after callback we will remove operation
   ARequest.State := osDone;
 
-  // Fire success/error event in main thread
+  // Fire success/error event in main thread first
   if ARequest.Succeeded then
     Self.FInvokeKind := iekSuccess
   else
-  begin
-    // If there is no HTTP status and not connected, classify as disconnection
-    if (ARequest.Status = HTTPErrorCode_HTTPClientException) or not Client.Connected then
-      // TODO: I'am not sure if this works correctly
-      Self.FInvokeKind := iekDisconnected
-    else
-      Self.FInvokeKind := iekError;
-  end;
+    Self.FInvokeKind := iekError;
   Self.FInvokeRequest := ARequest;
   if not Self.Terminated then
     Self.Synchronize(@DoInvokeEvents);
+
+  // Fire disconnection event ADDITIONALLY if connection was closed
+  if not ClientWasConnected then
+  begin
+    Self.FInvokeKind := iekDisconnected;
+    Self.FInvokeRequest := ARequest;
+    if not Self.Terminated then
+      Self.Synchronize(@DoInvokeEvents);
+  end;
 
   // Prepare and invoke the user callback in main thread
   ARequest.Response.Position := 0;
@@ -711,6 +773,7 @@ begin
   Self.FWorker := Self.CreateWorkerThread();
   Self.FCurrentClient := nil;
   Self.FCurrentClientLock := TCriticalSection.Create;
+  Self.FCancellingInProcess := False;
   Self.UserObject := nil;
   Self.UserString := '';
 end;
@@ -723,6 +786,9 @@ end;
 
 procedure TAsyncHTTP.EnqueueRequest(const ARequest: THttpRequest; const ClearDuplicates: Boolean);
 begin
+  // Clear cancelling flag when new request is enqueued
+  Self.FCancellingInProcess := False;
+  
   // Map operation name to request if provided
   if ARequest.OperationName <> '' then
   begin
@@ -967,18 +1033,21 @@ begin
           FreeAndNil(req);
         end;
       end;
-    oldQueue.Free;
+    FreeAndNil(oldQueue);
   end;
 
   if Assigned(oldDict) then
-    oldDict.Free;
+    FreeAndNil(oldDict);
 end;
 
 procedure TAsyncHTTP.CancelAll;
 begin
+  // Set cancelling flag to indicate cancellation is in progress
+  Self.FCancellingInProcess := True;
+  
   // Abort the current connection and clear queued requests
-  Self.AbortActiveConnection;
   Self.ClearQueue;
+  Self.AbortActiveConnection;
 end;
 
 function TAsyncHTTP.RequestInQueue(const OperationName: string): Boolean;
