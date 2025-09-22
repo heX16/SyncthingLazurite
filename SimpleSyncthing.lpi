@@ -32,7 +32,7 @@
       <AutoIncrementBuild Value="True"/>
       <MajorVersionNr Value="1"/>
       <MinorVersionNr Value="1"/>
-      <BuildNr Value="122"/>
+      <BuildNr Value="125"/>
     </VersionInfo>
     <BuildModes Count="4">
       <Item1 Name="Debug" Default="True"/>
@@ -200,7 +200,7 @@
         <PackageName Value="LCL"/>
       </Item7>
     </RequiredPackages>
-    <Units Count="13">
+    <Units Count="14">
       <Unit0>
         <Filename Value="SimpleSyncthing.lpr"/>
         <IsPartOfProject Value="True"/>
@@ -281,6 +281,11 @@
         <IsPartOfProject Value="True"/>
         <UnitName Value="uUtils"/>
       </Unit12>
+      <Unit13>
+        <Filename Value="ulogging.pas"/>
+        <IsPartOfProject Value="True"/>
+        <UnitName Value="uLogging"/>
+      </Unit13>
     </Units>
   </ProjectOptions>
   <CompilerOptions>
@@ -333,7 +338,7 @@
     </Other>
   </CompilerOptions>
   <Debugging>
-    <Exceptions Count="6">
+    <Exceptions Count="10">
       <Item1>
         <Name Value="EAbort"/>
       </Item1>
@@ -352,6 +357,18 @@
       <Item6>
         <Name Value="EWriteError"/>
       </Item6>
+      <Item7>
+        <Name Value="ESocketError"/>
+      </Item7>
+      <Item8>
+        <Name Value="EHTTPClientConnectTimeout"/>
+      </Item8>
+      <Item9>
+        <Name Value="EHTTPClientConnectFailed"/>
+      </Item9>
+      <Item10>
+        <Name Value="EHTTPClientTimeout"/>
+      </Item10>
     </Exceptions>
   </Debugging>
 </CONFIG>

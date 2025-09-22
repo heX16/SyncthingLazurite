@@ -404,10 +404,16 @@ procedure TModuleMain.Syn_OnStateChanged(Sender: TObject; NewState: TSyncthingFS
 var
   s: string;
   c: TColor;
+  statusMessage: string;
 begin
   // Print new FSM state to console
   s := GetEnumName(TypeInfo(TSyncthingFSM_State), Ord(NewState));
   DebugLog('FSyncthingAPI.OnStateChanged: ' + s);
+  
+  // Add status change to events log
+  statusMessage := Format('[%s] Status changed: %s', [FormatDateTime('hh:nn:ss', Now), s]);
+  AddLineToEventsLog(statusMessage);
+  
   // Change status circle color depending on state
   case NewState of
     ssOffline:

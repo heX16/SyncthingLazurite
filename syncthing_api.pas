@@ -10,7 +10,9 @@ uses
   Classes, SysUtils, Types, StrUtils,
   fpjson,
   AsyncHttp,
-  ExtCtrls;
+  ExtCtrls,
+  TypInfo,
+  uLogging;
 
 type
   // Finite state machine for the core
@@ -626,6 +628,11 @@ procedure TSyncthingAPI.FSM_Process();
 begin
   while True do
   begin
+    // Log FSM command processing
+    if Command <> ssCmdNone then
+      DebugLog('FSM_Process: State=' + GetEnumName(TypeInfo(TSyncthingFSM_State), Ord(FState)) + 
+        ', Command=' + GetEnumName(TypeInfo(TSyncthingFSM_Command), Ord(Command)));
+    
     case FState of
 
       ssConnectingInitAndPing:
@@ -732,7 +739,7 @@ begin
               continue;
             end
             else
-              StartLongPolling();
+              RestartLongPolling();
           end;
           if Command = ssCmdConnectionStable then
           begin
@@ -1154,6 +1161,8 @@ begin
 end;
 
 procedure TSyncthingAPI.StartLongPolling();
+var
+  url: string;
 begin
   if (Assigned(FLongPollingRestartTimer)) and (FLongPollingRestartIntervalSec > 0) then
   begin
@@ -1164,8 +1173,11 @@ begin
   if FHTTPEvents.RequestInQueue('polling') then
     FHTTPEvents.CancelAll();
 
+  url := FServerURL + 'rest/events?since=' + IntToStr(FEventsLastId) + '&limit=10&timeout=60';
+  DebugLog('StartLongPolling: Starting long-polling request to URL=' + url);
+  
   FHTTPEvents.Get(
-    FServerURL + 'rest/events?since=' + IntToStr(FEventsLastId) + '&limit=10&timeout=60',
+    url,
     @HTTP_EventAPI,
     '',
     'polling'
@@ -1183,8 +1195,10 @@ end;
 
 procedure TSyncthingAPI.RestartLongPolling;
 begin
+  DebugLog('RestartLongPolling: Restarting long-polling connection');
   FLongPollingSelfRestartFlag := true;
   StopLongPolling();
+
   StartLongPolling();
   FLongPollingSelfRestartFlag := false;
 end;
@@ -1481,6 +1495,7 @@ end;
 procedure TSyncthingAPI.LongPollingError(Request: THttpRequest; Sender: TObject
   );
 begin
+  DebugLog('LongPollingError: HTTP Error Code=' + IntToStr(Request.Status) + ', URL=' + Request.URL);
   Command:=ssCmdLongPollingError;
   FSM_Process();
 end;
@@ -1612,22 +1627,23 @@ var
   j: TJSONData;
   a: TJSONArray;
 begin
-  j := nil;
-  if ParseJson(Request, j) then
-  try
-    if (j is TJSONArray) then
-    begin
-      a := TJSONArray(j);
-      HandleIncommingDataFromEventAPI(a);
+  if Request.Succeeded then
+  begin
+    DebugLog('HTTP_EventAPI: Received event data, StatusCode=' + IntToStr(Request.Status));
+    j := nil;
+    if ParseJson(Request, j) then
+    try
+      if (j is TJSONArray) then
+      begin
+        a := TJSONArray(j);
+        DebugLog('HTTP_EventAPI: Parsed ' + IntToStr(a.Count) + ' events');
+        HandleIncommingDataFromEventAPI(a);
+      end;
+    finally
+      if Assigned(j) then
+        j.Free;
     end;
-  finally
-    if Assigned(j) then
-      j.Free;
   end;
-  // TODO: remove it !!!
-  // кажется это просто не нужно, мы потом поймаем событие дисконект.
-  // или тут нужно вызывать FSM с особой командой
-  StartLongPolling;
 end;
 
 end.
