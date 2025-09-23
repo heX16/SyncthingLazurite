@@ -10,15 +10,25 @@ procedure DebugLog(const S: string);
 implementation
 
 {$IFDEF DEBUG}
+uses
+  SysUtils;
+
+procedure DebugLog(const S: string);
+var
+  timeStr: string;
+begin
+  // Add time in HH:MM:SS format to the beginning of the message
+  timeStr := FormatDateTime('hh:nn:ss', Now);
+  WriteLn('[' + timeStr + '] ' + S);
+end;
+
+{$ELSE DEBUG}
+
 procedure DebugLog(const S: string);
 begin
-  WriteLn(S);
 end;
-{$ELSE}
-procedure DebugLog(const S: string);
-begin
-end;
-{$ENDIF}
+
+{$ENDIF DEBUG}
 
 end.
 

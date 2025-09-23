@@ -22,10 +22,14 @@ type
     ssConnectingPingWait, // Connecting to Syncthing
     ssConnectingWaitData,
     ssOnline,         // Connected; long-polling is active
-    ssOnlinePaused,   // Connected; long-polling is offline
-    ssOnlineUnstable, // Connected; long-polling has an error and is offline
+    ssOnlineLongPollingWait,   // Connected; no error; long-polling is unactive, will connect
+    ssOnlineUnstable, // Connected; has error; long-polling has an error and is offline
+    ssOnlineUnstableLongPollingWait,   // Connected; has error; long-polling is unactive, will connect
+    ssOnlinePaused,   // Connected; long-polling disabled
     ssDisconnecting   // Graceful disconnect in progress
   );
+
+  TSyncthingFSM_StatesList = set of TSyncthingFSM_State;
 
   // Commands for the finite state machine
   TSyncthingFSM_Command = (
@@ -37,14 +41,14 @@ type
     ssCmdConnectingPingAck,
     ssCmdConnectingPingFault,
     ssCmdConnectingTimeout,
-    ssCmdLongPollingTimeToAutoReconnect,
-    ssCmdLongPollingDisconnected,
+    ssCmdLongPollingForceRestart,
+    ssCmdLongPollingConnect,
+    ssCmdLongPollingDataReceived,
+    ssCmdLongPollingErrorDisconnected,
     ssCmdLongPollingTimerRestore,
     ssCmdLongPollingError,
     ssCmdQueueEmpty,
-    ssCmdDataReceived,
-    ssCmdConnectionStable, // user Cmd
-    ssCmdConnectionUnstable // user Cmd
+    ssCmdDataReceived
   );
 
   // Event types (callbacks)
@@ -314,28 +318,33 @@ type
   TSyncthingAPI = class(TComponent)
   private
     FState: TSyncthingFSM_State;
+    FStateCommand: TSyncthingFSM_Command;
+    PrevState: TSyncthingFSM_State;
+
     FTreeRoot: TJSONObject;            // Single in-memory JSON tree root
 
+    // Server
     FAPIKey: UTF8String;           // X-API-Key
     FHost: UTF8String;             // Syncthing host
     FPort: Integer;                // Syncthing port
-    FStateCommand: TSyncthingFSM_Command;
     FUseTLS: Boolean;              // Use HTTPS if true
     FServerURL: UTF8String;        // Built base URL (scheme://host:port/), see `BuildServerURL`
 
     FHTTP: TAsyncHTTP;             // REST client (RestAPI)
     FHTTPEvents: TAsyncHTTP;       // Long-polling client (EventAPI)
 
+    // LongPolling
     FEventsLastId: Int64;          // Last seen event id
-    FLongPollingRestartIntervalSec: Integer; // Periodic restart interval
-    FLongPollingRestartTimer: TTimer;
-    FLongPollingSelfRestartFlag: boolean; // flag that we ourselves caused the pooling restart
+    FLongPollingIntervalSec: Integer; // Specifies how long the connection will be open
+    FTimerLongPollingForceRestart: TTimer;
 
     FConnectTimeout: Integer; // Global connect timeout for both clients
     FIOTimeout: Integer;      // Global IO timeout for both clients
 
+    // Timers
     FTimerConnectingTimeout: TTimer;
     FTimerLongPollingErrorRestore: TTimer;
+    FTimerLongPullingDoConnect: TTimer;
 
     // Events (callbacks)
     FOnBeforeConnect: TNotifyEventObj;
@@ -352,11 +361,14 @@ type
     FOnBeforeTreeModify: TBeforeAfterTreeModifyEvent;
     FOnAfterTreeModify: TBeforeAfterTreeModifyEvent;
     FOnStateChanged: TStateChangedEvent;
+
     // Ping state (for synchronous Ping)
     FPingInProgress: boolean;
     FPingResult: boolean;
+
     // Last connection error code (for emitting OnConnectError from FSM)
     FLastConnectErrorCode: Integer;
+
     // State process. (FSM)
     procedure FSM_Process();
     // Internal helpers
@@ -364,8 +376,12 @@ type
     procedure LongPollingDisconnected(Request: THttpRequest; Sender: TObject);
     procedure LongPollingError(Request: THttpRequest; Sender: TObject);
     procedure OnRestAPIQueueEmpty(Sender: TObject);
-    procedure ConnectingTimeoutTimerHandler(Sender: TObject);
-    procedure LongPollingErrorRestoreTimerHandler(Sender: TObject);
+
+    // Timers:
+    procedure TimerConnectingTimeoutHandler(Sender: TObject);
+    procedure TimerLongPollingErrorRestoreHandler(Sender: TObject);
+    procedure TimerLongPullingDoConnectHandler(Sender: TObject);
+    procedure TimerLongPollingForceRestartHandler(Sender: TObject); virtual;
 
     // JSON Utils
 
@@ -430,13 +446,9 @@ type
 
     // Long-polling lifecycle
     { Starts event long-polling listener }
-    procedure StartLongPolling(); virtual;
+    function StartLongPolling(): boolean; virtual;
     { Stops event long-polling listener }
-    procedure StopLongPolling(); virtual;
-    { Restarts event long-polling listener (periodic or on drop) }
-    procedure RestartLongPolling(); virtual;
-    { Timer handler to periodically restart long-polling }
-    procedure LongPollingRestartTimerHandler(Sender: TObject); virtual;
+    function StopLongPolling(): boolean; virtual;
 
     // Long-polling processing
     { Parses and processes events array returned by Event API }
@@ -602,16 +614,12 @@ end;
 
 
 procedure TSyncthingAPI.FSM_Process();
-  function ProcessCmdDisconnect(): boolean;
+  procedure ProcessCmdDisconnect();
   begin
-    Result := false;
     if (Command = ssCmdDisconnect) and Assigned(FOnBeforeDisconnect) then
       FOnBeforeDisconnect(Self);
     if Command = ssCmdDisconnect then
-    begin
       SetState(ssDisconnecting);
-      Result := true; // continue;
-    end;
   end;
 
   procedure OnGotoOffline();
@@ -625,150 +633,235 @@ procedure TSyncthingAPI.FSM_Process();
     end;
   end;
 
-begin
-  while True do
+  function CheckArea(States: TSyncthingFSM_StatesList; var AAreaEntry: boolean): boolean;
   begin
-    // Log FSM command processing
-    if Command <> ssCmdNone then
-      DebugLog('FSM_Process: State=' + GetEnumName(TypeInfo(TSyncthingFSM_State), Ord(FState)) + 
-        ', Command=' + GetEnumName(TypeInfo(TSyncthingFSM_Command), Ord(Command)));
-    
-    case FState of
+    Result := false; // no event by default
+
+    // check entry into the area
+    if (Self.State in States)
+       and not (Self.PrevState in States)
+    then
+    begin
+      AAreaEntry := True;
+      Result := true;
+    end;
+
+    // check the exit from the area
+    if not (Self.State in States)
+       and (Self.PrevState in States)
+    then
+    begin
+      AAreaEntry := false; // exit from area
+      Result := true;
+    end;
+  end;
+
+var
+  i: integer;
+  NewState: boolean;
+  AreaEntry: boolean;
+begin
+  NewState := false;
+  AreaEntry := false;
+
+  DebugLog(
+    'FSM_Process: State=' +
+    GetEnumName(TypeInfo(TSyncthingFSM_State), Ord(FState)) +
+    ', Command=' +
+    GetEnumName(TypeInfo(TSyncthingFSM_Command), Ord(Command))
+  );
+
+  for i:=1 to 10 do
+  begin
+
+	IF self.PrevState <> self.State THEN
+		NewState := True;
+
+    if NewState then
+      DebugLog(
+        'FSM_Process: State=' +
+        GetEnumName(TypeInfo(TSyncthingFSM_State), Ord(FState)) +
+        ', Command=' +
+        GetEnumName(TypeInfo(TSyncthingFSM_Command), Ord(Command)) +
+        ' (repeat)'
+      );
+
+    // "area" processing
+    if NewState then
+    begin
+      if CheckArea([
+            ssConnectingInitAndPing,
+            ssConnectingPingWait,
+            ssConnectingWaitData], AreaEntry)
+      then
+        if AreaEntry
+        then
+          FTimerConnectingTimeout.Enabled := True
+        else
+          FTimerConnectingTimeout.Enabled := False;
+
+      if CheckArea([ssOnlineLongPollingWait], AreaEntry)
+      then
+        if AreaEntry
+        then
+          FTimerLongPullingDoConnect.Enabled:=True
+        else
+          FTimerLongPullingDoConnect.Enabled:=False;
+
+      if CheckArea([ssOnline], AreaEntry)
+      then
+        if AreaEntry
+        then
+          FTimerLongPollingForceRestart.Enabled:=True
+        else
+          FTimerLongPollingForceRestart.Enabled:=False;
+
+      if CheckArea([ssOnlineUnstable, ssOnlineUnstableLongPollingWait], AreaEntry)
+      then
+        if AreaEntry
+        then
+          if Assigned(FOnConnectionUnstable) then
+            FOnConnectionUnstable(Self);
+
+    end; // if NewState
+
+
+    // Automate
+    self.PrevState := self.State;
+    case self.FState of
 
       ssConnectingInitAndPing:
-        begin
-          BuildServerURL();
-          ConfigureHttpClient();
-          // Start initial ping; HTTP_CheckOnline drives next transitions
-          API_Get('system/ping', @HTTP_CheckOnline, '');
-          FTimerConnectingTimeout.Enabled := True;
-          SetState(ssConnectingPingWait);
-        end;
+      begin
+        BuildServerURL();
+        ConfigureHttpClient();
+        // Start initial ping; HTTP_CheckOnline drives next transitions
+        API_Get('system/ping', @HTTP_CheckOnline, '');
+
+        SetState(ssConnectingPingWait);
+      end;
 
       ssConnectingPingWait:
+      begin
+        if (Command = ssCmdConnectingPingFault) or
+           (Command = ssCmdConnectingTimeout) or
+           (Command = ssCmdDisconnect)
+        then
         begin
-          if (Command = ssCmdConnectingPingFault) or
-             (Command = ssCmdConnectingTimeout) or
-             (Command = ssCmdDisconnect)
-          then
-          begin
-            SetState(ssOffline);
-            OnGotoOffline();
-          end;
-          if Command = ssCmdConnectingPingAck then
-          begin
-            SetState(ssConnectingWaitData);
-            LoadAllBasicEndpoints();
-          end;
+          SetState(ssOffline);
+          OnGotoOffline();
         end;
+
+        if Command = ssCmdConnectingPingAck then
+        begin
+          SetState(ssConnectingWaitData);
+          LoadAllBasicEndpoints();
+        end;
+      end;
 
       ssConnectingWaitData:
+      begin
+        if Command = ssCmdDataReceived then
         begin
-          if Command = ssCmdDataReceived then
+          if not IsAnyBasicEndpointQueued() then
           begin
-            if not IsAnyBasicEndpointQueued() then
-            begin
-              // All data loaded, ready to "online status" ('.')\
-              SetState(ssOnline);
-              FTimerConnectingTimeout.Enabled := False;
+            // All data loaded, almost ready to "online status" ('.')\
+            SetState(ssOnlineLongPollingWait);
 
-              Command := ssCmdLongPollingTimeToAutoReconnect;
-              if Assigned(FOnConnected) then
-                FOnConnected(Self);
-
-              continue;
-            end;
-          end;
-          if (Command = ssCmdConnectingTimeout) or
-             (Command = ssCmdDisconnect)
-          then
-          begin
-            SetState(ssOffline);
-            OnGotoOffline();
+            // Formally, we are already connected,
+            // because all data is avaiable.
+            // So, send signal that our status as "online."
+            if Assigned(FOnConnected) then
+              FOnConnected(Self);
           end;
         end;
-
-      ssOnline:
+        if (Command = ssCmdConnectingTimeout) or
+           (Command = ssCmdDisconnect)
+        then
         begin
-          if ProcessCmdDisconnect() then
-            continue;
-
-          if Command = ssCmdLongPollingDisconnected then
-          begin
-            if not FHTTPEvents.RequestInQueueCold('pooling') and
-               not FLongPollingSelfRestartFlag
-            then
-              StartLongPolling();
-          end;
-          if Command = ssCmdLongPollingTimeToAutoReconnect then
-          begin
-            RestartLongPolling();
-          end;
-          if Command = ssCmdPause then
-          begin
-            StopLongPolling();
-            SetState(ssOnlinePaused);
-          end;
-          if (Command = ssCmdLongPollingError) or 
-             (Command = ssCmdConnectionUnstable) then
-          begin
-            // goto "Unstable"
-            SetState(ssOnlineUnstable);
-            if Command = ssCmdLongPollingError then
-              FTimerLongPollingErrorRestore.Enabled:=true;
-            if Assigned(FOnConnectionUnstable) then
-              FOnConnectionUnstable(Self);
-            continue;
-          end;
-          if Command = ssCmdLongPollingTimerRestore then
-          begin
-            FTimerLongPollingErrorRestore.Enabled:=false;
-          end;
+          SetState(ssOffline);
+          OnGotoOffline();
         end;
+      end;
 
-      ssOnlineUnstable:
+      ssOnlineLongPollingWait,
+      ssOnlineUnstableLongPollingWait:
+      begin
+        ProcessCmdDisconnect();
+
+        if Command = ssCmdLongPollingConnect then
         begin
-          if ProcessCmdDisconnect() then
-            continue;
-          if Command = ssCmdLongPollingTimerRestore then
-          begin
-            if FHTTPEvents.RequestInQueue('pooling') then
-            begin
-              // goto "Online"
-              SetState(ssOnline);
-              continue;
-            end
-            else
-              RestartLongPolling();
-          end;
-          if Command = ssCmdConnectionStable then
+          if FHTTPEvents.RequestInQueue('polling') then
           begin
             SetState(ssOnline);
             continue;
-          end;
-          if Command = ssCmdPause then
+          end else
           begin
-            StopLongPolling();
-            SetState(ssOnlinePaused);
-            continue;
+            StartLongPolling();
           end;
         end;
+
+        if Command in [
+            ssCmdLongPollingError,
+            ssCmdLongPollingErrorDisconnected] then
+        begin
+          // just ignore...
+          // TODO: counter and goto offline
+        end;
+
+        if Command = ssCmdPause then
+        begin
+          StopLongPolling();
+          SetState(ssOnlinePaused);
+        end;
+      end;
+
+      ssOnline:
+      begin
+        ProcessCmdDisconnect();
+
+        if Command in [
+            ssCmdLongPollingErrorDisconnected,
+            ssCmdLongPollingDataReceived]
+        then
+          SetState(ssOnlineLongPollingWait);
+
+        if Command in [
+            ssCmdLongPollingForceRestart,
+            ssCmdLongPollingError]
+        then
+        begin
+          StopLongPolling();
+          SetState(ssOnlineLongPollingWait);
+        end;
+
+        if Command = ssCmdPause then
+        begin
+          StopLongPolling();
+          SetState(ssOnlinePaused);
+        end;
+      end;
+
+      ssOnlineUnstable:
+      begin
+        ProcessCmdDisconnect();
+
+        if Command = ssCmdLongPollingTimerRestore then
+          SetState(ssOnlineUnstableLongPollingWait);
+
+        if Command = ssCmdPause then
+          SetState(ssOnlinePaused);
+      end;
 
       ssOnlinePaused:
       begin
-        if ProcessCmdDisconnect() then
-          continue;
+        ProcessCmdDisconnect();
 
         if Command = ssCmdPauseRelease then
-        begin
-          SetState(ssOnline);
-          StartLongPolling();
-        end;
+          SetState(ssOnlineLongPollingWait);
       end;
 
       ssDisconnecting:
         begin
-          FTimerConnectingTimeout.Enabled := False;
           StopLongPolling();
           FHTTP.CancelAll();
           SetState(ssOffline);
@@ -779,27 +872,23 @@ begin
 
       ssOffline:
         begin
-          FTimerConnectingTimeout.Enabled := False;
-
           if Command = ssCmdConnect then
           begin
             if Assigned(FOnBeforeConnect) then
               FOnBeforeConnect(Self);
 
             if Command = ssCmdConnect then
-            begin
               SetState(ssConnectingInitAndPing);
-              continue;
-            end;
           end;
         end;
 
-    end; // case
+    end; // case - end of automate
 
-    break;
-    Command:=ssCmdNone;
+	IF self.State = self.PrevState THEN
+      break;
   end; // while
 
+  Command:=ssCmdNone;
 end;
 
 class function TSyncthingAPI.GetEndpointURI(Id: TSyncthingEndpointId): UTF8String;
@@ -907,19 +996,32 @@ begin
   FHTTP := nil;
   FHTTPEvents := nil;
   FEventsLastId := 0;
-  FLongPollingRestartIntervalSec := 60;
-  FLongPollingRestartTimer := nil;
+  FLongPollingIntervalSec := 60;
   FConnectTimeout := 1000;
   FIOTimeout := 1000;
+
+  // Timers:
+  FTimerLongPollingForceRestart := TTimer.Create(Self);
+  FTimerLongPollingForceRestart.Enabled := False;
+  FTimerLongPollingForceRestart.OnTimer := @TimerLongPollingForceRestartHandler;
+  FTimerLongPollingForceRestart.Interval := FLongPollingIntervalSec * 1000;
+
   FTimerConnectingTimeout := TTimer.Create(Self);
   FTimerConnectingTimeout.Enabled := False;
-  FTimerConnectingTimeout.OnTimer := @ConnectingTimeoutTimerHandler;
+  FTimerConnectingTimeout.OnTimer := @TimerConnectingTimeoutHandler;
   FTimerConnectingTimeout.Interval:= 5000;
+
   FTimerLongPollingErrorRestore := TTimer.Create(Self);
   FTimerLongPollingErrorRestore.Enabled := False;
-  FTimerLongPollingErrorRestore.OnTimer := @LongPollingErrorRestoreTimerHandler;
-  FTimerLongPollingErrorRestore.Interval := 5000;
-  InitEndpointTable;
+  FTimerLongPollingErrorRestore.OnTimer := @TimerLongPollingErrorRestoreHandler;
+  FTimerLongPollingErrorRestore.Interval := 10000;
+
+  FTimerLongPullingDoConnect := TTimer.Create(Self);
+  FTimerLongPullingDoConnect.Interval := 500;
+  FTimerLongPullingDoConnect.OnTimer := @TimerLongPullingDoConnectHandler;
+  FTimerLongPullingDoConnect.Enabled := False;
+
+  InitEndpointTable();
   // Ping state init
   FPingInProgress := false;
   FPingResult := false;
@@ -928,12 +1030,14 @@ end;
 
 destructor TSyncthingAPI.Destroy;
 begin
-  if Assigned(FLongPollingRestartTimer) then
-    FreeAndNil(FLongPollingRestartTimer);
+  if Assigned(FTimerLongPollingForceRestart) then
+    FreeAndNil(FTimerLongPollingForceRestart);
   if Assigned(FTimerConnectingTimeout) then
     FreeAndNil(FTimerConnectingTimeout);
   if Assigned(FTimerLongPollingErrorRestore) then
     FreeAndNil(FTimerLongPollingErrorRestore);
+  if Assigned(FTimerLongPullingDoConnect) then
+    FreeAndNil(FTimerLongPullingDoConnect);
   if Assigned(FHTTP) then
     FreeAndNil(FHTTP);
   if Assigned(FHTTPEvents) then
@@ -951,40 +1055,30 @@ begin
     FServerURL := Format('http://%s:%d/', [FHost, FPort]);
 end;
 
-procedure TSyncthingAPI.ConfigureHttpClient;
+procedure TSyncthingAPI.ConfigureHttpClient();
 begin
   if not Assigned(FHTTP) then
-    FHTTP := TAsyncHTTP.Create;
+    FHTTP := TAsyncHTTP.Create();
   FHTTP.ConnectTimeout := FConnectTimeout;
   FHTTP.RetryCount := 1;
   FHTTP.IOTimeout := FIOTimeout;
   FHTTP.KeepConnection := True;
-  FHTTP.OnOpened := @HttpAddHeader;
+  FHTTP.OnBeginProcessing := @HttpAddHeader;
   FHTTP.OnQueueEmpty := @OnRestAPIQueueEmpty;
 
   if not Assigned(FHTTPEvents) then
-    FHTTPEvents := TAsyncHTTP.Create;
+    FHTTPEvents := TAsyncHTTP.Create();
   FHTTPEvents.ConnectTimeout := FConnectTimeout;
   FHTTPEvents.RetryCount := 0;
-  FHTTPEvents.IOTimeout := FLongPollingRestartIntervalSec * 1000 + FIOTimeout;
+  FHTTPEvents.IOTimeout := FLongPollingIntervalSec * 1000 + FIOTimeout;
   FHTTPEvents.KeepConnection := True;
-  FHTTPEvents.OnOpened := @HttpAddHeader;
+  FHTTPEvents.OnBeginProcessing := @HttpAddHeader;
   // TODO: в любом случае будет вызван "request callback". эти обработчики лишние.
   FHTTPEvents.OnDisconnected := @LongPollingDisconnected;
   FHTTPEvents.OnError := @LongPollingError;
 
-  if (FLongPollingRestartIntervalSec > 0) then
-  begin
-    if not Assigned(FLongPollingRestartTimer) then
-    begin
-      FLongPollingRestartTimer := TTimer.Create(Self);
-      FLongPollingRestartTimer.Enabled := False;
-      FLongPollingRestartTimer.OnTimer := @LongPollingRestartTimerHandler;
-    end;
-    FLongPollingRestartTimer.Interval := FLongPollingRestartIntervalSec * 1000;
-  end
-  else if Assigned(FLongPollingRestartTimer) then
-    FLongPollingRestartTimer.Enabled := False;
+  FTimerLongPollingForceRestart.Interval := FLongPollingIntervalSec * 1000 + 5000;
+  FTimerLongPollingForceRestart.Enabled := False;
 end;
 
 function TSyncthingAPI.GetDefaultRootStr: UTF8String;
@@ -1160,18 +1254,12 @@ begin
   end;
 end;
 
-procedure TSyncthingAPI.StartLongPolling();
+function TSyncthingAPI.StartLongPolling: boolean;
 var
   url: string;
 begin
-  if (Assigned(FLongPollingRestartTimer)) and (FLongPollingRestartIntervalSec > 0) then
-  begin
-    FLongPollingRestartTimer.Enabled := False;
-    FLongPollingRestartTimer.Enabled := True;
-  end;
-
   if FHTTPEvents.RequestInQueue('polling') then
-    FHTTPEvents.CancelAll();
+    exit(False);
 
   url := FServerURL + 'rest/events?since=' + IntToStr(FEventsLastId) + '&limit=10&timeout=60';
   DebugLog('StartLongPolling: Starting long-polling request to URL=' + url);
@@ -1182,30 +1270,23 @@ begin
     '',
     'polling'
   );
+  exit(True);
 end;
 
-procedure TSyncthingAPI.StopLongPolling;
+function TSyncthingAPI.StopLongPolling: boolean;
 begin
-  if Assigned(FLongPollingRestartTimer) then
-    FLongPollingRestartTimer.Enabled := False;
-
-  if Assigned(FHTTPEvents) then
+  if Assigned(FHTTPEvents) and FHTTPEvents.RequestInQueue('polling') then
+  begin
+    DebugLog('StopLongPolling');
     FHTTPEvents.CancelAll();
+    exit(True);
+  end else
+    exit(false);
 end;
 
-procedure TSyncthingAPI.RestartLongPolling;
+procedure TSyncthingAPI.TimerLongPollingForceRestartHandler(Sender: TObject);
 begin
-  DebugLog('RestartLongPolling: Restarting long-polling connection');
-  FLongPollingSelfRestartFlag := true;
-  StopLongPolling();
-
-  StartLongPolling();
-  FLongPollingSelfRestartFlag := false;
-end;
-
-procedure TSyncthingAPI.LongPollingRestartTimerHandler(Sender: TObject);
-begin
-  Command:=ssCmdLongPollingTimeToAutoReconnect;
+  Command:=ssCmdLongPollingForceRestart;
 
   if Assigned(FOnBeforeLongPollingRestart) then
     FOnBeforeLongPollingRestart(Self);
@@ -1213,7 +1294,7 @@ begin
   FSM_Process();
 end;
 
-procedure TSyncthingAPI.ConnectingTimeoutTimerHandler(Sender: TObject);
+procedure TSyncthingAPI.TimerConnectingTimeoutHandler(Sender: TObject);
 begin
   Command:=ssCmdConnectingTimeout;
   // Mark timeout as error for FSM handler
@@ -1221,9 +1302,15 @@ begin
   FSM_Process();
 end;
 
-procedure TSyncthingAPI.LongPollingErrorRestoreTimerHandler(Sender: TObject);
+procedure TSyncthingAPI.TimerLongPollingErrorRestoreHandler(Sender: TObject);
 begin
   Command:=ssCmdLongPollingTimerRestore;
+  FSM_Process();
+end;
+
+procedure TSyncthingAPI.TimerLongPullingDoConnectHandler(Sender: TObject);
+begin
+  Self.Command:=ssCmdLongPollingConnect;
   FSM_Process();
 end;
 
@@ -1404,7 +1491,7 @@ end;
 
 procedure TSyncthingAPI.SetLongPollingRestartInterval(Seconds: Integer);
 begin
-  FLongPollingRestartIntervalSec := Seconds;
+  FLongPollingIntervalSec := Seconds;
   ConfigureHttpClient;
 end;
 
@@ -1423,7 +1510,7 @@ begin
   if Assigned(FHTTP) then
     FHTTP.IOTimeout := Value;
   if Assigned(FHTTPEvents) then
-    FHTTPEvents.IOTimeout := FLongPollingRestartIntervalSec * 1000 + Value;
+    FHTTPEvents.IOTimeout := FLongPollingIntervalSec * 1000 + Value;
 end;
 
 procedure TSyncthingAPI.SetConnectingTimeout(Value: Integer);
@@ -1484,7 +1571,7 @@ end;
 
 procedure TSyncthingAPI.LongPollingDisconnected(Request: THttpRequest; Sender: TObject);
 begin
-  Command:=ssCmdLongPollingDisconnected;
+  Command:=ssCmdLongPollingErrorDisconnected;
 
   if Assigned(FOnLongPollingDrop) then
     FOnLongPollingDrop(Self);
@@ -1638,6 +1725,8 @@ begin
         a := TJSONArray(j);
         DebugLog('HTTP_EventAPI: Parsed ' + IntToStr(a.Count) + ' events');
         HandleIncommingDataFromEventAPI(a);
+        Command:=ssCmdLongPollingDataReceived;
+        FSM_Process();
       end;
     finally
       if Assigned(j) then

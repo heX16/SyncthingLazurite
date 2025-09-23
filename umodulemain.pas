@@ -137,8 +137,12 @@ uses
 { TModuleMain }
 
 procedure TModuleMain.AddLineToEventsLog(const Line: string);
+var
+  timeStr: string;
 begin
-  frmMain.listEvents.Items.Insert(0, Line);
+  // Add time in HH:MM:SS format to the beginning of the line
+  timeStr := FormatDateTime('hh:nn:ss', Now);
+  frmMain.listEvents.Items.Insert(0, '[' + timeStr + '] ' + Line);
   while frmMain.listEvents.Items.Count > 100 do
     frmMain.listEvents.Items.Delete(frmMain.listEvents.Items.Count - 1);
 end;
@@ -411,7 +415,7 @@ begin
   DebugLog('FSyncthingAPI.OnStateChanged: ' + s);
   
   // Add status change to events log
-  statusMessage := Format('[%s] Status changed: %s', [FormatDateTime('hh:nn:ss', Now), s]);
+  statusMessage := 'Status changed: ' + s;
   AddLineToEventsLog(statusMessage);
   
   // Change status circle color depending on state
@@ -420,11 +424,11 @@ begin
       c := clGray; // was used previously for offline
     ssConnectingInitAndPing, ssConnectingPingWait, ssConnectingWaitData:
       c := clYellow; // connecting states
-    ssOnline:
+    ssOnline, ssOnlineLongPollingWait:
       c := TColor($00B000);  // online
     ssOnlinePaused:
       c := clSilver; // paused
-    ssOnlineUnstable:
+    ssOnlineUnstable, ssOnlineUnstableLongPollingWait:
       c := clRed;    // unstable/error
     ssDisconnecting:
       c := clYellow;   // disconnecting
