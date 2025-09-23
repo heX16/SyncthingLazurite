@@ -20,7 +20,7 @@ type
   // Internal kind of event to invoke in main thread
   TInvokeEventKind = (
     iekNone,
-    iekOpened,
+    iekBeginProcessing,
     iekSuccess,
     iekError,
     iekDisconnected,
@@ -113,7 +113,7 @@ type
   // This class uses internal worker threads for HTTP operations but ensures
   // all user callbacks are executed in the main (GUI) thread via `Synchronize`.
   // This means:
-  // - All callback functions (`OnSuccess`, `OnError`, `OnOpened`, etc.) are main-thread safe
+  // - All callback functions (`OnSuccess`, `OnError`, `OnBeginProcessing`, etc.) are main-thread safe
   // - GUI components can be directly updated from callbacks without synchronization
   // - No need to use `QueueAsyncCall`, `Synchronize` or similar in callback handlers
   //
@@ -121,11 +121,11 @@ type
   // - Request callback is ALWAYS called, even on errors
   // - On error: Request.Status contains HTTPErrorCode_* and Request.Succeeded = false
   // - On success: Request.Status contains HTTP status code and Request.Succeeded = true
-  // - `OnOpened`, `OnError`, `OnLoadDone` are global handlers called for ALL requests
+  // - `OnBeginProcessing`, `OnError`, `OnLoadDone` are global handlers called for ALL requests
   // - Global handlers are optional - using individual request callbacks is sufficient
   //
   // EVENT FIRING ORDER:
-  // 1. OnOpened is fired when request starts processing
+  // 1. OnBeginProcessing is fired when request starts processing
   // 2. OnLoadDone is fired for successful responses (status 200-399)
   //    OnError is fired for HTTP error responses (status 400+ or connection errors)
   // 3. OnDisconnected is fired ADDITIONALLY when TCP connection is closed by server
@@ -133,11 +133,11 @@ type
   // 4. Individual request callback is fired last
   //
   // EXAMPLES:
-  // - GET /ok → Connection: keep-alive → OnOpened → OnLoadDone → callback
-  // - GET /ok → Connection: close → OnOpened → OnLoadDone → OnDisconnected → callback
-  // - GET /404 → Connection: keep-alive → OnOpened → OnError → callback
-  // - GET /404 → Connection: close → OnOpened → OnError → OnDisconnected → callback
-  // - Network timeout → OnOpened → OnError → OnDisconnected → callback
+  // - GET /ok → Connection: keep-alive → OnBeginProcessing → OnLoadDone → callback
+  // - GET /ok → Connection: close → OnBeginProcessing → OnLoadDone → OnDisconnected → callback
+  // - GET /404 → Connection: keep-alive → OnBeginProcessing → OnError → callback
+  // - GET /404 → Connection: close → OnBeginProcessing → OnError → OnDisconnected → callback
+  // - Network timeout → OnBeginProcessing → OnError → OnDisconnected → callback
 
   TAsyncHTTP = class
   private
@@ -149,7 +149,7 @@ type
     FWorker: TRequestWorkerThread;
     FNamedRequestsDict: TDictHttpRequest;
     FNamedRequestsLock: TCriticalSection;
-    FOnOpened: TAsyncHttpRequestEvent;
+    FOnBeginProcessing: TAsyncHttpRequestEvent;
     FOnLoadDone: TAsyncHttpRequestEvent;
     FOnError: TAsyncHttpRequestEvent;
     FOnDisconnected: TAsyncHttpRequestEvent;
@@ -250,7 +250,7 @@ type
     // When true, reuse one HTTP client (keep-alive) within the worker thread
     property KeepConnection: Boolean read FKeepConnection write FKeepConnection;
     { Global handler called when request starts. Optional - individual callbacks are sufficient. }
-    property OnOpened: TAsyncHttpRequestEvent read FOnOpened write FOnOpened;
+    property OnBeginProcessing: TAsyncHttpRequestEvent read FOnBeginProcessing write FOnBeginProcessing;
     { Global handler called on successful requests. Optional - individual callbacks are sufficient. }
     property OnLoadDone: TAsyncHttpRequestEvent read FOnLoadDone write FOnLoadDone;
     { Global handler called on request errors. Optional - individual callbacks are sufficient. }
@@ -425,9 +425,9 @@ procedure TRequestWorkerThread.DoInvokeEvents;
 begin
   // Execute requested events in the main thread
   case Self.FInvokeKind of
-    iekOpened:
-      if Assigned(Self.FOwner.FOnOpened) then
-        Self.FOwner.FOnOpened(Self.FInvokeRequest, Self.FOwner);
+    iekBeginProcessing:
+      if Assigned(Self.FOwner.FOnBeginProcessing) then
+        Self.FOwner.FOnBeginProcessing(Self.FInvokeRequest, Self.FOwner);
     iekSuccess:
       if Assigned(Self.FOwner.FOnLoadDone) then
         Self.FOwner.FOnLoadDone(Self.FInvokeRequest, Self.FOwner);
@@ -571,9 +571,9 @@ var
   clientNeedFree: Boolean;
   ClientWasConnected: boolean;
 begin
-  // Mark started and fire OnOpened on the main thread
+  // Mark started and fire OnBeginProcessing on the main thread
   Self.FOwner.FIsProcessing := True;
-  Self.FInvokeKind := iekOpened;
+  Self.FInvokeKind := iekBeginProcessing;
   Self.FInvokeRequest := ARequest;
   if not Self.Terminated then
     Self.Synchronize(@DoInvokeEvents);
