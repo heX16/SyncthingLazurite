@@ -106,12 +106,20 @@ const
 var
   dateNum: Word;
   monthNum: Byte;
+  year: Word;
 begin
   dateNum := GetMyVersion()[2]; // Release field contains year and month
   
   // Extract month and year from number like 2510
+  year := (dateNum div 100) + 2000; // Convert 2-digit year to 4-digit year (25 -> 2025)
   monthNum := dateNum mod 100;
-  Result := IntToStr(dateNum div 100) + ' ' + MonthNames[monthNum]; // format: 2025 october
+  
+  // Check month range
+  if (monthNum >= 1) and (monthNum <= 12) then
+    // format: 2025-10-XX (october)
+    Result := IntToStr(year) + '-' + IntToStr(monthNum) + '-XX (' + MonthNames[monthNum] + ')' 
+  else
+    Result := IntToStr(year) + '-XX-XX (' + IntToStr(monthNum) + ')';
 end;
 
 procedure TfrmAbout.FormCreate(Sender: TObject);
