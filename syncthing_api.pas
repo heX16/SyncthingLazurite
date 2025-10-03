@@ -337,6 +337,7 @@ type
     FEventsLastId: Int64;          // Last seen event id
     FLongPollingIntervalSec: Integer; // Specifies how long the connection will be open
     FTimerLongPollingForceRestart: TTimer;
+    FLongPollingWaitGoodBadCount: Integer; // Good: x>0; Bad: x<0
 
     FConnectTimeout: Integer; // Global connect timeout for both clients
     FIOTimeout: Integer;      // Global IO timeout for both clients
@@ -700,15 +701,18 @@ begin
         else
           FTimerConnectingTimeout.Enabled := False;
 
-      if CheckArea([ssOnlineLongPollingWait], AreaEntry)
+      if CheckArea([ssOnlineLongPollingWait, ssOnlineUnstableLongPollingWait], AreaEntry)
       then
         if AreaEntry
         then
-          FTimerLongPullingDoConnect.Enabled:=True
+        begin
+          FTimerLongPullingDoConnect.Enabled:=True;
+          FLongPollingWaitGoodBadCount:=0;
+        end
         else
           FTimerLongPullingDoConnect.Enabled:=False;
 
-      if CheckArea([ssOnline], AreaEntry)
+      if CheckArea([ssOnline, ssOnlineLongPollingWait], AreaEntry)
       then
         if AreaEntry
         then
@@ -792,8 +796,7 @@ begin
         begin
           if FHTTPEvents.RequestInQueue('polling') then
           begin
-            SetState(ssOnline);
-            continue;
+            FLongPollingWaitGoodBadCount := FLongPollingWaitGoodBadCount + 1;
           end else
           begin
             StartLongPolling();
@@ -804,9 +807,17 @@ begin
             ssCmdLongPollingError,
             ssCmdLongPollingErrorDisconnected] then
         begin
-          // just ignore...
-          // TODO: counter and goto offline
+          FLongPollingWaitGoodBadCount := FLongPollingWaitGoodBadCount - 1;
         end;
+
+        // TODO: create constant for 2 and -10
+        if FLongPollingWaitGoodBadCount >= 2
+        then
+          SetState(ssOnline);
+
+        if FLongPollingWaitGoodBadCount <= -10
+        then
+          SetState(ssOffline);
 
         if Command = ssCmdPause then
         begin
@@ -1260,6 +1271,13 @@ var
 begin
   if FHTTPEvents.RequestInQueue('polling') then
     exit(False);
+
+  if FTimerLongPollingForceRestart.Enabled then
+  begin
+    // Restart timer
+    FTimerLongPollingForceRestart.Enabled:=False;
+    FTimerLongPollingForceRestart.Enabled:=True
+  end;
 
   url := FServerURL + 'rest/events?since=' + IntToStr(FEventsLastId) + '&limit=10&timeout=60';
   DebugLog('StartLongPolling: Starting long-polling request to URL=' + url);
