@@ -1,4 +1,0 @@
-<?xml version="1.0" encoding="utf-8"?>
-<CONFIG>
-  <SimpleSyncthing edAPIKey_Text="MJzE2GL2vOvaFydjM05ocRM64SZ0DR1-" edInterval_Text="0.5 day" chIntervalMode_Checked="0" edPathToConfigDir_Text="D:\heXor\Data\syncthing" chRunSyncOnStart_Checked="1" edPathToExecWithFilename_Text="D:\heXor\App\INet_File\syncthing\syncthing.exe" chUseProxyOutputForFixBug_Checked="1"/>
-</CONFIG>
