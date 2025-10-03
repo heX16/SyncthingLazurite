@@ -10,6 +10,7 @@ uses
   ExtCtrls;
 
 type
+  TArrayOfWord = array[0..3] of Word;
 
   { TfrmAbout }
 
@@ -18,6 +19,8 @@ type
     Image1: TImage;
     lbAuthor: TLabel;
     lbProgramVer: TLabel;
+    lbProgramVerBuild: TLabel;
+    lbProgramVerDate: TLabel;
     lbSyncthingVersion: TLabeledEdit;
     lbSyncthingWebSite: TLabeledEdit;
     lbTranslateAuthor1: TLabel;
@@ -50,7 +53,7 @@ uses
 {$R *.lfm}
 
 { TfrmAbout }
-function GetMyVersion(VerCount: Byte = 4):string;
+function GetMyVersion(): TArrayOfWord;
 type
   TVerInfo=packed record
     OtherBytes: array[0..47] of byte; // ненужные нам 48 байт
@@ -60,30 +63,63 @@ var
   s:TResourceStream;
   v:TVerInfo;
 begin
-  result := '';
+  Result[0] := 0;
+  Result[1] := 0;
+  Result[2] := 0;
+  Result[3] := 0;
+  
   try
     s:=TResourceStream.Create(HInstance,'#1',RT_VERSION); // достаём ресурс
     if s.Size>0 then begin
       s.Read(v,SizeOf(v)); // читаем нужные нам байты
       // версия:
-      if VerCount >= 1 then
-        Result := Result + IntToStr(v.Major);
-      if VerCount >= 2 then
-        Result := Result + '.' + IntToStr(v.Minor);
-      if VerCount >= 3 then
-        Result := Result + '.' + IntToStr(v.Release);
-      if VerCount >= 4 then
-        Result := Result + '.' + IntToStr(v.Build);
+      Result[0] := v.Major;
+      Result[1] := v.Minor;
+      Result[2] := v.Release;
+      Result[3] := v.Build;
     end;
     s.Free;
   except;
   end;
 end;
 
+function GetProgramVersion(): string;
+var
+  versionNumbers: TArrayOfWord;
+begin
+  versionNumbers := GetMyVersion();
+  Result := IntToStr(versionNumbers[0]);
+  Result := Result + '.' + IntToStr(versionNumbers[1]);
+end;
+
+function GetBuildNumber(): string;
+begin
+  Result := IntToStr(GetMyVersion()[3]); // returning build number
+end;
+
+function GetDateFromVersion(): string;
+const
+  MonthNames: array[1..12] of string = (
+    'january', 'february', 'march', 'april', 'may', 'june',
+    'july', 'august', 'september', 'october', 'november', 'december'
+  );
+var
+  dateNum: Word;
+  monthNum: Byte;
+begin
+  dateNum := GetMyVersion()[2]; // Release field contains year and month
+  
+  // Extract month and year from number like 2510
+  monthNum := dateNum mod 100;
+  Result := IntToStr(dateNum div 100) + ' ' + MonthNames[monthNum]; // format: 2025 october
+end;
+
 procedure TfrmAbout.FormCreate(Sender: TObject);
 begin
   lbProgramName.Caption:='SyncthingLazurite';
-  lbProgramVer.Caption:='v' + uUtils.StripAfterChar(GetMyVersion(4), '.', true);
+  lbProgramVer.Caption:='v' + GetProgramVersion(); // Показываем только две цифры версии
+  lbProgramVerBuild.Caption:='Build: ' + GetBuildNumber(); // Показываем номер билда
+  lbProgramVerDate.Caption:='Date: ' + GetDateFromVersion(); // Показываем дату в формате мм.гг
   lbAuthor.Caption:='Author: [ heXor ]';
 end;
 

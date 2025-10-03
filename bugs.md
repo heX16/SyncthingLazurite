@@ -16,4 +16,340 @@
 
 -----------------------------
 
+Connect:
+  FSM_Process: State=ssOffline, Command=ssCmdConnect
+  FSyncthingAPI.OnStateChanged: ssConnectingInitAndPing
+  FSM_Process: State=ssConnectingInitAndPing, Command=ssCmdConnect
+  FSyncthingAPI.OnStateChanged: ssConnectingPingWait
+  FSM_Process: State=ssConnectingPingWait, Command=ssCmdConnectingPingAck
+  FSyncthingAPI.OnStateChanged: ssConnectingWaitData
+  FSyncthingAPI.OnTreeChanged: epConfig
+  FSM_Process: State=ssConnectingWaitData, Command=ssCmdDataReceived
+  FSyncthingAPI.OnTreeChanged: epSystem_Connections
+  FSM_Process: State=ssConnectingWaitData, Command=ssCmdDataReceived
+  FSyncthingAPI.OnTreeChanged: epStats_Device
+  FSM_Process: State=ssConnectingWaitData, Command=ssCmdDataReceived
+  FSyncthingAPI.OnTreeChanged: epStats_Folder
+  FSM_Process: State=ssConnectingWaitData, Command=ssCmdDataReceived
+  FSyncthingAPI.OnTreeChanged: epSystem_Status
+  FSM_Process: State=ssConnectingWaitData, Command=ssCmdDataReceived
+  FSyncthingAPI.OnTreeChanged: epSystem_Version
+  FSM_Process: State=ssConnectingWaitData, Command=ssCmdDataReceived
+Online:
+  FSyncthingAPI.OnStateChanged: ssOnline
+LongPolling reconnect:
+  FSM_Process: State=ssOnline, Command=ssCmdLongPollingTimeToAutoReconnect
+  RestartLongPolling: Restarting long-polling connection
+  StartLongPolling: Starting long-polling request to URL=http://127.0.0.1:8384/rest/events?since=0&limit=10&timeout=60
+  HTTP_EventAPI: Received event data, StatusCode=200
+  HTTP_EventAPI: Parsed 10 events
+  FSyncthingAPI.OnTreeChanged: epStats_Folder
+  FSM_Process: State=ssOnline, Command=ssCmdDataReceived
+  FSyncthingAPI.OnTreeChanged: epStats_Folder
+  FSM_Process: State=ssOnline, Command=ssCmdDataReceived
+  FSyncthingAPI.OnTreeChanged: epSystem_Status
+  FSM_Process: State=ssOnline, Command=ssCmdDataReceived
+LongPolling reconnect:
+  FSM_Process: State=ssOnline, Command=ssCmdLongPollingTimeToAutoReconnect
+  RestartLongPolling: Restarting long-polling connection
 
+LongPolling fault:
+  StartLongPolling: Starting long-polling request to URL=http://127.0.0.1:8384/rest/events?since=1053&limit=10&timeout=60
+  LongPollingError: HTTP Error Code=16009 HTTPErrorCode_SocketIOTimeout, URL=http://127.0.0.1:8384/rest/events?since=1053&limit=10&timeout=60
+
+OnlineUnstable:
+  FSM_Process: State=ssOnline, Command=ssCmdLongPollingError
+  FSyncthingAPI.OnStateChanged: ssOnlineUnstable
+  FSM_Process: State=ssOnlineUnstable, Command=ssCmdLongPollingError
+  FSM_Process: State=ssOnlineUnstable, Command=ssCmdLongPollingTimerRestore
+  RestartLongPolling: Restarting long-polling connection
+  StartLongPolling: Starting long-polling request to URL=http://127.0.0.1:8384/rest/events?since=1053&limit=10&timeout=60
+  FSM_Process: State=ssOnlineUnstable, Command=ssCmdLongPollingTimerRestore
+  RestartLongPolling: Restarting long-polling connection
+  StartLongPolling: Starting long-polling request to URL=http://127.0.0.1:8384/rest/events?since=1053&limit=10&timeout=60
+  LongPollingError: HTTP Error Code=16499, URL=http://127.0.0.1:8384/rest/events?since=1053&limit=10&timeout=60
+  FSM_Process: State=ssOnlineUnstable, Command=ssCmdLongPollingError
+  FSM_Process: State=ssOnlineUnstable, Command=ssCmdLongPollingDisconnected
+  FSM_Process: State=ssOnlineUnstable, Command=ssCmdLongPollingTimerRestore
+  RestartLongPolling: Restarting long-polling connection
+  StartLongPolling: Starting long-polling request to URL=http://127.0.0.1:8384/rest/events?since=1053&limit=10&timeout=60
+  LongPollingError: HTTP Error Code=16499, URL=http://127.0.0.1:8384/rest/events?since=1053&limit=10&timeout=60
+  FSM_Process: State=ssOnlineUnstable, Command=ssCmdLongPollingError
+  FSM_Process: State=ssOnlineUnstable, Command=ssCmdLongPollingDisconnected
+  FSM_Process: State=ssOnlineUnstable, Command=ssCmdLongPollingTimerRestore
+  RestartLongPolling: Restarting long-polling connection
+  StartLongPolling: Starting long-polling request to URL=http://127.0.0.1:8384/rest/events?since=1053&limit=10&timeout=60
+  LongPollingError: HTTP Error Code=16499, URL=http://127.0.0.1:8384/rest/events?since=1053&limit=10&timeout=60
+  FSM_Process: State=ssOnlineUnstable, Command=ssCmdLongPollingError
+  FSM_Process: State=ssOnlineUnstable, Command=ssCmdLongPollingDisconnected
+  FSM_Process: State=ssOnlineUnstable, Command=ssCmdLongPollingTimerRestore
+  RestartLongPolling: Restarting long-polling connection
+
+................
+
+FSM_Process: State=ssOnlineUnstable, Command=ssCmdLongPollingError
+FSM_Process: State=ssOnlineUnstable, Command=ssCmdLongPollingDisconnected
+FSM_Process: State=ssOnlineUnstable, Command=ssCmdLongPollingTimerRestore
+RestartLongPolling: Restarting long-polling connection
+StartLongPolling: Starting long-polling request to URL=http://127.0.0.1:8384/rest/events?since=1056&limit=10&timeout=60
+LongPollingError: HTTP Error Code=16499, URL=http://127.0.0.1:8384/rest/events?since=1056&limit=10&timeout=60
+FSM_Process: State=ssOnlineUnstable, Command=ssCmdLongPollingError
+FSM_Process: State=ssOnlineUnstable, Command=ssCmdLongPollingDisconnected
+FSM_Process: State=ssOnlineUnstable, Command=ssCmdLongPollingTimerRestore
+RestartLongPolling: Restarting long-polling connection
+StartLongPolling: Starting long-polling request to URL=http://127.0.0.1:8384/rest/events?since=1056&limit=10&timeout=60
+LongPollingError: HTTP Error Code=16499, URL=http://127.0.0.1:8384/rest/events?since=1056&limit=10&timeout=60
+FSM_Process: State=ssOnlineUnstable, Command=ssCmdLongPollingError
+FSM_Process: State=ssOnlineUnstable, Command=ssCmdLongPollingDisconnected
+
+...................
+
+RestartLongPolling: Restarting long-polling connection
+StartLongPolling: Starting long-polling request to URL=http://127.0.0.1:8384/rest/events?since=1197&limit=10&timeout=60
+FSM_Process: State=ssOnlineUnstable, Command=ssCmdLongPollingTimerRestore
+RestartLongPolling: Restarting long-polling connection
+StartLongPolling: Starting long-polling request to URL=http://127.0.0.1:8384/rest/events?since=1197&limit=10&timeout=60
+LongPollingError: HTTP Error Code=16499, URL=http://127.0.0.1:8384/rest/events?since=1197&limit=10&timeout=60
+FSM_Process: State=ssOnlineUnstable, Command=ssCmdLongPollingError
+FSM_Process: State=ssOnlineUnstable, Command=ssCmdLongPollingDisconnected
+FSM_Process: State=ssOnlineUnstable, Command=ssCmdLongPollingTimerRestore
+RestartLongPolling: Restarting long-polling connection
+StartLongPolling: Starting long-polling request to URL=http://127.0.0.1:8384/rest/events?since=1197&limit=10&timeout=60
+LongPollingError: HTTP Error Code=16499, URL=http://127.0.0.1:8384/rest/events?since=1197&limit=10&timeout=60
+FSM_Process: State=ssOnlineUnstable, Command=ssCmdLongPollingError
+FSM_Process: State=ssOnlineUnstable, Command=ssCmdLongPollingDisconnected
+FSM_Process: State=ssOnlineUnstable, Command=ssCmdLongPollingTimerRestore
+RestartLongPolling: Restarting long-polling connection
+StartLongPolling: Starting long-polling request to URL=http://127.0.0.1:8384/rest/events?since=1197&limit=10&timeout=60
+LongPollingError: HTTP Error Code=16499, URL=http://127.0.0.1:8384/rest/events?since=1197&limit=10&timeout=60
+FSM_Process: State=ssOnlineUnstable, Command=ssCmdLongPollingError
+FSM_Process: State=ssOnlineUnstable, Command=ssCmdLongPollingDisconnected
+FSM_Process: State=ssOnlineUnstable, Command=ssCmdLongPollingTimerRestore
+RestartLongPolling: Restarting long-polling connection
+StartLongPolling: Starting long-polling request to URL=http://127.0.0.1:8384/rest/events?since=1197&limit=10&timeout=60
+LongPollingError: HTTP Error Code=16499, URL=http://127.0.0.1:8384/rest/events?since=1197&limit=10&timeout=60
+FSM_Process: State=ssOnlineUnstable, Command=ssCmdLongPollingError
+FSM_Process: State=ssOnlineUnstable, Command=ssCmdLongPollingDisconnected
+FSM_Process: State=ssOnlineUnstable, Command=ssCmdLongPollingTimerRestore
+RestartLongPolling: Restarting long-polling connection
+StartLongPolling: Starting long-polling request to URL=http://127.0.0.1:8384/rest/events?since=1197&limit=10&timeout=60
+LongPollingError: HTTP Error Code=16499, URL=http://127.0.0.1:8384/rest/events?since=1197&limit=10&timeout=60
+FSM_Process: State=ssOnlineUnstable, Command=ssCmdLongPollingError
+FSM_Process: State=ssOnlineUnstable, Command=ssCmdLongPollingDisconnected
+FSM_Process: State=ssOnlineUnstable, Command=ssCmdLongPollingTimerRestore
+RestartLongPolling: Restarting long-polling connection
+StartLongPolling: Starting long-polling request to URL=http://127.0.0.1:8384/rest/events?since=1197&limit=10&timeout=60
+LongPollingError: HTTP Error Code=16499, URL=http://127.0.0.1:8384/rest/events?since=1197&limit=10&timeout=60
+FSM_Process: State=ssOnlineUnstable, Command=ssCmdLongPollingError
+FSM_Process: State=ssOnlineUnstable, Command=ssCmdLongPollingDisconnected
+FSM_Process: State=ssOnlineUnstable, Command=ssCmdLongPollingTimerRestore
+RestartLongPolling: Restarting long-polling connection
+StartLongPolling: Starting long-polling request to URL=http://127.0.0.1:8384/rest/events?since=1197&limit=10&timeout=60
+LongPollingError: HTTP Error Code=16499, URL=http://127.0.0.1:8384/rest/events?since=1197&limit=10&timeout=60
+FSM_Process: State=ssOnlineUnstable, Command=ssCmdLongPollingError
+FSM_Process: State=ssOnlineUnstable, Command=ssCmdLongPollingDisconnected
+FSM_Process: State=ssOnlineUnstable, Command=ssCmdLongPollingTimerRestore
+RestartLongPolling: Restarting long-polling connection
+StartLongPolling: Starting long-polling request to URL=http://127.0.0.1:8384/rest/events?since=1197&limit=10&timeout=60
+LongPollingError: HTTP Error Code=16499, URL=http://127.0.0.1:8384/rest/events?since=1197&limit=10&timeout=60
+FSM_Process: State=ssOnlineUnstable, Command=ssCmdLongPollingError
+FSM_Process: State=ssOnlineUnstable, Command=ssCmdLongPollingDisconnected
+FSM_Process: State=ssOnlineUnstable, Command=ssCmdLongPollingTimerRestore
+RestartLongPolling: Restarting long-polling connection
+StartLongPolling: Starting long-polling request to URL=http://127.0.0.1:8384/rest/events?since=1197&limit=10&timeout=60
+LongPollingError: HTTP Error Code=16499, URL=http://127.0.0.1:8384/rest/events?since=1197&limit=10&timeout=60
+FSM_Process: State=ssOnlineUnstable, Command=ssCmdLongPollingError
+FSM_Process: State=ssOnlineUnstable, Command=ssCmdLongPollingDisconnected
+
+------------------
+
+HTTP_EventAPI: Received event data, StatusCode=200
+HTTP_EventAPI: Parsed 2 events
+FSM_Process: State=ssOnlineUnstable, Command=ssCmdLongPollingTimerRestore
+RestartLongPolling: Restarting long-polling connection
+StartLongPolling: Starting long-polling request to URL=http://127.0.0.1:8384/rest/events?since=1199&limit=10&timeout=60
+HTTP_EventAPI: Received event data, StatusCode=200
+HTTP_EventAPI: Parsed 3 events
+FSyncthingAPI.OnTreeChanged: epStats_Device
+FSM_Process: State=ssOnlineUnstable, Command=ssCmdDataReceived
+FSyncthingAPI.OnTreeChanged: epStats_Folder
+FSM_Process: State=ssOnlineUnstable, Command=ssCmdDataReceived
+FSM_Process: State=ssOnlineUnstable, Command=ssCmdLongPollingTimerRestore
+RestartLongPolling: Restarting long-polling connection
+StartLongPolling: Starting long-polling request to URL=http://127.0.0.1:8384/rest/events?since=1202&limit=10&timeout=60
+HTTP_EventAPI: Received event data, StatusCode=200
+HTTP_EventAPI: Parsed 10 events
+FSyncthingAPI.OnTreeChanged: epStats_Folder
+FSM_Process: State=ssOnlineUnstable, Command=ssCmdDataReceived
+FSyncthingAPI.OnTreeChanged: epStats_Folder
+FSM_Process: State=ssOnlineUnstable, Command=ssCmdDataReceived
+FSM_Process: State=ssOnlineUnstable, Command=ssCmdLongPollingTimerRestore
+RestartLongPolling: Restarting long-polling connection
+StartLongPolling: Starting long-polling request to URL=http://127.0.0.1:8384/rest/events?since=1219&limit=10&timeout=60
+HTTP_EventAPI: Received event data, StatusCode=200
+HTTP_EventAPI: Parsed 10 events
+FSyncthingAPI.OnTreeChanged: epStats_Folder
+FSM_Process: State=ssOnlineUnstable, Command=ssCmdDataReceived
+FSyncthingAPI.OnTreeChanged: epStats_Folder
+FSM_Process: State=ssOnlineUnstable, Command=ssCmdDataReceived
+FSM_Process: State=ssOnlineUnstable, Command=ssCmdLongPollingTimerRestore
+RestartLongPolling: Restarting long-polling connection
+StartLongPolling: Starting long-polling request to URL=http://127.0.0.1:8384/rest/events?since=1238&limit=10&timeout=60
+HTTP_EventAPI: Received event data, StatusCode=200
+HTTP_EventAPI: Parsed 1 events
+FSyncthingAPI.OnTreeChanged: epSystem_Connections
+FSM_Process: State=ssOnlineUnstable, Command=ssCmdDataReceived
+FSyncthingAPI.OnTreeChanged: epStats_Device
+FSM_Process: State=ssOnlineUnstable, Command=ssCmdDataReceived
+FSM_Process: State=ssOnlineUnstable, Command=ssCmdLongPollingTimerRestore
+RestartLongPolling: Restarting long-polling connection
+StartLongPolling: Starting long-polling request to URL=http://127.0.0.1:8384/rest/events?since=1239&limit=10&timeout=60
+HTTP_EventAPI: Received event data, StatusCode=200
+HTTP_EventAPI: Parsed 10 events
+FSyncthingAPI.OnTreeChanged: epStats_Folder
+FSM_Process: State=ssOnlineUnstable, Command=ssCmdDataReceived
+FSyncthingAPI.OnTreeChanged: epStats_Folder
+FSM_Process: State=ssOnlineUnstable, Command=ssCmdDataReceived
+FSM_Process: State=ssOnlineUnstable, Command=ssCmdLongPollingTimerRestore
+RestartLongPolling: Restarting long-polling connection
+StartLongPolling: Starting long-polling request to URL=http://127.0.0.1:8384/rest/events?since=1277&limit=10&timeout=60
+FSM_Process: State=ssOnlineUnstable, Command=ssCmdLongPollingTimerRestore
+RestartLongPolling: Restarting long-polling connection
+StartLongPolling: Starting long-polling request to URL=http://127.0.0.1:8384/rest/events?since=1277&limit=10&timeout=60
+LongPollingError: HTTP Error Code=16499, URL=http://127.0.0.1:8384/rest/events?since=1277&limit=10&timeout=60
+FSM_Process: State=ssOnlineUnstable, Command=ssCmdLongPollingError
+FSM_Process: State=ssOnlineUnstable, Command=ssCmdLongPollingDisconnected
+
+------------------------
+
+Disconnect:
+  FSM_Process: State=ssOnlineUnstable, Command=ssCmdDisconnect
+  FSyncthingAPI.OnStateChanged: ssDisconnecting
+  FSM_Process: State=ssDisconnecting, Command=ssCmdDisconnect
+
+Offline:
+  FSyncthingAPI.OnStateChanged: ssOffline
+  LongPollingError: HTTP Error Code=16499, URL=http://127.0.0.1:8384/rest/events?since=1277&limit=10&timeout=60
+  FSM_Process: State=ssOffline, Command=ssCmdLongPollingError
+  FSM_Process: State=ssOffline, Command=ssCmdLongPollingDisconnected
+Connect:
+  FSM_Process: State=ssOffline, Command=ssCmdConnect
+  FSyncthingAPI.OnStateChanged: ssConnectingInitAndPing
+  FSM_Process: State=ssConnectingInitAndPing, Command=ssCmdConnect
+  FSyncthingAPI.OnStateChanged: ssConnectingPingWait
+PingFault!: (WTF???)
+  FSM_Process: State=ssConnectingPingWait, Command=ssCmdConnectingPingFault
+  FSyncthingAPI.OnStateChanged: ssOffline
+PollingTimerRestore - DOUBLE!!!
+  FSM_Process: State=ssOffline, Command=ssCmdLongPollingTimerRestore
+  FSM_Process: State=ssOffline, Command=ssCmdLongPollingTimerRestore
+Disconnect:
+  FSM_Process: State=ssOffline, Command=ssCmdDisconnect
+  FSM_Process: State=ssOffline, Command=ssCmdDisconnect
+Connect:
+  FSM_Process: State=ssOffline, Command=ssCmdConnect
+  FSyncthingAPI.OnStateChanged: ssConnectingInitAndPing
+  FSM_Process: State=ssConnectingInitAndPing, Command=ssCmdConnect
+  FSyncthingAPI.OnStateChanged: ssConnectingPingWait
+  FSM_Process: State=ssConnectingPingWait, Command=ssCmdConnectingPingAck
+  FSyncthingAPI.OnStateChanged: ssConnectingWaitData
+  FSyncthingAPI.OnTreeChanged: epConfig
+  FSM_Process: State=ssConnectingWaitData, Command=ssCmdDataReceived
+  FSyncthingAPI.OnTreeChanged: epSystem_Connections
+  FSM_Process: State=ssConnectingWaitData, Command=ssCmdDataReceived
+  FSyncthingAPI.OnTreeChanged: epStats_Device
+  FSM_Process: State=ssConnectingWaitData, Command=ssCmdDataReceived
+  FSyncthingAPI.OnTreeChanged: epStats_Folder
+  FSM_Process: State=ssConnectingWaitData, Command=ssCmdDataReceived
+  FSyncthingAPI.OnTreeChanged: epSystem_Status
+  FSM_Process: State=ssConnectingWaitData, Command=ssCmdDataReceived
+  FSyncthingAPI.OnTreeChanged: epSystem_Version
+  FSM_Process: State=ssConnectingWaitData, Command=ssCmdDataReceived
+Online:
+  FSyncthingAPI.OnStateChanged: ssOnline
+LongPolling:
+  FSM_Process: State=ssOnline, Command=ssCmdLongPollingTimeToAutoReconnect
+  RestartLongPolling: Restarting long-polling connection
+  StartLongPolling: Starting long-polling request to URL=http://127.0.0.1:8384/rest/events?since=1277&limit=10&timeout=60
+  FSM_Process: State=ssOnline, Command=ssCmdLongPollingTimerRestore
+  HTTP_EventAPI: Received event data, StatusCode=200
+  HTTP_EventAPI: Parsed 1 events
+  FSyncthingAPI.OnTreeChanged: epStats_Device
+  FSM_Process: State=ssOnline, Command=ssCmdDataReceived
+Online - ALL OK
+
+
+-------------------------
+
+Connect:
+[04:55:16] FSM_Process: State=ssOffline, Command=ssCmdConnect
+[04:55:16] FSyncthingAPI.OnStateChanged: ssConnectingInitAndPing
+[04:55:16] FSM_Process: State=ssConnectingInitAndPing, Command=ssCmdConnect
+[04:55:16] FSyncthingAPI.OnStateChanged: ssConnectingPingWait
+[04:55:16] FSM_Process: State=ssConnectingPingWait, Command=ssCmdConnectingPingAck
+[04:55:16] FSyncthingAPI.OnStateChanged: ssConnectingWaitData
+[04:55:16] FSyncthingAPI.OnTreeChanged: epConfig
+[04:55:16] FSM_Process: State=ssConnectingWaitData, Command=ssCmdDataReceived
+[04:55:16] FSyncthingAPI.OnTreeChanged: epSystem_Connections
+[04:55:16] FSM_Process: State=ssConnectingWaitData, Command=ssCmdDataReceived
+[04:55:16] FSyncthingAPI.OnTreeChanged: epStats_Device
+[04:55:16] FSM_Process: State=ssConnectingWaitData, Command=ssCmdDataReceived
+[04:55:16] FSyncthingAPI.OnTreeChanged: epStats_Folder
+[04:55:16] FSM_Process: State=ssConnectingWaitData, Command=ssCmdDataReceived
+[04:55:16] FSyncthingAPI.OnTreeChanged: epSystem_Status
+[04:55:16] FSM_Process: State=ssConnectingWaitData, Command=ssCmdDataReceived
+[04:55:16] FSyncthingAPI.OnTreeChanged: epSystem_Version
+[04:55:16] FSM_Process: State=ssConnectingWaitData, Command=ssCmdDataReceived
+Online:
+[04:55:16] FSyncthingAPI.OnStateChanged: ssOnline
+LongPolling:
+[04:55:16] FSM_Process: State=ssOnline, Command=ssCmdLongPollingTimeToAutoReconnect
+[04:55:16] RestartLongPolling: Restarting long-polling connection
+[04:55:16] StartLongPolling: Starting long-polling request to URL=http://127.0.0.1:8384/rest/events?since=0&limit=10&timeout=60
+[04:55:16] HTTP_EventAPI: Received event data, StatusCode=200
+[04:55:16] HTTP_EventAPI: Parsed 10 events
+[04:55:16] FSyncthingAPI.OnTreeChanged: epSystem_Status
+[04:55:16] FSM_Process: State=ssOnline, Command=ssCmdDataReceived
+[04:55:16] FSyncthingAPI.OnTreeChanged: epSystem_Status
+[04:55:16] FSM_Process: State=ssOnline, Command=ssCmdDataReceived
+[04:56:16] FSM_Process: State=ssOnline, Command=ssCmdLongPollingTimeToAutoReconnect
+LongPolling:
+[04:56:16] RestartLongPolling: Restarting long-polling connection
+LongPolling FAIL:
+[04:56:16] StartLongPolling: Starting long-polling request to URL=http://127.0.0.1:8384/rest/events?since=1350&limit=10&timeout=60
+[04:56:16] LongPollingError: HTTP Error Code=16009, URL=http://127.0.0.1:8384/rest/events?since=1350&limit=10&timeout=60
+[04:56:16] FSM_Process: State=ssOnline, Command=ssCmdLongPollingError
+Unstable:
+[04:56:16] FSyncthingAPI.OnStateChanged: ssOnlineUnstable
+[04:56:16] FSM_Process: State=ssOnlineUnstable, Command=ssCmdLongPollingError
+[04:56:21] FSM_Process: State=ssOnlineUnstable, Command=ssCmdLongPollingTimerRestore
+LongPolling:
+[04:56:21] RestartLongPolling: Restarting long-polling connection
+[04:56:21] StartLongPolling: Starting long-polling request to URL=http://127.0.0.1:8384/rest/events?since=1350&limit=10&timeout=60
+LongPolling: - !!!
+[04:56:26] FSM_Process: State=ssOnlineUnstable, Command=ssCmdLongPollingTimerRestore
+[04:56:26] RestartLongPolling: Restarting long-polling connection
+[04:56:26] StartLongPolling: Starting long-polling request to URL=http://127.0.0.1:8384/rest/events?since=1350&limit=10&timeout=60
+[04:56:26] LongPollingError: HTTP Error Code=16499, URL=http://127.0.0.1:8384/rest/events?since=1350&limit=10&timeout=60
+[04:56:26] FSM_Process: State=ssOnlineUnstable, Command=ssCmdLongPollingError
+[04:56:26] FSM_Process: State=ssOnlineUnstable, Command=ssCmdLongPollingDisconnected
+[04:56:31] FSM_Process: State=ssOnlineUnstable, Command=ssCmdLongPollingTimerRestore
+[04:56:31] RestartLongPolling: Restarting long-polling connection
+[04:56:31] StartLongPolling: Starting long-polling request to URL=http://127.0.0.1:8384/rest/events?since=1350&limit=10&timeout=60
+[04:56:31] LongPollingError: HTTP Error Code=16499, URL=http://127.0.0.1:8384/rest/events?since=1350&limit=10&timeout=60
+[04:56:31] FSM_Process: State=ssOnlineUnstable, Command=ssCmdLongPollingError
+[04:56:31] FSM_Process: State=ssOnlineUnstable, Command=ssCmdLongPollingDisconnected
+[04:56:36] FSM_Process: State=ssOnlineUnstable, Command=ssCmdLongPollingTimerRestore
+[04:56:36] RestartLongPolling: Restarting long-polling connection
+[04:56:36] StartLongPolling: Starting long-polling request to URL=http://127.0.0.1:8384/rest/events?since=1350&limit=10&timeout=60
+[04:56:36] LongPollingError: HTTP Error Code=16499, URL=http://127.0.0.1:8384/rest/events?since=1350&limit=10&timeout=60
+[04:56:36] FSM_Process: State=ssOnlineUnstable, Command=ssCmdLongPollingError
+[04:56:36] FSM_Process: State=ssOnlineUnstable, Command=ssCmdLongPollingDisconnected
+[04:56:41] FSM_Process: State=ssOnlineUnstable, Command=ssCmdLongPollingTimerRestore
+[04:56:41] RestartLongPolling: Restarting long-polling connection
+[04:56:41] StartLongPolling: Starting long-polling request to URL=http://127.0.0.1:8384/rest/events?since=1350&limit=10&timeout=60
+[04:56:41] LongPollingError: HTTP Error Code=16499, URL=http://127.0.0.1:8384/rest/events?since=1350&limit=10&timeout=60
+[04:56:41] FSM_Process: State=ssOnlineUnstable, Command=ssCmdLongPollingError
+[04:56:41] FSM_Process: State=ssOnlineUnstable, Command=ssCmdLongPollingDisconnected
+[04:56:46] FSM_Process: State=ssOnlineUnstable, Command=ssCmdLongPollingTimerRestore
+[04:56:46] RestartLongPolling: Restarting long-polling connection

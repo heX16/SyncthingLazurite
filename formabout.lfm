@@ -1,14 +1,15 @@
 object frmAbout: TfrmAbout
   Left = 330
-  Height = 427
+  Height = 467
   Top = 259
   Width = 607
   Caption = 'About'
-  ClientHeight = 427
+  ClientHeight = 467
   ClientWidth = 607
   DesignTimePPI = 120
   Font.Height = -15
   Position = poMainFormCenter
+  LCLVersion = '4.2.0.0'
   OnCreate = FormCreate
   OnShow = FormShow
   object Shape1: TShape
@@ -22,8 +23,8 @@ object frmAbout: TfrmAbout
   end
   object lbProgramName: TLabel
     Left = 216
-    Height = 46
-    Top = 10
+    Height = 48
+    Top = 8
     Width = 256
     Alignment = taCenter
     AutoSize = False
@@ -36,7 +37,7 @@ object frmAbout: TfrmAbout
   object lbRepURL: TLabeledEdit
     Left = 9
     Height = 28
-    Top = 392
+    Top = 432
     Width = 303
     EditLabel.Height = 20
     EditLabel.Width = 303
@@ -69,7 +70,7 @@ object frmAbout: TfrmAbout
   object lbAboutText: TMemo
     Left = 9
     Height = 160
-    Top = 208
+    Top = 248
     Width = 591
     Lines.Strings = (
       'This is GUI client for Syncthing application.'
@@ -86,7 +87,7 @@ object frmAbout: TfrmAbout
   object lbSyncthingVersion: TLabeledEdit
     Left = 384
     Height = 28
-    Top = 145
+    Top = 185
     Width = 88
     EditLabel.Height = 28
     EditLabel.Width = 125
@@ -549,10 +550,9 @@ object frmAbout: TfrmAbout
   end
   object lbProgramVer: TLabel
     Left = 480
-    Height = 30
-    Top = 16
+    Height = 32
+    Top = 14
     Width = 105
-    Alignment = taCenter
     AutoSize = False
     Caption = 'vX.X'
     Font.Height = -20
@@ -563,7 +563,7 @@ object frmAbout: TfrmAbout
   object Button1: TButton
     Left = 440
     Height = 44
-    Top = 376
+    Top = 416
     Width = 160
     Caption = 'btnClose'
     TabOrder = 3
@@ -572,7 +572,7 @@ object frmAbout: TfrmAbout
   object lbSyncthingWebSite: TLabeledEdit
     Left = 384
     Height = 28
-    Top = 172
+    Top = 212
     Width = 184
     EditLabel.Height = 28
     EditLabel.Width = 132
@@ -583,5 +583,27 @@ object frmAbout: TfrmAbout
     ParentFont = False
     TabOrder = 4
     Text = 'https://syncthing.net/'
+  end
+  object lbProgramVerDate: TLabel
+    Left = 480
+    Height = 16
+    Top = 48
+    Width = 105
+    AutoSize = False
+    Caption = 'Date: 2025 Oct'
+    Font.Height = -13
+    ParentColor = False
+    ParentFont = False
+  end
+  object lbProgramVerBuild: TLabel
+    Left = 480
+    Height = 16
+    Top = 64
+    Width = 105
+    AutoSize = False
+    Caption = 'Build: XXX'
+    Font.Height = -13
+    ParentColor = False
+    ParentFont = False
   end
 end

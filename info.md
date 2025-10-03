@@ -99,7 +99,7 @@
 HTTP‑клиенты
 - `FHTTP` — REST: очередь запросов, единый обработчик `HTTPHandle_RestAPI`.
 - `FHTTPEvents` — Event API: long‑polling; обработчики разрывов/ошибок, автоперезапуск по таймеру.
-- Заголовок `X-API-Key` добавляется в `HttpAddHeader` при `OnOpened`.
+- Заголовок `X-API-Key` добавляется в `HttpAddHeader` при `OnBeginProcessing`.
 
 JSON‑дерево и указатели
 - Инициализация: `CreateDefaultRoot` (+ `GetDefaultRootStr`).
@@ -144,7 +144,7 @@ Long‑polling событий
 ### 6. Сетевая модель
 - REST: инициализационная загрузка «базовых» эндпоинтов, далее точечные дозагрузки по событиям.
 - Events: long‑polling `/rest/events?since=<id>&limit=10&timeout=60` с автоперезапуском по таймеру или при сбоях.
-- Заголовок `X-API-Key` добавляется в `OnOpened` каждого запроса.
+- Заголовок `X-API-Key` добавляется в `OnBeginProcessing` каждого запроса.
 
 ### 7. UI‑детали
 - Иконки устройств: 0=offline, 1=online, 2=paused. Онлайновость проверяется по `system.connections`.

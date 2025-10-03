@@ -50,6 +50,14 @@ msgstr ""
 msgid "vX.X"
 msgstr ""
 
+#: tfrmabout.lbprogramverbuild.caption
+msgid "Build: XXX"
+msgstr ""
+
+#: tfrmabout.lbprogramverdate.caption
+msgid "Date: 2025 Oct"
+msgstr ""
+
 #: tfrmabout.lbrepurl.editlabel.caption
 msgid "Source code repository:"
 msgstr ""
