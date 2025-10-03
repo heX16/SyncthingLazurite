@@ -8,7 +8,7 @@
         <CompatibilityMode Value="True"/>
       </Flags>
       <SessionStorage Value="InProjectDir"/>
-      <Title Value="SimpleSyncthing"/>
+      <Title Value="SyncthingLazurite"/>
       <Scaled Value="True"/>
       <ResourceType Value="res"/>
       <UseXPManifest Value="True"/>
@@ -33,7 +33,7 @@
       <MajorVersionNr Value="1"/>
       <MinorVersionNr Value="1"/>
       <RevisionNr Value="2510"/>
-      <BuildNr Value="132"/>
+      <BuildNr Value="136"/>
     </VersionInfo>
     <BuildModes Count="4">
       <Item1 Name="Debug" Default="True"/>
@@ -42,11 +42,11 @@
           <Version Value="11"/>
           <PathDelim Value="\"/>
           <Target>
-            <Filename Value="SimpleSyncthing"/>
+            <Filename Value="SyncthingLazurite"/>
           </Target>
           <SearchPaths>
             <IncludeFiles Value="$(ProjOutDir)"/>
-            <UnitOutputDirectory Value="$Env(Temp)\tmp\lazarus\SimpleSyncthing\$(TargetCPU)-$(TargetOS)"/>
+            <UnitOutputDirectory Value="$Env(Temp)\tmp\lazarus\SyncthingLazurite\$(TargetCPU)-$(TargetOS)"/>
           </SearchPaths>
           <CodeGeneration>
             <SmartLinkUnit Value="True"/>
@@ -84,11 +84,11 @@
           <Version Value="11"/>
           <PathDelim Value="\"/>
           <Target>
-            <Filename Value="SimpleSyncthing"/>
+            <Filename Value="SyncthingLazurite"/>
           </Target>
           <SearchPaths>
             <IncludeFiles Value="$(ProjOutDir)"/>
-            <UnitOutputDirectory Value="$Env(Temp)\tmp\lazarus\lib\SimpleSyncthing\$(TargetCPU)-$(TargetOS)"/>
+            <UnitOutputDirectory Value="$Env(Temp)\tmp\lazarus\lib\SyncthingLazurite\$(TargetCPU)-$(TargetOS)"/>
           </SearchPaths>
           <CodeGeneration>
             <SmartLinkUnit Value="True"/>
@@ -119,11 +119,11 @@
           <Version Value="11"/>
           <PathDelim Value="\"/>
           <Target>
-            <Filename Value="SimpleSyncthing"/>
+            <Filename Value="SyncthingLazurite"/>
           </Target>
           <SearchPaths>
             <IncludeFiles Value="$(ProjOutDir)"/>
-            <UnitOutputDirectory Value="$Env(Temp)\tmp\lazarus\SimpleSyncthing\$(TargetCPU)-$(TargetOS)"/>
+            <UnitOutputDirectory Value="$Env(Temp)\tmp\lazarus\SyncthingLazurite\$(TargetCPU)-$(TargetOS)"/>
           </SearchPaths>
           <Parsing>
             <SyntaxOptions>
@@ -203,7 +203,7 @@
     </RequiredPackages>
     <Units Count="14">
       <Unit0>
-        <Filename Value="SimpleSyncthing.lpr"/>
+        <Filename Value="SyncthingLazurite.lpr"/>
         <IsPartOfProject Value="True"/>
       </Unit0>
       <Unit1>
@@ -293,11 +293,11 @@
     <Version Value="11"/>
     <PathDelim Value="\"/>
     <Target>
-      <Filename Value="$Env(Temp)\tmp\SimpleSyncthing\SimpleSyncthing.exe" ApplyConventions="False"/>
+      <Filename Value="SyncthingLazurite" ApplyConventions="False"/>
     </Target>
     <SearchPaths>
       <IncludeFiles Value="$(ProjOutDir)"/>
-      <UnitOutputDirectory Value="$Env(Temp)\tmp\lazarus\lib\SimpleSyncthing\$(TargetCPU)-$(TargetOS)"/>
+      <UnitOutputDirectory Value="$Env(Temp)\tmp\lazarus\lib\SyncthingLazurite\$(TargetCPU)-$(TargetOS)"/>
     </SearchPaths>
     <Parsing>
       <SyntaxOptions>

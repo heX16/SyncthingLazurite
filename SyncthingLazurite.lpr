@@ -1,4 +1,4 @@
-program SimpleSyncthing;
+program SyncthingLazurite;
 
 {$ifdef DEBUG}
   {$apptype console}

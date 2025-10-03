@@ -9,7 +9,6 @@ object frmOptions: TfrmOptions
   DesignTimePPI = 120
   Position = poDefault
   SessionProperties = 'chIntervalMode.Checked;chRunSyncOnStart.Checked;chUseProxyOutputForFixBug.Checked;edAPIKey.Text;edInterval.Text;edPathToExecWithFilename.Text;edPathToConfigDir.Text'
-  LCLVersion = '4.2.0.0'
   OnShow = FormShow
   object BitBtn1: TBitBtn
     Left = 8
@@ -162,7 +161,7 @@ object frmOptions: TfrmOptions
   end
   object IniPropStorageConfig: TIniPropStorage
     StoredValues = <>
-    IniFileName = 'SimpleSyncthingConfig.ini'
+    IniFileName = 'SyncthingLazuriteConfig.ini'
     Left = 376
     Top = 16
   end

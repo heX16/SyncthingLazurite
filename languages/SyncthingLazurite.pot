@@ -1,0 +1,325 @@
+msgid ""
+msgstr "Content-Type: text/plain; charset=UTF-8"
+
+#: tcore.actinit.caption
+msgid "actInit"
+msgstr ""
+
+#: tcore.actrestart.caption
+msgid "actRestart"
+msgstr ""
+
+#: tcore.actrunsupportproc.caption
+msgid "actRunSupportProc"
+msgstr ""
+
+#: tcore.actstartandconnect.caption
+msgid "actStartAndConnect"
+msgstr ""
+
+#: tcore.actstartorconnect.caption
+msgid "actStartOrConnect"
+msgstr ""
+
+#: tcore.actstop.caption
+msgid "actStop"
+msgstr ""
+
+#: tcore.actstopandexit.caption
+msgid "actStopAndExit"
+msgstr ""
+
+#: tcore.actterminate.caption
+msgid "actTerminate"
+msgstr ""
+
+#: tfrmabout.button1.caption
+msgid "btnClose"
+msgstr ""
+
+#: tfrmabout.caption
+msgid "About"
+msgstr ""
+
+#: tfrmabout.lbprogramname.caption
+#, fuzzy
+msgctxt "tfrmabout.lbprogramname.caption"
+msgid "SyncthingLazurite"
+msgstr "SyncthingLazurite"
+
+#: tfrmabout.lbprogramver.caption
+msgid "vX.X"
+msgstr ""
+
+#: tfrmabout.lbprogramverbuild.caption
+msgid "Build: XXX"
+msgstr ""
+
+#: tfrmabout.lbprogramverdate.caption
+msgid "Date: 2025 Oct"
+msgstr ""
+
+#: tfrmabout.lbrepurl.editlabel.caption
+msgid "Source code repository:"
+msgstr ""
+
+#: tfrmabout.lbrepurl.text
+msgid "https://bitbucket.org/heXor/..."
+msgstr ""
+
+#: tfrmabout.lbsyncthingversion.editlabel.caption
+msgid "lbSyncthingVersion"
+msgstr ""
+
+#: tfrmabout.lbsyncthingversion.text
+msgctxt "tfrmabout.lbsyncthingversion.text"
+msgid "..."
+msgstr ""
+
+#: tfrmabout.lbsyncthingwebsite.editlabel.caption
+msgid "lbSyncthingWebSite"
+msgstr ""
+
+#: tfrmabout.lbsyncthingwebsite.text
+msgid "https://syncthing.net/"
+msgstr ""
+
+#: tfrmabout.lbtranslateauthor1.caption
+msgid "Author of localization: Alexander Kerner"
+msgstr ""
+
+#: tfrmjsonview.btnhintupd.caption
+msgid "Update"
+msgstr ""
+
+#: tfrmjsonview.caption
+msgid "frmJSONView"
+msgstr ""
+
+#: tfrmjsonview.edhintfieldslist.editlabel.caption
+msgid "edHintFieldsList"
+msgstr ""
+
+#: tfrmjsonview.edserverurl.editlabel.caption
+msgid "edServerURL"
+msgstr ""
+
+#: tfrmjsonview.edserverurl.text
+msgid "http://127.0.0.1:8384"
+msgstr ""
+
+#: tfrmjsonview.mncollapseall.caption
+msgid "mnCollapseAll"
+msgstr ""
+
+#: tfrmjsonview.mncopyexpandrecursive.caption
+msgid "mnCopyExpandRecursive"
+msgstr ""
+
+#: tfrmjsonview.mncopyjsonrecursive.caption
+msgid "mnCopyJsonRecursive"
+msgstr ""
+
+#: tfrmjsonview.mncopyname.caption
+msgid "mnCopyName"
+msgstr ""
+
+#: tfrmjsonview.mncopypath.caption
+msgid "mnCopyPath"
+msgstr ""
+
+#: tfrmjsonview.mncopyvalue.caption
+msgid "mnCopyValue"
+msgstr ""
+
+#: tfrmjsonview.mncopyvaluetext.caption
+msgid "mnCopyValueText"
+msgstr ""
+
+#: tfrmjsonview.mnexpandall.caption
+msgid "mnExpandAll"
+msgstr ""
+
+#: tfrmjsonview.mnshowhintpanel.caption
+msgid "mnShowHintPanel"
+msgstr ""
+
+#: tfrmjsonview.mntestconnect.caption
+msgid "mnTestConnect"
+msgstr ""
+
+#: tfrmjsonview.mntestgrp.caption
+msgid "mnTestGrp"
+msgstr ""
+
+#: tfrmjsonview.mntestjson.caption
+msgid "mnTestJson"
+msgstr ""
+
+#: tfrmmain.caption
+msgctxt "tfrmmain.caption"
+msgid "SyncthingLazurite"
+msgstr ""
+
+#: tfrmmain.grpdevices.caption
+msgid "grpDevices"
+msgstr ""
+
+#: tfrmmain.grpevents.caption
+msgid "grpEvents"
+msgstr ""
+
+#: tfrmmain.grpfolders.caption
+msgid "grpFolders"
+msgstr ""
+
+#: tfrmoptions.btnselectdirconfig.caption
+msgctxt "tfrmoptions.btnselectdirconfig.caption"
+msgid "..."
+msgstr ""
+
+#: tfrmoptions.btnselectfileexec.caption
+msgctxt "tfrmoptions.btnselectfileexec.caption"
+msgid "..."
+msgstr ""
+
+#: tfrmoptions.caption
+msgid "frmOptions"
+msgstr ""
+
+#: tfrmoptions.chauto.caption
+msgid "chAuto"
+msgstr ""
+
+#: tfrmoptions.chrunsynconstart.caption
+msgid "chRunSyncOnStart"
+msgstr ""
+
+#: tfrmoptions.chscheduleintervalmode.caption
+msgid "chScheduleIntervalMode"
+msgstr ""
+
+#: tfrmoptions.chuseproxyoutputforfixbug.caption
+msgid "chUseProxyOutputForFixBug"
+msgstr ""
+
+#: tfrmoptions.edapikey.editlabel.caption
+msgid "edAPIKey"
+msgstr ""
+
+#: tfrmoptions.edapikey.editlabel.hint
+msgid ""
+"Goto:\n"
+"Settings -> Common -> API Key\n"
+"\n"
+"API Key example: xzMwbz6rDUuAv9tjVSbqfVMNta4kPWss"
+msgstr ""
+
+#: tfrmoptions.edpathtoconfigdir.editlabel.caption
+msgid "edPathToConfigDir"
+msgstr ""
+
+#: tfrmoptions.edpathtoconfigdir.text
+msgctxt "tfrmoptions.edpathtoconfigdir.text"
+msgid "./"
+msgstr ""
+
+#: tfrmoptions.edpathtoexecwithfilename.editlabel.caption
+msgid "edPathToExecWithFilename"
+msgstr ""
+
+#: tfrmoptions.edpathtoexecwithfilename.text
+msgctxt "tfrmoptions.edpathtoexecwithfilename.text"
+msgid "./"
+msgstr ""
+
+#: tfrmoptions.grpschedule.caption
+msgid "grpSchedule"
+msgstr ""
+
+#: tfrmoptions.lbschedulepausebetweenruns.caption
+msgid "lbSchedulePauseBetweenRuns"
+msgstr ""
+
+#: tmodulemain.actabout.caption
+msgid "actAbout"
+msgstr ""
+
+#: tmodulemain.actclosegui.caption
+msgid "actCloseGUI"
+msgstr ""
+
+#: tmodulemain.actconnect.caption
+msgid "actConnect"
+msgstr ""
+
+#: tmodulemain.actcopyselecteddevid.caption
+msgid "actCopySelectedDevID"
+msgstr ""
+
+#: tmodulemain.actdisconnect.caption
+msgid "actDisconnect"
+msgstr ""
+
+#: tmodulemain.actsetstaterun.caption
+msgid "actSetStateRun"
+msgstr ""
+
+#: tmodulemain.actsetstatestop.caption
+msgid "actSetStateStop"
+msgstr ""
+
+#: tmodulemain.actshowconsole.caption
+msgid "actShowConsole"
+msgstr ""
+
+#: tmodulemain.actshowevents.caption
+msgid "actShowEvents"
+msgstr ""
+
+#: tmodulemain.actshowoptions.caption
+msgid "actShowOptions"
+msgstr ""
+
+#: tmodulemain.actshowrestview.caption
+msgid "actShowRestView"
+msgstr ""
+
+#: tmodulemain.actshowweb.caption
+msgid "actShowWeb"
+msgstr ""
+
+#: tmodulemain.menuitem4.caption
+msgid "actPause"
+msgstr ""
+
+#: tmodulemain.mnserver.caption
+msgid "mnServer"
+msgstr ""
+
+#: tmodulemain.mnview.caption
+msgid "mnView"
+msgstr ""
+
+#: uformmain.caddress
+msgid "Address"
+msgstr ""
+
+#: uformmain.cdays
+msgid "days"
+msgstr ""
+
+#: uformmain.coffline
+msgid "Offline"
+msgstr ""
+
+#: umodulemain.cprogramname
+#, fuzzy
+msgctxt "umodulemain.cprogramname"
+msgid "SyncthingLazurite"
+msgstr "SyncthingLazurite"
+
+#: umodulemain.cstrlocal
+msgid " (local)"
+msgstr ""
+

@@ -1,2 +1,2 @@
 
-copy SimpleSyncthingConfig.xml %temp%\tmp\SimpleSyncthing\
+copy SyncthingLazuriteConfig.ini %temp%\tmp\SyncthingLazurite\

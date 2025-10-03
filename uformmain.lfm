@@ -3,14 +3,13 @@ object frmMain: TfrmMain
   Height = 578
   Top = 199
   Width = 551
-  Caption = 'frmMain'
+  Caption = 'SyncthingLazurite'
   ClientHeight = 578
   ClientWidth = 551
   DesignTimePPI = 120
   Menu = ModuleMain.MainMenu1
   Position = poDefaultPosOnly
   SessionProperties = 'SplitterLeft.Left;SplitterBottom1.Top;SplitterBottom2.Top'
-  LCLVersion = '4.2.0.0'
   OnCreate = FormCreate
   OnDestroy = FormDestroy
   OnWindowStateChange = FormWindowStateChange
@@ -109,7 +108,7 @@ object frmMain: TfrmMain
         item
           MinWidth = 150
           Position = 0
-          Width = 158
+          Width = 150
         end>
       Header.Options = [hoAutoResize, hoColumnResize, hoDrag]
       HintMode = hmHint
@@ -203,7 +202,7 @@ object frmMain: TfrmMain
   end
   object IniPropStoragePos: TIniPropStorage
     StoredValues = <>
-    IniFileName = 'SimpleSyncthingPos.ini'
+    IniFileName = 'SyncthingLazuritePos.ini'
     IniSection = 'FormMain'
     Left = 424
     Top = 72

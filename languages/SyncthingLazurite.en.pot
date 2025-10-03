@@ -1,53 +1,49 @@
-﻿msgid ""
+msgid ""
 msgstr "Content-Type: text/plain; charset=UTF-8"
-
-#: tcore.actexit.caption
-msgid "actExit"
-msgstr "Выход"
 
 #: tcore.actinit.caption
 msgid "actInit"
-msgstr "Инициализация"
+msgstr "Initialize"
 
 #: tcore.actpause.caption
 msgid "actPause"
-msgstr "Пауза"
+msgstr "Pause"
 
 #: tcore.actreloadconfig.caption
 msgid "actReloadConfig"
-msgstr "Обновить конфигурацию"
+msgstr "Reload configuration"
 
 #: tcore.actrestart.caption
 msgid "actRestart"
-msgstr "Рестарт"
+msgstr "Restart"
 
 #: tcore.actrunsupportproc.caption
 msgid "actRunSupportProc"
-msgstr "Доп. программа"
+msgstr "Run support program"
 
 #: tcore.actstart.caption
 msgid "actStart"
-msgstr "Старт"
+msgstr "Start"
 
 #: tcore.actstop.caption
 msgid "actStop"
-msgstr "Стоп"
+msgstr "Stop"
 
 #: tcore.actstopandexit.caption
 msgid "actStopAndExit"
-msgstr "Остановить и выйти"
+msgstr "Stop and exit"
 
 #: tcore.actterminate.caption
 msgid "actTerminate"
-msgstr "Завершить"
+msgstr "Terminate"
 
 #: tfrmabout.caption
 msgid "About"
-msgstr "О программе"
+msgstr "About"
 
 #: tfrmabout.lbrepurl.editlabel.caption
 msgid "Source code repository:"
-msgstr "Репозиторий исходного кода:"
+msgstr "Source code repository:"
 
 #: tfrmabout.lbrepurl.text
 msgid "https://bitbucket.org/heXor/..."
@@ -55,7 +51,7 @@ msgstr "https://bitbucket.org/heXor/..."
 
 #: tfrmabout.lbsyncthingversion.editlabel.caption
 msgid "lbSyncthingVersion"
-msgstr "Версия Syncthing"
+msgstr "Syncthing version"
 
 #: tfrmabout.lbsyncthingversion.text
 msgctxt "tfrmabout.lbsyncthingversion.text"
@@ -64,27 +60,27 @@ msgstr "..."
 
 #: tfrmabout.lbtranslateauthor.caption
 msgid "Author of localization: -"
-msgstr "Автор локализации: -"
+msgstr "Author of localization: -"
 
 #: tfrmjsonview.caption
 msgid "frmJSONView"
-msgstr "Просмотр JSON"
+msgstr "JSON View"
 
 #: tfrmmain.caption
-msgid "frmMain"
-msgstr "Syncthing"
+msgid "SyncthingLazurite"
+msgstr "SyncthingLazurite"
 
 #: tfrmmain.grpdevices.caption
 msgid "grpDevices"
-msgstr "Устройства"
+msgstr "Devices"
 
 #: tfrmmain.grpevents.caption
 msgid "grpEvents"
-msgstr "События"
+msgstr "Events"
 
 #: tfrmmain.grpfolders.caption
 msgid "grpFolders"
-msgstr "Папки"
+msgstr "Folders"
 
 #: tfrmmain.lbexcdetected.caption
 msgid "!EX!"
@@ -102,24 +98,24 @@ msgstr "..."
 
 #: tfrmoptions.caption
 msgid "frmOptions"
-msgstr "Опции"
+msgstr "Options"
 
 #: tfrmoptions.chauto.caption
 msgid "chAuto"
-msgstr "Авто"
+msgstr "Auto"
+
+#: tfrmoptions.chrunsynconstart.caption
+msgid "chRunSyncOnStart"
+msgstr "Run sync on startup"
 
 #: tfrmoptions.chscheduleintervalmode.caption
 msgctxt "tfrmoptions.chscheduleintervalmode.caption"
 msgid "chScheduleIntervalMode"
-msgstr "Интервальный режим"
-
-#: tfrmoptions.chrunsynconstart.caption
-msgid "chRunSyncOnStart"
-msgstr "Запускать синхронизацию при старте программы"
+msgstr "Interval mode"
 
 #: tfrmoptions.chuseproxyoutputforfixbug.caption
 msgid "chUseProxyOutputForFixBug"
-msgstr "Использовать прокси-вывод для исправления ошибки"
+msgstr "Use proxy output to fix bug"
 
 #: tfrmoptions.edapikey.editlabel.caption
 msgid "edAPIKey"
@@ -132,14 +128,14 @@ msgid ""
 "\n"
 "API Key example: xzMwbz6rDUuAv9tjVSbqfVMNta4kPWss"
 msgstr ""
-"Перейдите:\n"
-"Настройки -> Общие -> API Key\n"
+"Goto:\n"
+"Settings -> Common -> API Key\n"
 "\n"
-"Пример API Key: xzMwbz6rDUuAv9tjVSbqfVMNta4kPWss"
+"API Key example: xzMwbz6rDUuAv9tjVSbqfVMNta4kPWss"
 
 #: tfrmoptions.edpathtoconfigdir.editlabel.caption
 msgid "edPathToConfigDir"
-msgstr "Путь к конфигурации"
+msgstr "Path to configuration"
 
 #: tfrmoptions.edpathtoconfigdir.text
 msgctxt "tfrmoptions.edpathtoconfigdir.text"
@@ -148,7 +144,7 @@ msgstr "./"
 
 #: tfrmoptions.edpathtoexecwithfilename.editlabel.caption
 msgid "edPathToExecWithFilename"
-msgstr "Путь к программе"
+msgstr "Path to program"
 
 #: tfrmoptions.edpathtoexecwithfilename.text
 msgctxt "tfrmoptions.edpathtoexecwithfilename.text"
@@ -158,110 +154,102 @@ msgstr "./"
 #: tfrmoptions.grpschedule.caption
 msgctxt "tfrmoptions.grpschedule.caption"
 msgid "grpSchedule"
-msgstr "Расписание"
+msgstr "Schedule"
 
 #: tfrmoptions.lbschedulepausebetweenruns.caption
 msgctxt "tfrmoptions.lbschedulepausebetweenruns.caption"
 msgid "lbSchedulePauseBetweenRuns"
-msgstr "Пауза между запусками"
+msgstr "Pause between runs:"
 
 #: tmodulemain.actabout.caption
 msgid "actAbout"
-msgstr "О программе"
+msgstr "About"
 
 #: tmodulemain.actclosegui.caption
 msgid "actCloseGUI"
-msgstr "Закрыть интерфейс"
+msgstr "Close GUI"
 
 #: tmodulemain.actcopyselecteddevid.caption
 msgid "actCopySelectedDevID"
-msgstr "Скопировать ID устройства"
-
-#: tmodulemain.actshowconsole.caption
-msgid "actShowConsole"
-msgstr "Показать консоль"
-
-#: tmodulemain.actshowevents.caption
-msgid "actShowEvents"
-msgstr "Показать события"
-
-#: tmodulemain.actshowoptions.caption
-msgid "actShowOptions"
-msgstr "Опции"
-
-#: tmodulemain.actshowrestview.caption
-msgid "actShowRestView"
-msgstr "Просмотр REST данных"
-
-#: tmodulemain.actshowweb.caption
-msgid "actShowWeb"
-msgstr "Открыть веб-интерфейс в браузере"
+msgstr "Copy Device ID"
 
 #: tmodulemain.actsetstaterun.caption
 msgid "actSetStateRun"
-msgstr "Запустить"
+msgstr "Run"
 
 #: tmodulemain.actsetstatestop.caption
 msgid "actSetStateStop"
-msgstr "Остановить"
+msgstr "Stop"
+
+#: tmodulemain.actshowconsole.caption
+msgid "actShowConsole"
+msgstr "Show console"
+
+#: tmodulemain.actshowevents.caption
+msgid "actShowEvents"
+msgstr "Show events"
+
+#: tmodulemain.actshowoptions.caption
+msgid "actShowOptions"
+msgstr "Options"
+
+#: tmodulemain.actshowrestview.caption
+msgid "actShowRestView"
+msgstr "View REST data"
+
+#: tmodulemain.actshowweb.caption
+msgid "actShowWeb"
+msgstr "Open web interface in browser"
 
 #: tmodulemain.mnserver.caption
 msgid "mnServer"
-msgstr "Сервер"
-
-#: tmodulemain.mnstaterun.caption
-msgid "mnStateRun"
-msgstr "Запустить"
-
-#: tmodulemain.mnstatestop.caption
-msgid "mnStateStop"
-msgstr "Остановить"
+msgstr "Server"
 
 #: tmodulemain.mnview.caption
 msgid "mnView"
-msgstr "Вид"
+msgstr "View"
 
 #: uformmain.caddress
 msgid "Address"
-msgstr "Адрес"
+msgstr "Address"
 
 #: uformmain.cdays
 msgid "days"
-msgstr "дни"
+msgstr "days"
 
 #: uformmain.coffline
 msgid "Offline"
-msgstr "Оффлайн"
+msgstr "Offline"
 
 #: umodulemain.cstrlocal
 msgctxt "umodulemain.cstrlocal"
 msgid " (local)"
-msgstr " (локально)"
+msgstr " (local)"
 
 #: tcore.actconnect.caption
 msgctxt "tcore.actconnect.caption"
 msgid "actConnect"
-msgstr "Подключиться"
+msgstr "Connect"
 
 #: tcore.actstartandconnect.caption
 msgid "actStartAndConnect"
-msgstr "Запустить и подключиться"
+msgstr "Start and connect"
 
 #: tcore.actstartorconnect.caption
 msgid "actStartOrConnect"
-msgstr "Запустить или подключиться"
+msgstr "Start or connect"
 
 #: tfrmjsonview.btnhintupd.caption
 msgid "Update"
-msgstr "Обновить"
+msgstr "Update"
 
 #: tfrmjsonview.edhintfieldslist.editlabel.caption
 msgid "edHintFieldsList"
-msgstr "Список полей подсказки"
+msgstr "Hint fields list"
 
 #: tfrmjsonview.edserverurl.editlabel.caption
 msgid "edServerURL"
-msgstr "URL сервера"
+msgstr "Server URL"
 
 #: tfrmjsonview.edserverurl.text
 msgid "http://127.0.0.1:8384"
@@ -269,68 +257,68 @@ msgstr "http://127.0.0.1:8384"
 
 #: tfrmjsonview.mncollapseall.caption
 msgid "mnCollapseAll"
-msgstr "Свернуть всё"
+msgstr "Collapse all"
 
 #: tfrmjsonview.mncopyexpandrecursive.caption
 msgid "mnCopyExpandRecursive"
-msgstr "Копировать (раскрыть рекурсивно)"
+msgstr "Copy (expand recursively)"
 
 #: tfrmjsonview.mncopyjsonrecursive.caption
 msgid "mnCopyJsonRecursive"
-msgstr "Копировать JSON (рекурсивно)"
+msgstr "Copy JSON recursively"
 
 #: tfrmjsonview.mncopyname.caption
 msgid "mnCopyName"
-msgstr "Копировать имя"
+msgstr "Copy name"
 
 #: tfrmjsonview.mncopypath.caption
 msgid "mnCopyPath"
-msgstr "Копировать путь"
+msgstr "Copy path"
 
 #: tfrmjsonview.mncopyvalue.caption
 msgid "mnCopyValue"
-msgstr "Копировать значение"
+msgstr "Copy value"
 
 #: tfrmjsonview.mncopyvaluetext.caption
 msgid "mnCopyValueText"
-msgstr "Копировать текст значения"
+msgstr "Copy value text"
 
 #: tfrmjsonview.mnexpandall.caption
 msgid "mnExpandAll"
-msgstr "Развернуть всё"
+msgstr "Expand all"
 
 #: tfrmjsonview.mnshowhintpanel.caption
 msgid "mnShowHintPanel"
-msgstr "Показать панель подсказок"
+msgstr "Show hint panel"
 
 #: tfrmjsonview.mntestconnect.caption
 msgctxt "tfrmjsonview.mntestconnect.caption"
 msgid "mnTestConnect"
-msgstr "Проверить подключение"
+msgstr "Test connection"
 
 #: tfrmjsonview.mntestgrp.caption
 msgid "mnTestGrp"
-msgstr "Тестовая группа"
+msgstr "Test group"
 
 #: tfrmjsonview.mntestjson.caption
 msgid "mnTestJson"
-msgstr "Тест JSON"
+msgstr "Test JSON"
 
 #: tmodulemain.actconnect.caption
 msgctxt "tmodulemain.actconnect.caption"
 msgid "actConnect"
-msgstr "Подключиться"
+msgstr "Connect"
 
 #: tmodulemain.actdisconnect.caption
 msgid "actDisconnect"
-msgstr "Отключиться"
+msgstr "Disconnect"
 
 #: tmodulemain.menuitem22.caption
 msgctxt "tmodulemain.menuitem22.caption"
 msgid "actPause"
-msgstr "Пауза"
+msgstr "Pause"
 
 #: tmodulemain.menuitem4.caption
 msgctxt "tmodulemain.menuitem4.caption"
 msgid "actPause"
-msgstr "Пауза"
+msgstr "Pause"
