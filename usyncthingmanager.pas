@@ -46,7 +46,6 @@ type
     // Таймеры
     FTimerReadOutput: TTimer;
     FTimerCheckProcess: TTimer;
-    FTimerAutoStart: TTimer;
 
     // Буфер вывода
     FOutputBuffer: UTF8String;
@@ -62,7 +61,6 @@ type
 
     procedure TimerReadOutputTimer(Sender: TObject);
     procedure TimerCheckProcessTimer(Sender: TObject);
-    procedure TimerAutoStartTimer(Sender: TObject);
 
     procedure ProcessTerminated(Sender: TObject);
     procedure ReadProcessOutput;
@@ -106,9 +104,6 @@ type
     property OnProcessStateChanged: TProcessEvent read FOnProcessStateChanged write FOnProcessStateChanged;
     property OnConsoleOutput: TConsoleOutputEvent read FOnConsoleOutput write FOnConsoleOutput;
 
-  // Публикуемые свойства для инспектора объектов
-  // property HomePath_: UTF8String read FHomePath write SetHomePath stored True;
-  // property ExecPath_: UTF8String read FExecPath write SetExecPath stored True;
   end;
 
 implementation
@@ -169,9 +164,6 @@ begin
   if Assigned(FTimerCheckProcess) then
     FreeAndNil(FTimerCheckProcess);
 
-  if Assigned(FTimerAutoStart) then
-    FreeAndNil(FTimerAutoStart);
-
   inherited Destroy;
 end;
 
@@ -203,12 +195,6 @@ begin
   FTimerCheckProcess.Enabled := False;
   FTimerCheckProcess.Interval := 1000; // 1s
   FTimerCheckProcess.OnTimer := @TimerCheckProcessTimer;
-
-  // Таймер автозапуска
-  FTimerAutoStart := TTimer.Create(Self);
-  FTimerAutoStart.Enabled := False;
-  FTimerAutoStart.Interval := 100; // 100ms
-  FTimerAutoStart.OnTimer := @TimerAutoStartTimer;
 end;
 
 procedure TSyncthingManager.ConfigureProcesses;
@@ -262,16 +248,6 @@ begin
     ProcessStateChanged(NewState);
 end;
 
-procedure TSyncthingManager.TimerAutoStartTimer(Sender: TObject);
-begin
-  FTimerAutoStart.Enabled := False;
-
-  // Автозапуск, если настроен
-  if (frmOptions <> nil) and frmOptions.chRunSyncOnStart.Checked then
-  begin
-    StartSyncthingProcess;
-  end;
-end;
 
 procedure TSyncthingManager.ProcessTerminated(Sender: TObject);
 begin
@@ -537,6 +513,10 @@ begin
     FProcessSyncthing.Execute;
 
     StartTime := Now;
+    // TODO: переписать на цикл `FOR`. 
+    // тоесть перед запуском цикла вы вычисляем сколько раз нужно пройти цикл
+    // для этого просто делим время ожидания на время sleep
+    // эти времена нужно объявить как константы которые объявленны в начале файла
     while not FProcessSyncthing.Running and (SecondsBetween(Now, StartTime) < 5) do
     begin
       Sleep(100);
