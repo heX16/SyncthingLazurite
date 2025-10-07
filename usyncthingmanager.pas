@@ -35,30 +35,21 @@ type
 
   TSyncthingManager = class(TSyncthingAPI)
   private
-    // Процессы
     FProcessSyncthing: TProcessUTF8;
     FProcessSupport: TProcessUTF8;
 
-    // Конфигурация
     FHomePath: UTF8String;
     FExecPath: UTF8String;
-    FConfigPath: UTF8String;
 
-    // Состояния процессов
     FProcessState: TProcessState;
 
-    // Таймеры
     FTimerReadOutput: TTimer;
     FTimerCheckProcess: TTimer;
 
-    // Буфер вывода
     FOutputBuffer: UTF8String;
 
-    // События
     FOnProcessStateChanged: TProcessEvent;
     FOnConsoleOutput: TConsoleOutputEvent;
-
-    // Внутренние методы
     procedure InitializeProcesses;
     procedure InitializeTimers;
 
@@ -71,25 +62,17 @@ type
     procedure ProcessStateChanged(NewState: TProcessState);
     procedure AddToConsole(const Text: UTF8String);
 
-  protected
-    // Переопределенные методы TSyncthingAPI
-    procedure SetEndpoint(const Host: UTF8String; Port: Integer; UseTLS: Boolean); override;
-    procedure SetAPIKey(const Key: UTF8String); override;
-
   public
-    // Конструктор/Деструктор
     constructor Create(AOwner: TComponent); override;
     destructor Destroy; override;
 
-    // Конфигурация
-    function ReadAPIKeyFromConfig: string; virtual;
-    procedure ExtractConfigSettings; // Извлечение настроек из XML без хранения всего файла
+    function GetConfigPath: UTF8String;
+    procedure ExtractConfigSettings;
     procedure LoadConfigFromDisk; virtual;
 
     procedure SetHomePath(const Path: UTF8String); virtual;
     procedure SetExecPath(const Path: UTF8String); virtual;
 
-    // Управление процессами
     function StartSyncthingProcess: Boolean; virtual;
     function StartSupportProcess: Boolean; virtual;
     function StopSyncthingProcess: Boolean; virtual;
@@ -120,11 +103,10 @@ uses
   TypInfo,
   LCLTranslator, LConvEncoding;
 
-// Константы для таймаутов процессов
 const
-  PROCESS_START_TIMEOUT_MS = 5000;  // Максимальное время ожидания запуска процесса (мс)
-  PROCESS_CHECK_INTERVAL_MS = 100;  // Интервал проверки состояния процесса (мс)
-  PROCESS_CHECK_ITERATIONS = PROCESS_START_TIMEOUT_MS div PROCESS_CHECK_INTERVAL_MS; // Количество итераций
+  PROCESS_START_TIMEOUT_MS = 5000;
+  PROCESS_CHECK_INTERVAL_MS = 100;
+  PROCESS_CHECK_ITERATIONS = PROCESS_START_TIMEOUT_MS div PROCESS_CHECK_INTERVAL_MS;
 
 { TSyncthingManager }
 
@@ -132,38 +114,23 @@ constructor TSyncthingManager.Create(AOwner: TComponent);
 begin
   inherited Create(AOwner);
 
-  // Инициализация состояний
   FProcessState := psUnknown;
 
-  // Создание процессов
   InitializeProcesses;
-
-  // Создание таймеров
   InitializeTimers;
-
-  // Загрузка конфигурации по умолчанию
   LoadConfigFromDisk;
-
-  // Чтение API-ключа из конфигурации
-  if FHomePath <> '' then
-  begin
-    SetAPIKey(ReadAPIKeyFromConfig);
-  end;
 end;
 
 destructor TSyncthingManager.Destroy;
 begin
-  // Остановка всех процессов перед уничтожением
   StopAllProcesses;
 
-  // Освобождение ресурсов процессов
   if Assigned(FProcessSyncthing) then
     FreeAndNil(FProcessSyncthing);
 
   if Assigned(FProcessSupport) then
     FreeAndNil(FProcessSupport);
 
-  // Освобождение таймеров
   if Assigned(FTimerReadOutput) then
     FreeAndNil(FTimerReadOutput);
 
@@ -175,12 +142,10 @@ end;
 
 procedure TSyncthingManager.InitializeProcesses;
 begin
-  // Создание основного процесса Syncthing
   FProcessSyncthing := TProcessUTF8.Create(nil);
   FProcessSyncthing.Options := [poUsePipes];
   FProcessSyncthing.ShowWindow := swoHIDE;
 
-  // Создание вспомогательного процесса
   FProcessSupport := TProcessUTF8.Create(nil);
   FProcessSupport.Options := [poNoConsole];
   FProcessSupport.ShowWindow := swoHIDE;
@@ -188,33 +153,17 @@ end;
 
 procedure TSyncthingManager.InitializeTimers;
 begin
-  // Таймер чтения вывода процессов
   FTimerReadOutput := TTimer.Create(Self);
   FTimerReadOutput.Enabled := False;
-  FTimerReadOutput.Interval := 100; // 100ms
+  FTimerReadOutput.Interval := 100;
   FTimerReadOutput.OnTimer := @TimerReadOutputTimer;
 
-  // Таймер проверки состояния процессов
   FTimerCheckProcess := TTimer.Create(Self);
   FTimerCheckProcess.Enabled := False;
-  FTimerCheckProcess.Interval := 1000; // 1s
+  FTimerCheckProcess.Interval := 1000;
   FTimerCheckProcess.OnTimer := @TimerCheckProcessTimer;
 end;
 
-
-procedure TSyncthingManager.SetEndpoint(const Host: UTF8String; Port: Integer; UseTLS: Boolean);
-begin
-  inherited SetEndpoint(Host, Port, UseTLS);
-
-  // Настройки процессов синхронизируются при запуске процесса
-end;
-
-procedure TSyncthingManager.SetAPIKey(const Key: UTF8String);
-begin
-  inherited SetAPIKey(Key);
-
-  // API-ключ также сохраняется локально для записи в конфигурацию
-end;
 
 procedure TSyncthingManager.TimerReadOutputTimer(Sender: TObject);
 begin
@@ -226,7 +175,6 @@ var
   NewState: TProcessState;
 begin
   NewState := TProcessState.psUnknown;
-  // Проверка состояния процессов
   if FProcessSyncthing.Running then
   begin
     if FProcessState = psStarting then
@@ -241,7 +189,6 @@ begin
   else
     NewState := FProcessState;
 
-  // Если состояние изменилось, уведомляем
   if NewState <> FProcessState then
     ProcessStateChanged(NewState);
 end;
@@ -249,7 +196,6 @@ end;
 
 procedure TSyncthingManager.ProcessTerminated(Sender: TObject);
 begin
-  // Процесс завершился, обновляем состояние
   if Sender = FProcessSyncthing then
   begin
     if FProcessState = psRunning then
@@ -278,7 +224,6 @@ begin
       SetLength(Line, BytesRead);
       FProcessSyncthing.Output.ReadBuffer(Line[1], BytesRead);
 
-      // Добавляем к буферу
       FOutputBuffer := FOutputBuffer + Line;
 
       // Разбиваем на строки
@@ -288,10 +233,8 @@ begin
         LineStr := Copy(FOutputBuffer, 1, p - 1);
         FOutputBuffer := Copy(FOutputBuffer, p + Length(LE), Length(FOutputBuffer) - p);
 
-        // Конвертируем кодировку
         LineStr := ConvertEncodingToUTF8(LineStr, GetConsoleTextEncoding(), conv_ok);
 
-        // Обрабатываем строку
         ProcessOutputLine(LineStr);
 
         p := Pos(LE, FOutputBuffer);
@@ -302,10 +245,9 @@ end;
 
 procedure TSyncthingManager.ProcessOutputLine(const Line: UTF8String);
 begin
-  // Добавляем в консоль
+  // TODO: AddToConsole??? - зачем это надо? у нас уже есть OnConsoleOutput
   AddToConsole(Line);
 
-  // Вызываем событие
   if Assigned(FOnConsoleOutput) then
     FOnConsoleOutput(Self, Line);
 end;
@@ -317,12 +259,10 @@ begin
   OldState := FProcessState;
   FProcessState := NewState;
 
-  // Логируем смену состояния
   DebugLog(Format('Process state changed: %s -> %s',
     [GetEnumName(TypeInfo(TProcessState), Ord(OldState)),
      GetEnumName(TypeInfo(TProcessState), Ord(NewState))]));
 
-  // Останавливаем/запускаем таймеры в зависимости от состояния
   case FProcessState of
     psStarting, psRunning:
       begin
@@ -336,49 +276,11 @@ begin
       end;
   end;
 
-  // Вызываем событие
   if Assigned(FOnProcessStateChanged) then
     FOnProcessStateChanged(Self, FProcessState);
 end;
 
-function TSyncthingManager.ReadAPIKeyFromConfig: string;
-var
-  filename: UTF8String;
-  FDoc: TXMLDocument;
-  NPtr: TDOMNode;
-begin
-  Result := '';
 
-  if FHomePath = '' then
-    Exit;
-
-  filename := FHomePath + PathDelim + 'config.xml';
-
-  if not FileExistsUTF8(filename) then
-    Exit;
-
-  try
-    FDoc := nil;
-    ReadXMLFile(FDoc, UTF8ToSys(filename));
-
-    NPtr := FDoc;
-    if GetXmlNode(NPtr, 'configuration') and
-       GetXmlNode(NPtr, 'gui') and
-       GetXmlNode(NPtr, 'apikey') and
-       GetXmlNode(NPtr, '#text') then
-    begin
-      Result := UTF8String(NPtr.NodeValue);
-    end;
-  finally
-    if Assigned(FDoc) then
-      FDoc.Free;
-  end;
-
-  // Если не нашли в файле, возвращаем пустую строку
-  // API-ключ должен передаваться извне через SetAPIKey
-end;
-
-// Извлечение конкретных настроек из XML конфига (без хранения всего файла)
 procedure TSyncthingManager.ExtractConfigSettings;
 var
   filename: UTF8String;
@@ -389,7 +291,7 @@ begin
   if FHomePath = '' then
     Exit;
 
-  filename := FHomePath + PathDelim + 'config.xml';
+  filename := GetConfigPath;
   if not FileExistsUTF8(filename) then
     Exit;
 
@@ -401,7 +303,6 @@ begin
 
     NPtr := FDoc;
 
-    // Извлекаем только API ключ из пути configuration/gui/apikey
     if GetXmlNode(NPtr, 'configuration') and
        GetXmlNode(NPtr, 'gui') and
        GetXmlNode(NPtr, 'apikey') and
@@ -410,27 +311,27 @@ begin
       APIKeyValue := UTF8String(NPtr.NodeValue);
       if APIKeyValue <> '' then
       begin
-        DebugLog('API key loaded from config.xml: ' + APIKeyValue);
+        DebugLog('API key loaded from config.xml');
         SetAPIKey(APIKeyValue);
       end;
     end;
 
-    // Здесь можно добавить извлечение других нужных настроек
-    // Например: глобальные настройки, лимиты и т.д.
-
   finally
-    // Освобождаем XML документ сразу после использования
     if Assigned(FDoc) then
       FDoc.Free;
   end;
 end;
 
+function TSyncthingManager.GetConfigPath: UTF8String;
+begin
+  if FHomePath = '' then
+    Result := ''
+  else
+    Result := FHomePath + PathDelim + 'config.xml';
+end;
+
 procedure TSyncthingManager.LoadConfigFromDisk;
 begin
-  // Загружаем пути из параметров (должны быть установлены извне)
-  // SetHomePath и SetExecPath должны вызываться до этого метода
-
-  // Извлекаем нужные настройки из XML конфига
   if FHomePath <> '' then
   begin
     ExtractConfigSettings;
@@ -439,25 +340,12 @@ end;
 
 procedure TSyncthingManager.SetHomePath(const Path: UTF8String);
 begin
-  if FHomePath <> Path then
-  begin
-    FHomePath := Path;
-    FConfigPath := FHomePath + PathDelim + 'config.xml';
-
-    // Процессы переконфигурируются при запуске
-    DebugLog('Home path changed to: ' + FHomePath);
-  end;
+  FHomePath := Path;
 end;
 
 procedure TSyncthingManager.SetExecPath(const Path: UTF8String);
 begin
-  if FExecPath <> Path then
-  begin
-    FExecPath := Path;
-
-    // Процессы переконфигурируются при запуске
-    DebugLog('Exec path changed to: ' + FExecPath);
-  end;
+  FExecPath := Path;
 end;
 
 function TSyncthingManager.StartSyncthingProcess: Boolean;
@@ -494,28 +382,24 @@ begin
       '--home=' + FHomePath + ' ' +
       '| find /v " empty_find_just_for_redirect_stdio_00686558 " "';
     {$ELSE}
-    // Обычный запуск без исправления бага (отключено директивой)
     FProcessSyncthing.Executable := FExecPath;
     FProcessSyncthing.Parameters.Text :=
       '--no-browser ' +
       '--home=' + FHomePath;
     {$ENDIF}
     {$ELSE}
-    // Linux/macOS версия
     FProcessSyncthing.Executable := FExecPath;
     FProcessSyncthing.Parameters.Clear;
     FProcessSyncthing.Parameters.Add('--home=' + FHomePath);
     FProcessSyncthing.Parameters.Add('--no-browser');
     {$ENDIF}
 
-    // Запускаем процесс
     FProcessSyncthing.Execute;
 
-    // Ждем запуска процесса с фиксированным количеством итераций
     for I := 1 to PROCESS_CHECK_ITERATIONS do
     begin
       if FProcessSyncthing.Running then
-        Break; // Процесс запустился, выходим из цикла
+        Break;
 
       Sleep(PROCESS_CHECK_INTERVAL_MS);
       Application.ProcessMessages;
@@ -526,7 +410,6 @@ begin
       DebugLog('Syncthing process started successfully');
       ProcessStateChanged(psRunning);
 
-      // Подключаемся к API после успешного запуска процесса
       Connect;
       Result := True;
     end
@@ -556,10 +439,9 @@ begin
   end;
 
   {$IFDEF WINDOWS}
-  FProcessSupport.Executable := FExecPath; // Предполагаем, что есть syncthing-inotify.exe рядом
+  FProcessSupport.Executable := FExecPath;
   FProcessSupport.Parameters.Text := '--home=' + FHomePath;
   {$ELSE}
-  // Для Linux может потребоваться другая утилита
   {$ENDIF}
 
   try
@@ -591,19 +473,15 @@ begin
   ProcessStateChanged(psStopping);
 
   try
-    // Сначала пытаемся graceful shutdown через API
     if IsOnline then
     begin
-      // Отправляем команду shutdown через REST API
       API_Get('system/shutdown', nil, '');
-      Sleep(2000); // Ждем 2 секунды
+      Sleep(2000);
     end;
 
-    // Если процесс все еще работает, принудительно завершаем
     if FProcessSyncthing.Running then
       FProcessSyncthing.Terminate(0);
 
-    // Ждем завершения
     Sleep(1000);
 
     if not FProcessSyncthing.Running then
@@ -630,10 +508,8 @@ end;
 
 function TSyncthingManager.StopAllProcesses: Boolean;
 begin
-  // Останавливаем основной процесс
   StopSyncthingProcess;
 
-  // Останавливаем вспомогательный процесс
   if FProcessSupport.Running then
   begin
     FProcessSupport.Terminate(0);
