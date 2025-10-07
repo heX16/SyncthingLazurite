@@ -57,9 +57,8 @@ type
 
     procedure ProcessTerminated(Sender: TObject);
     procedure ReadProcessOutput;
-    procedure ProcessOutputLine(const Line: UTF8String);
-    procedure ProcessStateChanged(NewState: TProcessState);
-    procedure AddToConsole(const Text: UTF8String);
+    procedure ProcessOutputLine(const Line: UTF8String); virtual;
+    procedure ProcessStateChanged(NewState: TProcessState); virtual;
 
   public
     constructor Create(AOwner: TComponent); override;
@@ -77,7 +76,6 @@ type
     function StopAllProcesses: Boolean; virtual;
 
     function IsProcessRunning: Boolean; virtual;
-    function GetProcessInfo: string; virtual;
 
     // Свойства
     property HomePath: UTF8String read FHomePath write SetHomePath;
@@ -122,6 +120,14 @@ const
   PROCESS_CHECK_INTERVAL_MS = 100;
   PROCESS_CHECK_ITERATIONS = PROCESS_START_TIMEOUT_MS div PROCESS_CHECK_INTERVAL_MS;
 
+  // Интервалы таймеров в миллисекундах
+  PROCESS_OUTPUT_READ_INTERVAL_MS = 100;    // Интервал чтения вывода процесса
+  PROCESS_STATE_CHECK_INTERVAL_MS = 1000;   // Интервал проверки состояния процесса
+
+  // Времена ожидания в миллисекундах
+  API_SHUTDOWN_WAIT_MS = 2000;              // Ожидание после вызова API shutdown
+  PROCESS_TERMINATE_WAIT_MS = 1000;         // Ожидание после Terminate
+
 { TSyncthingManager }
 
 constructor TSyncthingManager.Create(AOwner: TComponent);
@@ -132,7 +138,6 @@ begin
 
   InitializeProcesses;
   InitializeTimers;
-  LoadConfigFromDisk;
 end;
 
 destructor TSyncthingManager.Destroy;
@@ -162,12 +167,12 @@ procedure TSyncthingManager.InitializeTimers;
 begin
   FTimerReadOutput := TTimer.Create(Self);
   FTimerReadOutput.Enabled := False;
-  FTimerReadOutput.Interval := 100;
+  FTimerReadOutput.Interval := PROCESS_OUTPUT_READ_INTERVAL_MS;
   FTimerReadOutput.OnTimer := @TimerReadOutputTimer;
 
   FTimerCheckProcess := TTimer.Create(Self);
   FTimerCheckProcess.Enabled := False;
-  FTimerCheckProcess.Interval := 1000;
+  FTimerCheckProcess.Interval := PROCESS_STATE_CHECK_INTERVAL_MS;
   FTimerCheckProcess.OnTimer := @TimerCheckProcessTimer;
 end;
 
@@ -252,9 +257,6 @@ end;
 
 procedure TSyncthingManager.ProcessOutputLine(const Line: UTF8String);
 begin
-  // TODO: AddToConsole??? - зачем это надо? у нас уже есть OnConsoleOutput
-  AddToConsole(Line);
-
   if Assigned(FOnConsoleOutput) then
     FOnConsoleOutput(Self, Line);
 end;
@@ -451,13 +453,13 @@ begin
     if IsOnline then
     begin
       API_Get('system/shutdown', nil, '');
-      Sleep(2000);
+      Sleep(API_SHUTDOWN_WAIT_MS);
     end;
 
     if FProcessSyncthing.Running then
       FProcessSyncthing.Terminate(0);
 
-    Sleep(1000);
+    Sleep(PROCESS_TERMINATE_WAIT_MS);
 
     if not FProcessSyncthing.Running then
     begin
@@ -492,19 +494,9 @@ begin
   Result := FProcessSyncthing.Running;
 end;
 
-function TSyncthingManager.GetProcessInfo: string;
-begin
-  Result := Format('Process: %s, State: %s, Running: %s',
-    [FExecPath,
-     GetEnumName(TypeInfo(TProcessState), Ord(FProcessState)),
-     BoolToStr(FProcessSyncthing.Running, True)]);
-end;
 
-procedure TSyncthingManager.AddToConsole(const Text: UTF8String);
-begin
-  if Assigned(FOnConsoleOutput) then
-    FOnConsoleOutput(Self, Text);
-end;
+
+
 
 // Вспомогательная функция для поиска XML узлов
 function GetXmlNode(var Node: TDOMNode; Name: WideString): boolean;

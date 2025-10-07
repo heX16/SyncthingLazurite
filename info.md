@@ -27,6 +27,13 @@
   - Обрабатывает события (`/rest/events`) пакетно; по типам событий дозаказывает ресурсы.
   - Коллбеки наружу: OnConnected, OnEvent, OnTreeChanged(Path/EndpointId), OnStateChanged и др.
 
+- `uSyncthingManager.pas` — управление процессом "Syncthing":
+  - Класс `TSyncthingManager` наследуется от `TSyncthingAPI` и добавляет функционал запуска программы "syncthing".
+  - Запуск/остановка процесса "syncthing".
+  - Машина состояний (FMS): `psUnknown` → `psStarting` → `psRunning` → `psStopping` → `psStopped`.
+  - Извлечение настроек (включая API‑ключ) из `config.xml` файла.
+  - События: `OnProcessStateChanged` для отслеживания состояния процесса, `OnConsoleOutput` для вывода консоли.
+
 - `AsyncHTTP.pas` — очередь асинхронных HTTP‑запросов:
   - Worker‑поток, `TFPHTTPClient`; таймауты, ретраи, keep‑alive.
   - Коллбеки и служебные события исполняются в главном потоке (`Synchronize`).
