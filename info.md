@@ -39,7 +39,7 @@
 - `uFormMain.pas` — главная форма (деревья устройств/папок, лог событий, индикатор статуса).
 - `uFormOptions.pas` — диалог настроек (пути/ключи/флаги).
 - `uFormJsonView.pas` — просмотр JSON (HTTP через `AsyncHTTP`, подсказочные поля).
-- `uModuleCore.pas` — чтение API‑ключа из `config.xml`, подготовка запуска Syncthing (частично WIP), таймеры/консоль.
+- `uModuleCore.pas` — чтение API‑ключа из `config.xml`, подготовка запуска Syncthing (частично WIP), таймеры/консоль. Устаревший модуль. Подлежит замене и последующему удалению (в будущем). Функционал будет переноситься в другие модули.
 - Утилиты: `syncthing_api_utils.pas`, `usyncthingtypes.pas`, `uutils.pas`, `vtutils.pas`, `ulogging.pas`.
 
 ### 3. JSONTree — единая модель данных
@@ -86,55 +86,95 @@
 - Добавление новых REST‑ресурсов сводится к сопоставлению `EndpointId` ↔ `URI` и использованию `LoadEndpoint`; ветка автоматически попадёт в JSONTree по правилу путей.
 
 ### 4. Подробности модуля syncthing_api.pas
-Роль и ответственность
+
+**Основная цель:** Модуль обеспечивает взаимодействие с Syncthing через REST API и Event API, поддерживая единое JSON-дерево состояния.
+
+**Архитектура на высоком уровне:**
+
+1. **Класс TSyncthingAPI** - центральный компонент для управления подключением к Syncthing
+
+2. **Конечный автомат (FSM)** состояний подключения:
+   - `ssOffline` → `ssConnecting*` → `ssOnline*` → `ssDisconnecting`
+   - Управляет жизненным циклом соединения
+
+3. **Два HTTP-клиента:**
+   - `FHTTP` - для REST запросов (синхронные)
+   - `FHTTPEvents` - для long-polling событий (асинхронные)
+
+4. **JSON-дерево данных:**
+   - `FTreeRoot` - единое корневое TJSONObject со всей информацией
+   - Типизированные указатели (`config`, `stats_device`, `stats_folder` и др.)
+   - Автоматическая синхронизация при обновлениях
+
+5. **Система эндпоинтов:**
+   - Перечисление `TSyncthingEndpointId` всех доступных REST эндпоинтов
+   - Автоматическая загрузка базовых данных при подключении
+
+6. **События и коллбеки:**
+   - Различные события (`OnConnected`, `OnEvent`, `OnTreeChanged`, `OnStateChanged`)
+   - Потокобезопасные вызовы через `Synchronize`
+
+**Ключевые возможности:**
+- Подключение/отключение с автоматическим восстановлением
+- Синхронный ping для проверки доступности
+- Асинхронное получение событий через long-polling
+- Автоматическое обновление данных по событиям
+- Потокобезопасная работа с GUI
+
+Модуль спроектирован как современная замена старому `uModuleCore.pas`.
+
+#### Роль и ответственность
 - Единая точка интеграции с REST и Event API Syncthing.
 - Управляет жизненным циклом подключения через конечный автомат (FSM).
 - Поддерживает единую модель данных (JSONTree) и уведомляет слушателей об изменениях.
 
-Состояния (FSM) и команды
-- Состояния: `ssOffline`, `ssConnectingInitAndPing`, `ssConnectingPingWait`, `ssConnectingWaitData`, `ssOnline`, `ssOnlinePaused`, `ssOnlineUnstable`, `ssDisconnecting`.
-- Команды: `ssCmdConnect/Disconnect`, `ssCmdPause/PauseRelease`, `ssCmdConnectingPingAck/Fault/Timeout`, `ssCmdDataReceived`, `ssCmdLongPolling*`, `ssCmdConnectionStable/Unstable`.
-- Метод `FSM_Process` отрабатывает переходы, запускает и останавливает long‑polling, инициирует загрузки эндпоинтов и вызывает коллбеки.
+#### Состояния (FSM) и команды
+**Состояния:** `ssOffline`, `ssConnectingInitAndPing`, `ssConnectingPingWait`, `ssConnectingWaitData`, `ssOnline`, `ssOnlinePaused`, `ssOnlineUnstable`, `ssOnlineLongPollingWait`, `ssOnlineUnstableLongPollingWait`, `ssDisconnecting`.
 
-HTTP‑клиенты
-- `FHTTP` — REST: очередь запросов, единый обработчик `HTTPHandle_RestAPI`.
-- `FHTTPEvents` — Event API: long‑polling; обработчики разрывов/ошибок, автоперезапуск по таймеру.
-- Заголовок `X-API-Key` добавляется в `HttpAddHeader` при `OnBeginProcessing`.
+**Команды:** `ssCmdConnect/Disconnect`, `ssCmdPause/PauseRelease`, `ssCmdConnectingPingAck/Fault/Timeout`, `ssCmdDataReceived`, `ssCmdLongPolling*`, `ssCmdConnectionStable/Unstable`, `ssCmdQueueEmpty`.
 
-JSON‑дерево и указатели
-- Инициализация: `CreateDefaultRoot` (+ `GetDefaultRootStr`).
-- Запись веток: `SetJsonNodeAtPath` (с предварительным `FindAndCreatePathInJsonTree`).
-- Обновление указателей: `UpdateJsonPointersFromTree` (+ `UpdateAllJsonPointersFromTree`).
-- Высылка уведомлений: `JSONTreeNewDataFromNetwork` → `NotifyTreeChanged`.
+**Метод `FSM_Process`** отрабатывает переходы, запускает и останавливает long‑polling, инициирует загрузки эндпоинтов и вызывает коллбеки.
 
-Инициализационная загрузка и эндпоинты
-- Базовые ресурсы: массив `SyncthingEndpointsBasic`.
-- Загрузка: `LoadAllBasicEndpoints` / `LoadEndpoint(Id)`.
-- Таблица соответствий: `GetEndpointURI`, обратное сопоставление `GetEndpointIdByURI` (включая под‑ресурсы `.../@`).
+#### HTTP‑клиенты подробно
+- **`FHTTP`** — REST: очередь запросов, единый обработчик `HTTP_RestAPI`.
+- **`FHTTPEvents`** — Event API: long‑polling; обработчики разрывов/ошибок, автоперезапуск по таймеру.
+- Заголовок `X-API-Key` добавляется в `HttpAddHeader` при `OnBeginProcessing` каждого запроса.
 
-Long‑polling событий
-- Запуск/стоп/перезапуск: `StartLongPolling`, `StopLongPolling`, `RestartLongPolling` (+ таймер‑интервал).
-- Обработка: `HTTPHandle_EventAPI` → `HandleIncommingDataFromEventAPI` → `ProcessEvent` → дозагрузка нужных ресурсов.
-- Интеграция фрагментов в дерево зарезервирована `IntegrateEvent` (пока пустышка — логика сведена к дозагрузкам).
+#### JSON‑дерево и указатели подробно
+- **Инициализация:** `CreateDefaultRoot` (+ `GetDefaultRootStr`).
+- **Запись веток:** `SetJsonNodeAtPath` (с предварительным `FindAndCreatePathInJsonTree`).
+- **Обновление указателей:** `UpdateJsonPointer` / `UpdateAllJsonPointers` (+ `UpdateJsonPointersFromTree`).
+- **Высылка уведомлений:** `JSONTreeNewDataFromNetwork` → `NotifyTreeChanged`.
 
-Публичный API
-- Настройки подключения: `SetEndpoint`, `SetAPIKey`, таймауты (`ConnectTimeout`, `IOTimeout`, `ConnectingTimeout`, период перезапуска long‑polling).
-- Управление соединением: `Connect`, `Disconnect`, `Pause`, `PauseRelease`, синхронный `Ping()`.
-- Состояние: `State`, `IsOnline`, `Command`, данные: `TreeRoot` и типизированные указатели (`config_*`, `stats_*`).
-- Коллбеки: `OnBeforeConnect/OnConnected/OnConnectError/OnBeforeDisconnect/OnDisconnectedByUser/OnHardDisconnect`, события long‑polling, дерево, смена состояния.
+#### Инициализационная загрузка и эндпоинты
+- **Базовые ресурсы:** массив `SyncthingEndpointsBasic` (config, system/connections, stats/device, stats/folder, system/status, system/version).
+- **Загрузка:** `LoadAllBasicEndpoints` / `LoadEndpoint(Id)`.
+- **Таблица соответствий:** `GetEndpointURI`, обратное сопоставление `GetEndpointIdByURI` (включая под‑ресурсы `.../@`).
 
-Ошибки/восстановление
-- Таймауты соединения/ввода‑вывода, авто‑ретраи в `AsyncHTTP`.
-- Коды псевдо‑ошибок для некоторых ситуаций (например, разрыв keep‑alive) и повторная попытка.
-- При ошибках long‑polling → состояние `ssOnlineUnstable`, далее восстановление по таймеру/событию.
+#### Long‑polling событий подробно
+- **Запуск/стоп/перезапуск:** `StartLongPolling`, `StopLongPolling` (+ таймер‑интервал).
+- **Обработка:** `HTTP_EventAPI` → `HandleIncommingDataFromEventAPI` → `ProcessEvent` → дозагрузка нужных ресурсов.
+- **Интеграция фрагментов в дерево:** зарезервирована `IntegrateEvent` (пока пустышка — логика сведена к дозагрузкам).
 
-Потокобезопасность
-- Сетевые коллбеки приходят через механизм очереди/worker → `Synchronize`.
-- Перед модификацией дерева вызывается `OnBeforeTreeModify`, после — `OnAfterTreeModify`; UI бережно читает дерево под `LockJSONTree`.
+#### Публичный API
+- **Настройки подключения:** `SetEndpoint`, `SetAPIKey`, таймауты (`ConnectTimeout`, `IOTimeout`, `ConnectingTimeout`, период перезапуска long‑polling).
+- **Управление соединением:** `Connect`, `Disconnect`, `Pause`, `PauseRelease`, синхронный `Ping()`.
+- **Состояние:** `State`, `IsOnline`, `Command`, данные: `TreeRoot` и типизированные указатели (`config_*`, `stats_*`).
+- **Коллбеки:** `OnBeforeConnect/OnConnected/OnConnectError/OnBeforeDisconnect/OnDisconnectedByUser/OnHardDisconnect`, события long‑polling, дерево, смена состояния.
 
-Расширяемость и заметки
-- Простое сопоставление эндпоинтов позволяет добавлять новые ресурсы без изменения основной логики (через `GetEndpointCallback`/`GetEndpointURI`).
-- Возможна интеграция инкрементального применения фрагментов событий в дерево (реализовать в `IntegrateEvent`).
+#### Обработка ошибок и восстановление
+- **Таймауты соединения/ввода‑вывода,** авто‑ретраи в `AsyncHTTP`.
+- **Коды псевдо‑ошибок** для некоторых ситуаций (например, разрыв keep‑alive) и повторная попытка.
+- **При ошибках long‑polling** → состояние `ssOnlineUnstable`, далее восстановление по таймеру/событию.
+
+#### Потокобезопасность
+- **Сетевые коллбеки** приходят через механизм очереди/worker → `Synchronize`.
+- **Перед модификацией дерева** вызывается `OnBeforeTreeModify`, после — `OnAfterTreeModify`.
+- **UI бережно читает дерево** под `LockJSONTree`.
+
+#### Расширяемость и заметки
+- **Простое сопоставление эндпоинтов** позволяет добавлять новые ресурсы без изменения основной логики (через `GetEndpointCallback`/`GetEndpointURI`).
+- **Возможна интеграция инкрементального применения фрагментов событий в дерево** (реализовать в `IntegrateEvent`).
 
 ### 5. Потоки и модель данных
 - Единственный источник правды — `TSyncthingAPI.FTreeRoot`. Любые обновления приходят из сетевых коллбеков.

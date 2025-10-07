@@ -12,8 +12,8 @@ uses
   {$ENDIF}{$ENDIF}
   Interfaces, // this includes the LCL widgetset
   Forms, uFormMain, laz_synapse, uniqueinstance_package, uModuleCore, AsyncHttp,
-  uFormOptions, uModuleMain, uformjsonview, hashmapstr, FormAbout, 
-  usyncthingtypes, syncthing_api, uLogging;
+  uFormOptions, uModuleMain, uformjsonview, hashmapstr, FormAbout,
+  usyncthingtypes, syncthing_api, uSyncthingManager, uLogging;
 
 {$R *.res}
 

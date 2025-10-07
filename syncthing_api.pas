@@ -316,7 +316,7 @@ type
   // - `OnBeginTreeModify`/`OnEndTreeModify` are NOT for GUI synchronization, but only
   //   needed if you have additional threads that access the JSON tree concurrently
   TSyncthingAPI = class(TComponent)
-  private
+  protected
     FState: TSyncthingFSM_State;
     FStateCommand: TSyncthingFSM_Command;
     PrevState: TSyncthingFSM_State;
