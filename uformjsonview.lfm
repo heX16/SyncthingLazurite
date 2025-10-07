@@ -8,7 +8,6 @@ object frmJSONView: TfrmJSONView
   ClientWidth = 513
   DesignTimePPI = 120
   Menu = MainMenu
-  LCLVersion = '4.2.0.0'
   OnCreate = FormCreate
   OnDestroy = FormDestroy
   object panelHintFieldsList: TPanel
@@ -19,7 +18,7 @@ object frmJSONView: TfrmJSONView
     Align = alTop
     ClientHeight = 32
     ClientWidth = 513
-    TabOrder = 4
+    TabOrder = 3
     Visible = False
     object edHintFieldsList: TLabeledEdit
       Left = 96

@@ -1,43 +1,6 @@
 unit uFormMain;
 
-//todo: if API key is not valid - analize this error
-
 {$mode objfpc}{$H+}
-
-{
-Dependency:
-
-Test:
-* https://github.com/esvignolo/delphi-rest-client-api
-  в этой библиотеке нет асинхронности,
-  но зато есть парсинг
-
-* https://github.com/libevent/libevent
-  библиотека для C
-  очень мощная и вроде простая
-  в теории ее можно прикрутить.
-  оссобено после моих тестов,
-  где я обнаружил потенциальную возможность
-  скомпилировать C файлы, и затем их obj
-  файлы исползовать напрямую в lazarus.
-  правда когда 10 лет назад мы это тестировали
-  там был баг, причем на уровне lazarus.
-
-Dependency old:
-* LNet https://github.com/almindor/lnet
-  пришлось отказаться - там утечка памяти (issue создал - #32).
-  асинхронная.
-  надо попробовать пофиксить утечку - кажется это будет проще,
-  тем все остальные варианты.
-
-* Python
-  затея хорошая, но он дает слишком много сложностей.
-  код по конвертированию данных
-  по сложности такойже как парсинг данных из json.
-  но учитывая что на Lazarus нет Async HTTP _вообще_
-  то кажется что Python это единственный простой вариант.
-
-}
 
 interface
 
@@ -45,8 +8,6 @@ uses
   Classes,
   Math,
   SysUtils,
-  //SynHighlighterJScript,
-  //SynEdit,
   uModuleCore, VirtualTrees, Forms, Controls,
   StdCtrls, ExtCtrls, Graphics, IniPropStorage;
 

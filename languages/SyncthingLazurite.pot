@@ -42,10 +42,9 @@ msgid "About"
 msgstr ""
 
 #: tfrmabout.lbprogramname.caption
-#, fuzzy
 msgctxt "tfrmabout.lbprogramname.caption"
 msgid "SyncthingLazurite"
-msgstr "SyncthingLazurite"
+msgstr ""
 
 #: tfrmabout.lbprogramver.caption
 msgid "vX.X"
@@ -314,10 +313,9 @@ msgid "Offline"
 msgstr ""
 
 #: umodulemain.cprogramname
-#, fuzzy
 msgctxt "umodulemain.cprogramname"
 msgid "SyncthingLazurite"
-msgstr "SyncthingLazurite"
+msgstr ""
 
 #: umodulemain.cstrlocal
 msgid " (local)"

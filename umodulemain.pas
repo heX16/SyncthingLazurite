@@ -50,6 +50,7 @@ type
     MenuItem18: TMenuItem;
     MenuItem19: TMenuItem;
     MenuItem20: TMenuItem;
+    MenuItem21: TMenuItem;
     Separator2: TMenuItem;
     Separator1: TMenuItem;
     mnView: TMenuItem;
@@ -371,28 +372,36 @@ procedure TModuleMain.Syn_OnTreeChanged(Sender: TObject; EndpointId: TSyncthingE
         frmMain.treeDevices.Invalidate();
         // Update tray hint when device data changes
         TrayIcon.Hint := BuildOnlineDevicesHint();
+        {$IfDef DEBUG}
         AddLineToEventsLog('UPD: Devices');
+        {$EndIf}
       end;
       epConfig_Folders, epStats_Folder:
       begin
         frmMain.treeFolders.RootNodeCount := FSyncthingAPI.config_folders.Count;
         //frmMain.treeFolders.Repaint;
         frmMain.treeFolders.Invalidate();
+        {$IfDef DEBUG}
         AddLineToEventsLog('UPD: Folders');
+        {$EndIf}
       end;
     end;
   end;
 var
   ep: TSyncthingEndpointId;
+  {$IfDef DEBUG}
   logStr: string;
+  {$EndIf}
 begin
-  DebugLog('FSyncthingAPI.OnTreeChanged: ' + 
+  {$IfDef DEBUG}
+  DebugLog('FSyncthingAPI.OnTreeChanged: ' +
     GetEnumName(TypeInfo(TSyncthingEndpointId), Ord(EndpointId)));
 
   // Add TreeChanged entry to visual log with JSON path
   logStr := 'TreeChanged: ' + GetEnumName(TypeInfo(TSyncthingEndpointId), Ord(EndpointId)) +
     '  JSONTreePath:' + Path;
   AddLineToEventsLog(logStr);
+  {$EndIf}
 
   if EndpointId <> epConfig then
     ChangedEndpoint(EndpointId)
@@ -406,10 +415,16 @@ end;
 
 procedure TModuleMain.Syn_OnStateChanged(Sender: TObject; NewState: TSyncthingFSM_State);
 var
+  {$IfDef DEBUG}
   s: string;
+  {$EndIf}
   c: TColor;
   statusMessage: string;
 begin
+  self.actConnect.Enabled:=true;
+  self.actDisconnect.Enabled:=true;
+
+  {$IfDef DEBUG}
   // Print new FSM state to console
   s := GetEnumName(TypeInfo(TSyncthingFSM_State), Ord(NewState));
   DebugLog('FSyncthingAPI.OnStateChanged: ' + s);
@@ -417,19 +432,29 @@ begin
   // Add status change to events log
   statusMessage := 'Status changed: ' + s;
   AddLineToEventsLog(statusMessage);
-  
+  {$EndIf}
+
   // Change status circle color depending on state
   case NewState of
-    ssOffline:
+    ssOffline: begin
       c := clGray; // was used previously for offline
+      self.actDisconnect.Enabled:=false;
+    end;
+
     ssConnectingInitAndPing, ssConnectingPingWait, ssConnectingWaitData:
       c := clYellow; // connecting states
-    ssOnline, ssOnlineLongPollingWait:
+
+    ssOnline, ssOnlineLongPollingWait: begin
       c := TColor($00B000);  // online
+      self.actConnect.Enabled:=false;
+    end;
+
     ssOnlinePaused:
       c := clSilver; // paused
+
     ssOnlineUnstable, ssOnlineUnstableLongPollingWait:
       c := clRed;    // unstable/error
+
     ssDisconnecting:
       c := clYellow;   // disconnecting
   else

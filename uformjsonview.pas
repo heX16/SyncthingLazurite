@@ -274,7 +274,7 @@ begin
     if Pos(' (', self.endpoint) > 0 then
       self.endpoint := Copy(self.endpoint, 1, Pos(' (', self.endpoint) - 1);
 
-    url := edServerURL.Text + '/' + self.endpoint;
+    url := edServerURL.Text + '/rest/' + self.endpoint;
     headers := 'X-API-Key: ' + Core.APIKey + LineEnding +
                'Accept: application/json';
 
@@ -454,7 +454,8 @@ end;
 procedure TfrmJSONView.FormDestroy(Sender: TObject);
 begin
   FreeAndNil(hintList);
-  FreeAndNil(json);
+  if json <> nil then
+    FreeAndNil(json);
   FreeAndNil(http);
 end;
 

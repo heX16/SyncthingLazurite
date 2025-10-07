@@ -250,11 +250,18 @@ object ModuleMain: TModuleMain
     Top = 256
     object mnServer: TMenuItem
       Caption = 'mnServer'
+      object MenuItem20: TMenuItem
+        Action = actConnect
+      end
+      object MenuItem21: TMenuItem
+        Action = actDisconnect
+      end
       object MenuItem3: TMenuItem
         Action = Core.actStartAndConnect
       end
       object MenuItem4: TMenuItem
         Caption = 'actPause'
+        Enabled = False
       end
       object MenuItem2: TMenuItem
         Action = Core.actRestart
@@ -266,6 +273,7 @@ object ModuleMain: TModuleMain
         Caption = '-'
       end
       object MenuItem8: TMenuItem
+        Action = actShowRestView
       end
       object MenuItem6: TMenuItem
         Caption = '-'
@@ -303,9 +311,6 @@ object ModuleMain: TModuleMain
     end
     object MenuItem7: TMenuItem
       Action = actShowOptions
-    end
-    object MenuItem20: TMenuItem
-      Action = actShowRestView
     end
     object MenuItem12: TMenuItem
       Action = actAbout

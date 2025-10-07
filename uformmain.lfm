@@ -172,6 +172,7 @@ object frmMain: TfrmMain
     ClientHeight = 87
     ClientWidth = 547
     TabOrder = 6
+    Visible = False
     object listEvents: TListBox
       Left = 0
       Height = 87
@@ -191,6 +192,7 @@ object frmMain: TfrmMain
     Width = 551
     Align = alBottom
     ResizeAnchor = akBottom
+    Visible = False
   end
   object btnShowWeb: TButton
     Left = 72
