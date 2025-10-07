@@ -45,7 +45,7 @@ type
     FTimerReadOutput: TTimer;
     FTimerCheckProcess: TTimer;
 
-    FOutputBuffer: UTF8String;
+    FOutputBuffer: RawByteString;
 
     FOnProcessStateChanged: TProcessEvent;
     FOnConsoleOutput: TConsoleOutputEvent;
@@ -159,7 +159,7 @@ end;
 procedure TSyncthingManager.InitializeProcesses;
 begin
   FProcessSyncthing := TProcessUTF8.Create(nil);
-  FProcessSyncthing.Options := [poUsePipes];
+  FProcessSyncthing.Options := [poUsePipes, poStderrToOutPut];
   FProcessSyncthing.ShowWindow := swoHIDE;
 end;
 
@@ -217,10 +217,11 @@ end;
 
 procedure TSyncthingManager.ReadProcessOutput;
 var
-  Line: RawByteString;
+  Chunk: RawByteString;
   BytesRead: LongInt;
   p: Integer;
-  LineStr: UTF8String;
+  RawLine: RawByteString;
+  UtfLine: UTF8String;
   conv_ok: boolean;
 const
   LE = LineEnding;
@@ -233,21 +234,26 @@ begin
     BytesRead := FProcessSyncthing.Output.NumBytesAvailable;
     if BytesRead > 0 then
     begin
-      SetLength(Line, BytesRead);
-      FProcessSyncthing.Output.ReadBuffer(Line[1], BytesRead);
+      SetLength(Chunk, BytesRead);
+      FProcessSyncthing.Output.ReadBuffer(Chunk[1], BytesRead);
 
-      FOutputBuffer := FOutputBuffer + Line;
+      FOutputBuffer := FOutputBuffer + Chunk;
 
-      // Разбиваем на строки
+      // Разбиваем на строки по системному разделителю
       p := Pos(LE, FOutputBuffer);
       while p <> 0 do
       begin
-        LineStr := Copy(FOutputBuffer, 1, p - 1);
+        RawLine := Copy(FOutputBuffer, 1, p - 1);
         FOutputBuffer := Copy(FOutputBuffer, p + Length(LE), Length(FOutputBuffer) - p);
 
-        LineStr := ConvertEncodingToUTF8(LineStr, GetConsoleTextEncoding(), conv_ok);
+        UtfLine := ConvertEncodingToUTF8(RawLine, GetConsoleTextEncoding(), conv_ok);
+        if not conv_ok then
+        begin
+          DebugLog('Failed to convert console output line to UTF-8; passing raw bytes as UTF-8');
+          UtfLine := UTF8String(RawLine);
+        end;
 
-        ProcessOutputLine(LineStr);
+        ProcessOutputLine(UtfLine);
 
         p := Pos(LE, FOutputBuffer);
       end;
@@ -282,6 +288,22 @@ begin
       begin
         FTimerReadOutput.Enabled := False;
         FTimerCheckProcess.Enabled := False;
+        // Дочитываем хвост буфера как последнюю строку, если остался
+        if Length(FOutputBuffer) > 0 then
+        begin
+          // Пытаемся сконвертировать и вывести хвост как строку
+          // Здесь важно избежать потери данных при отсутствии завершающего перевода строки
+          var TailUtf: UTF8String;
+          var conv_ok: boolean;
+          TailUtf := ConvertEncodingToUTF8(FOutputBuffer, GetConsoleTextEncoding(), conv_ok);
+          if not conv_ok then
+          begin
+            DebugLog('Failed to convert trailing console output to UTF-8; passing raw bytes as UTF-8');
+            TailUtf := UTF8String(FOutputBuffer);
+          end;
+          ProcessOutputLine(TailUtf);
+          FOutputBuffer := '';
+        end;
       end;
   end;
 
@@ -444,6 +466,7 @@ begin
   if not FProcessSyncthing.Running then
   begin
     DebugLog('Syncthing process not running');
+    ProcessStateChanged(psStopped);
     Exit(True);
   end;
 
