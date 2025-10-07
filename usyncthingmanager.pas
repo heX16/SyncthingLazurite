@@ -2,6 +2,11 @@ unit uSyncthingManager;
 
 {$mode objfpc}{$H+}
 
+// Директива компилятора для отключения исправления бага Windows с выводом процессов
+// Определите в проекте для отключения cmd.exe перенаправления stdout/stderr:
+// {$DEFINE DISABLE_WINDOWS_OUTPUT_FIX}
+// По умолчанию исправление ВКЛЮЧЕНО для совместимости с Windows
+
 interface
 
 uses
@@ -106,6 +111,7 @@ type
 
   end;
 
+
 implementation
 
 uses
@@ -115,6 +121,12 @@ uses
   process,
   TypInfo,
   LCLTranslator, LConvEncoding;
+
+// Константы для таймаутов процессов
+const
+  PROCESS_START_TIMEOUT_MS = 5000;  // Максимальное время ожидания запуска процесса (мс)
+  PROCESS_CHECK_INTERVAL_MS = 100;  // Интервал проверки состояния процесса (мс)
+  PROCESS_CHECK_ITERATIONS = PROCESS_START_TIMEOUT_MS div PROCESS_CHECK_INTERVAL_MS; // Количество итераций
 
 { TSyncthingManager }
 
@@ -459,6 +471,7 @@ end;
 function TSyncthingManager.StartSyncthingProcess: Boolean;
 var
   StartTime: TDateTime;
+  i: Integer;
 begin
   Result := False;
 
@@ -479,13 +492,22 @@ begin
 
   try
     {$IFDEF WINDOWS}
+    {$IFNDEF DISABLE_WINDOWS_OUTPUT_FIX}
     // Используем cmd.exe для перенаправления вывода (исправление бага Windows)
+    // Включено по умолчанию для совместимости
     FProcessSyncthing.Executable := GetEnvironmentVariableUTF8('WINDIR') + '\system32\cmd.exe';
     FProcessSyncthing.Parameters.Text :=
       '/C "' + FExecPath + ' ' +
       '--no-browser ' +
       '--home=' + FHomePath + ' ' +
       '| find /v " empty_find_just_for_redirect_stdio_00686558 " "';
+    {$ELSE}
+    // Обычный запуск без исправления бага (отключено директивой)
+    FProcessSyncthing.Executable := FExecPath;
+    FProcessSyncthing.Parameters.Text :=
+      '--no-browser ' +
+      '--home=' + FHomePath;
+    {$ENDIF}
     {$ELSE}
     // Linux/macOS версия
     FProcessSyncthing.Executable := FExecPath;
@@ -497,14 +519,13 @@ begin
     // Запускаем процесс
     FProcessSyncthing.Execute;
 
-    StartTime := Now;
-    // TODO: переписать на цикл `FOR`. 
-    // тоесть перед запуском цикла вы вычисляем сколько раз нужно пройти цикл
-    // для этого просто делим время ожидания на время sleep
-    // эти времена нужно объявить как константы которые объявленны в начале файла
-    while not FProcessSyncthing.Running and (SecondsBetween(Now, StartTime) < 5) do
+    // Ждем запуска процесса с фиксированным количеством итераций
+    for I := 1 to PROCESS_CHECK_ITERATIONS do
     begin
-      Sleep(100);
+      if FProcessSyncthing.Running then
+        Break; // Процесс запустился, выходим из цикла
+
+      Sleep(PROCESS_CHECK_INTERVAL_MS);
       Application.ProcessMessages;
     end;
 
