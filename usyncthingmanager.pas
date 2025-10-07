@@ -36,7 +36,6 @@ type
   TSyncthingManager = class(TSyncthingAPI)
   private
     FProcessSyncthing: TProcessUTF8;
-    FProcessSupport: TProcessUTF8;
 
     FHomePath: UTF8String;
     FExecPath: UTF8String;
@@ -74,7 +73,6 @@ type
     procedure SetExecPath(const Path: UTF8String); virtual;
 
     function StartSyncthingProcess: Boolean; virtual;
-    function StartSupportProcess: Boolean; virtual;
     function StopSyncthingProcess: Boolean; virtual;
     function StopAllProcesses: Boolean; virtual;
 
@@ -90,6 +88,22 @@ type
     property OnProcessStateChanged: TProcessEvent read FOnProcessStateChanged write FOnProcessStateChanged;
     property OnConsoleOutput: TConsoleOutputEvent read FOnConsoleOutput write FOnConsoleOutput;
 
+  end;
+
+  { TSyncthingManagerWithSupport }
+  // Extended version with support process functionality
+  // Preserved for potential future use
+
+  TSyncthingManagerWithSupport = class(TSyncthingManager)
+  private
+    FProcessSupport: TProcessUTF8;
+    procedure InitializeSupportProcess;
+  public
+    constructor Create(AOwner: TComponent); override;
+    destructor Destroy; override;
+
+    function StartSupportProcess: Boolean; virtual;
+    function StopAllProcesses: Boolean; override;
   end;
 
 
@@ -128,9 +142,6 @@ begin
   if Assigned(FProcessSyncthing) then
     FreeAndNil(FProcessSyncthing);
 
-  if Assigned(FProcessSupport) then
-    FreeAndNil(FProcessSupport);
-
   if Assigned(FTimerReadOutput) then
     FreeAndNil(FTimerReadOutput);
 
@@ -145,10 +156,6 @@ begin
   FProcessSyncthing := TProcessUTF8.Create(nil);
   FProcessSyncthing.Options := [poUsePipes];
   FProcessSyncthing.ShowWindow := swoHIDE;
-
-  FProcessSupport := TProcessUTF8.Create(nil);
-  FProcessSupport.Options := [poNoConsole];
-  FProcessSupport.ShowWindow := swoHIDE;
 end;
 
 procedure TSyncthingManager.InitializeTimers;
@@ -428,38 +435,6 @@ begin
   end;
 end;
 
-function TSyncthingManager.StartSupportProcess: Boolean;
-begin
-  Result := False;
-
-  if FHomePath = '' then
-  begin
-    DebugLog('Cannot start support process: home path not set');
-    Exit;
-  end;
-
-  {$IFDEF WINDOWS}
-  FProcessSupport.Executable := FExecPath;
-  FProcessSupport.Parameters.Text := '--home=' + FHomePath;
-  {$ELSE}
-  {$ENDIF}
-
-  try
-    FProcessSupport.Execute;
-    Result := FProcessSupport.Running;
-    if Result then
-      DebugLog('Support process started successfully')
-    else
-      DebugLog('Failed to start support process');
-  except
-    on E: Exception do
-    begin
-      DebugLog('Exception while starting support process: ' + E.Message);
-      Result := False;
-    end;
-  end;
-end;
-
 function TSyncthingManager.StopSyncthingProcess: Boolean;
 begin
   Result := False;
@@ -509,14 +484,7 @@ end;
 function TSyncthingManager.StopAllProcesses: Boolean;
 begin
   StopSyncthingProcess;
-
-  if FProcessSupport.Running then
-  begin
-    FProcessSupport.Terminate(0);
-    DebugLog('Support process stopped');
-  end;
-
-  Result := not FProcessSyncthing.Running and not FProcessSupport.Running;
+  Result := not FProcessSyncthing.Running;
 end;
 
 function TSyncthingManager.IsProcessRunning: Boolean;
@@ -553,6 +521,73 @@ begin
       Result := True;
     end;
   end;
+end;
+
+{ TSyncthingManagerWithSupport }
+
+constructor TSyncthingManagerWithSupport.Create(AOwner: TComponent);
+begin
+  inherited Create(AOwner);
+  InitializeSupportProcess;
+end;
+
+destructor TSyncthingManagerWithSupport.Destroy;
+begin
+  if Assigned(FProcessSupport) then
+    FreeAndNil(FProcessSupport);
+  inherited Destroy;
+end;
+
+procedure TSyncthingManagerWithSupport.InitializeSupportProcess;
+begin
+  FProcessSupport := TProcessUTF8.Create(nil);
+  FProcessSupport.Options := [poNoConsole];
+  FProcessSupport.ShowWindow := swoHIDE;
+end;
+
+function TSyncthingManagerWithSupport.StartSupportProcess: Boolean;
+begin
+  Result := False;
+
+  if HomePath = '' then
+  begin
+    DebugLog('Cannot start support process: home path not set');
+    Exit;
+  end;
+
+  {$IFDEF WINDOWS}
+  FProcessSupport.Executable := ExecPath;
+  FProcessSupport.Parameters.Text := '--home=' + HomePath;
+  {$ELSE}
+  {$ENDIF}
+
+  try
+    FProcessSupport.Execute;
+    Result := FProcessSupport.Running;
+    if Result then
+      DebugLog('Support process started successfully')
+    else
+      DebugLog('Failed to start support process');
+  except
+    on E: Exception do
+    begin
+      DebugLog('Exception while starting support process: ' + E.Message);
+      Result := False;
+    end;
+  end;
+end;
+
+function TSyncthingManagerWithSupport.StopAllProcesses: Boolean;
+begin
+  inherited StopAllProcesses;
+
+  if FProcessSupport.Running then
+  begin
+    FProcessSupport.Terminate(0);
+    DebugLog('Support process stopped');
+  end;
+
+  Result := not IsProcessRunning and not FProcessSupport.Running;
 end;
 
 end.
