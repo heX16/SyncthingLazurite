@@ -43,7 +43,6 @@ type
     FHomePath: UTF8String;
     FExecPath: UTF8String;
     FConfigPath: UTF8String;
-    FConfigData: TJSONObject;
 
     // Состояния процессов
     FProcessState: TProcessState;
@@ -62,7 +61,6 @@ type
     // Внутренние методы
     procedure InitializeProcesses;
     procedure InitializeTimers;
-    procedure ConfigureProcesses;
 
     procedure TimerReadOutputTimer(Sender: TObject);
     procedure TimerCheckProcessTimer(Sender: TObject);
@@ -85,7 +83,7 @@ type
 
     // Конфигурация
     function ReadAPIKeyFromConfig: string; virtual;
-    function ReadConfigFromFile: TJSONObject; virtual;
+    procedure ExtractConfigSettings; // Извлечение настроек из XML без хранения всего файла
     procedure LoadConfigFromDisk; virtual;
 
     procedure SetHomePath(const Path: UTF8String); virtual;
@@ -136,7 +134,6 @@ begin
 
   // Инициализация состояний
   FProcessState := psUnknown;
-  FConfigData := nil;
 
   // Создание процессов
   InitializeProcesses;
@@ -166,10 +163,6 @@ begin
   if Assigned(FProcessSupport) then
     FreeAndNil(FProcessSupport);
 
-  // Освобождение конфигурации
-  if Assigned(FConfigData) then
-    FreeAndNil(FConfigData);
-
   // Освобождение таймеров
   if Assigned(FTimerReadOutput) then
     FreeAndNil(FTimerReadOutput);
@@ -191,8 +184,6 @@ begin
   FProcessSupport := TProcessUTF8.Create(nil);
   FProcessSupport.Options := [poNoConsole];
   FProcessSupport.ShowWindow := swoHIDE;
-
-  ConfigureProcesses;
 end;
 
 procedure TSyncthingManager.InitializeTimers;
@@ -210,18 +201,12 @@ begin
   FTimerCheckProcess.OnTimer := @TimerCheckProcessTimer;
 end;
 
-procedure TSyncthingManager.ConfigureProcesses;
-begin
-  // Конфигурация процессов будет выполнена в FillSyncthingExecPath
-end;
 
 procedure TSyncthingManager.SetEndpoint(const Host: UTF8String; Port: Integer; UseTLS: Boolean);
 begin
   inherited SetEndpoint(Host, Port, UseTLS);
 
-  // Синхронизация с настройками процессов
-  if FHomePath <> '' then
-    ConfigureProcesses;
+  // Настройки процессов синхронизируются при запуске процесса
 end;
 
 procedure TSyncthingManager.SetAPIKey(const Key: UTF8String);
@@ -393,19 +378,18 @@ begin
   // API-ключ должен передаваться извне через SetAPIKey
 end;
 
-function TSyncthingManager.ReadConfigFromFile: TJSONObject;
+// Извлечение конкретных настроек из XML конфига (без хранения всего файла)
+procedure TSyncthingManager.ExtractConfigSettings;
 var
   filename: UTF8String;
   FDoc: TXMLDocument;
-  ConfigStr: UTF8String;
+  NPtr: TDOMNode;
+  APIKeyValue: UTF8String;
 begin
-  Result := nil;
-
   if FHomePath = '' then
     Exit;
 
   filename := FHomePath + PathDelim + 'config.xml';
-
   if not FileExistsUTF8(filename) then
     Exit;
 
@@ -413,13 +397,29 @@ begin
     FDoc := nil;
     ReadXMLFile(FDoc, UTF8ToSys(filename));
 
-    // Для простоты конвертируем XML в JSON (в реальности может быть сложнее)
-    // Это упрощенная версия - в будущем можно реализовать полный парсер
-    ConfigStr := '<config>Конфигурация загружена</config>';
+    if FDoc = nil then Exit;
 
-    if ConfigStr <> '' then
-      Result := TJSONObject(GetJSON(ConfigStr));
+    NPtr := FDoc;
+
+    // Извлекаем только API ключ из пути configuration/gui/apikey
+    if GetXmlNode(NPtr, 'configuration') and
+       GetXmlNode(NPtr, 'gui') and
+       GetXmlNode(NPtr, 'apikey') and
+       GetXmlNode(NPtr, '#text') then
+    begin
+      APIKeyValue := UTF8String(NPtr.NodeValue);
+      if APIKeyValue <> '' then
+      begin
+        DebugLog('API key loaded from config.xml: ' + APIKeyValue);
+        SetAPIKey(APIKeyValue);
+      end;
+    end;
+
+    // Здесь можно добавить извлечение других нужных настроек
+    // Например: глобальные настройки, лимиты и т.д.
+
   finally
+    // Освобождаем XML документ сразу после использования
     if Assigned(FDoc) then
       FDoc.Free;
   end;
@@ -430,15 +430,11 @@ begin
   // Загружаем пути из параметров (должны быть установлены извне)
   // SetHomePath и SetExecPath должны вызываться до этого метода
 
-  // Читаем API-ключ из конфигурации
+  // Извлекаем нужные настройки из XML конфига
   if FHomePath <> '' then
   begin
-    SetAPIKey(ReadAPIKeyFromConfig);
+    ExtractConfigSettings;
   end;
-
-  // Загружаем дополнительные настройки конфигурации
-  if FHomePath <> '' then
-    FConfigData := ReadConfigFromFile;
 end;
 
 procedure TSyncthingManager.SetHomePath(const Path: UTF8String);
@@ -448,9 +444,7 @@ begin
     FHomePath := Path;
     FConfigPath := FHomePath + PathDelim + 'config.xml';
 
-    // Переконфигурируем процессы при изменении пути
-    ConfigureProcesses;
-
+    // Процессы переконфигурируются при запуске
     DebugLog('Home path changed to: ' + FHomePath);
   end;
 end;
@@ -461,9 +455,7 @@ begin
   begin
     FExecPath := Path;
 
-    // Переконфигурируем процессы при изменении пути к исполняемому файлу
-    ConfigureProcesses;
-
+    // Процессы переконфигурируются при запуске
     DebugLog('Exec path changed to: ' + FExecPath);
   end;
 end;
