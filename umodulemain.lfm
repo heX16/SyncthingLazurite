@@ -176,10 +176,14 @@ object ModuleMain: TModuleMain
       Caption = '-'
     end
     object mnRestart: TMenuItem
-      Action = Core.actRestart
+      Caption = 'actRestart'
+      Enabled = False
+      Visible = False
     end
     object miExit: TMenuItem
-      Action = Core.actStopAndExit
+      Caption = 'actStopAndExit'
+      Enabled = False
+      Visible = False
     end
     object N1: TMenuItem
       Caption = '-'
@@ -239,6 +243,18 @@ object ModuleMain: TModuleMain
       Caption = 'actDisconnect'
       OnExecute = actDisconnectExecute
     end
+    object actConnectOrStart: TAction
+      Caption = 'actConnectOrStart'
+    end
+    object actDisconnectAndStop: TAction
+      Caption = 'actDisconnectAndStop'
+    end
+    object actStopAndExit: TAction
+      Caption = 'actStopAndExit'
+    end
+    object actRestartApp: TAction
+      Caption = 'actRestartApp'
+    end
   end
   object TimerUpdate: TTimer
     Interval = 5000
@@ -257,17 +273,23 @@ object ModuleMain: TModuleMain
         Action = actDisconnect
       end
       object MenuItem3: TMenuItem
-        Action = Core.actStartAndConnect
+        Caption = 'actStartAndConnect'
+        Enabled = False
+        Visible = False
       end
       object MenuItem4: TMenuItem
         Caption = 'actPause'
         Enabled = False
       end
       object MenuItem2: TMenuItem
-        Action = Core.actRestart
+        Caption = 'actRestart'
+        Enabled = False
+        Visible = False
       end
       object MenuItem1: TMenuItem
-        Action = Core.actStop
+        Caption = 'actStop'
+        Enabled = False
+        Visible = False
       end
       object MenuItem9: TMenuItem
         Caption = '-'
@@ -279,7 +301,9 @@ object ModuleMain: TModuleMain
         Caption = '-'
       end
       object MenuItem5: TMenuItem
-        Action = Core.actStopAndExit
+        Caption = 'actStopAndExit'
+        Enabled = False
+        Visible = False
       end
       object MenuItem13: TMenuItem
         Action = actCloseGUI

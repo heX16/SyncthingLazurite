@@ -14,35 +14,6 @@ uses
   Classes, SysUtils, UTF8Process, ExtCtrls, ActnList, Forms;
 
 type
-  TCoreState = (
-    stUnknown,
-    // execute fault
-    stFaultAndDisconnected,
-    // detect: connect to present syncthing or execure syncthing
-    stConnectOrStart,
-    // syncthing disabled
-    stStopped,
-    // GUI will paused, wait disconnecting the long polling
-    stDisconnectingGUI,
-    // syncthinc still working, but GUI paused
-    stDisconnectedGUI,
-    // execute syncthinc app
-    stLaunching,
-    // wait ack from syncthinc app
-    stLaunchingWait,
-    // online - syncthinc working, GUI working
-    stWork,
-    // shutdown and start (restart)
-    stShutdownAndStart,
-    // shutdown and start, wait ack (restart)
-    stShutdownAndStartWait,
-    // send stop command
-    stStopping,
-    // wait stopping ack
-    stStoppingWait);
-
-
-type
 
   TAddConsoleLine = procedure (Line: UTF8String) of object;
 
@@ -50,37 +21,17 @@ type
 
   //todo: extract real core code to 'model'(or 'control') and 'utils'
   TCore = class(TDataModule)
-    actStartOrConnect: TAction;
-    actStopAndExit: TAction;
-    actInit: TAction;
-    actRunSupportProc: TAction;
-    actTerminate: TAction;
-    actRestart: TAction;
-    actStop: TAction;
-    actStartAndConnect: TAction;
     ActionList: TActionList;
-    ProcessSyncthing: TProcessUTF8;
-    ProcessSupport: TProcessUTF8;
     TimerAfterStartCheckRunError: TTimer;
     TimerInit: TTimer;
-    TimerReadStdOutput: TTimer;
-    procedure actStopAndExitExecute(Sender: TObject);
-    procedure actRestartExecute(Sender: TObject);
-    procedure actTerminateExecute(Sender: TObject);
 
     procedure TimerAfterStartCheckRunErrorTimer(Sender: TObject);
-
     procedure TimerInitTimer(Sender: TObject);
-    procedure TimerReadStdOutputTimer(Sender: TObject);
   private
     OutputChankStr: UTF8String;
   public
     // Flag that core is inited
     Inited: boolean;
-
-    // State (FSM)
-    //TODO: WIP!
-    State: TCoreState;
 
     APIKey: string;
     SyncthigExecPath: UTF8String;
@@ -99,7 +50,6 @@ type
     procedure FillSupportExecPath();
 
 
-    procedure ReadStdOutput(Proc: TProcessUTF8; AddProc: TAddConsoleLine; var TextChank: UTF8String);
     procedure AddStringToConsole(Str: UTF8String);
   end;
 
@@ -212,91 +162,7 @@ begin
     Result := frmOptions.edAPIKey.Text;
 end;
 
-(*
-procedure TCore.StartAndConnect();
-begin
-  //TODO: добавить поддержку "подключения" к уже запущенному процессу (без консоли разумеется)
-  // если процесс не запущен тогда запускаем его
-  if not ProcessSyncthing.Running then
-  begin
-    // we are launching a new process
-    self.State := stLaunching;
-    FillSyncthingExecPath();
-    ProcessSyncthing.Execute();
-    TimerAfterStartCheckRunError.Enabled:=True;
-    if actRunSupportProc.Checked then
-    begin
-      FillSupportExecPath();
-      ProcessSupport.Execute();
-    end;
-  end
-  else
-  begin
-    // TODO: process is already running - ...???...
-  end;
-end;
-*)
 
-
-(*
-procedure TCore.Stop();
-begin
-  // move state to stopping, final state will be set by httpCheckOnline
-  self.State := stStopping;
-  //aiohttp.Post('rest/system/shutdown', '', nil);
-  if ProcessSupport.Active then
-    ProcessSupport.Terminate(0);
-  //ProcessSyncthing.Terminate(0);
-end;
-*)
-
-
-procedure TCore.ReadStdOutput(Proc: TProcessUTF8;
-  AddProc: TAddConsoleLine; var TextChank: UTF8String);
-var
-  line, TmpStr: RawByteString;
-  p, BytesRead: LongInt;
-  conv_ok: boolean;
-const
-  LE = LineEnding; //todo: check in linux
-begin
-  try
-    if Assigned(Proc.Output) then
-    begin
-      //todo: (ProcessSyncthing.Running) ...
-      BytesRead:=Proc.Output.NumBytesAvailable;
-      if (BytesRead > 0) then
-      begin
-        SetLength(TmpStr, BytesRead);
-        Proc.Output.ReadBuffer(TmpStr[1], BytesRead);
-        TmpStr := TextChank + TmpStr;
-        line := '';
-        p := Pos(LE, TmpStr);
-        while p <> 0 do
-        begin
-          // get line
-          line := Copy(TmpStr, 1, p-1);
-          // cut line from text
-          TmpStr := Copy(TmpStr, p+Length(LE), Length(TmpStr) - p);
-          // normalize codepage from console (uses LConvEncoding)
-          line := ConvertEncodingToUTF8(line, GetConsoleTextEncoding(), conv_ok);
-          // send line
-          AddProc(line);
-          // find again
-          p := Pos(LE, TmpStr);
-        end;
-        TextChank := TmpStr;
-      end;
-    end;
-  except
-    //ShowMessage('FAIL!');
-  end;
-end;
-
-procedure TCore.TimerReadStdOutputTimer(Sender: TObject);
-begin
-  ReadStdOutput(ProcessSyncthing, @AddStringToConsole, OutputChankStr);
-end;
 
 procedure TCore.TimerInitTimer(Sender: TObject);
 begin
@@ -306,8 +172,6 @@ begin
 
     // TODO: temp, удалить выставление ru
     SetDefaultLang('ru');
-
-    self.State := stUnknown;
 
     SyncthigHost:='127.0.0.1';
     SyncthigPort:=8384;
@@ -322,32 +186,6 @@ begin
       ModuleMain.actConnect.Execute;
     end;
   end;
-end;
-
-procedure TCore.actRestartExecute(Sender: TObject);
-var i: integer;
-begin
-  actStop.Execute();
-
-  //todo: плохое решение! - надо делать проверку и отложенный старт
-  for i:=1 to 10*5 do begin
-    sleep(100); // sleep 5 second
-    Application.ProcessMessages();
-  end;
-
-  actStartAndConnect.Execute();
-end;
-
-procedure TCore.actStopAndExitExecute(Sender: TObject);
-begin
-  actStop.Execute();
-  Application.Terminate();
-end;
-
-procedure TCore.actTerminateExecute(Sender: TObject);
-begin
-  ProcessSupport.Terminate(0);
-  ProcessSyncthing.Terminate(0);
 end;
 
 procedure TCore.TimerAfterStartCheckRunErrorTimer(Sender: TObject);

@@ -1,33 +1,14 @@
 ﻿msgid ""
 msgstr "Content-Type: text/plain; charset=UTF-8"
 
-#: tcore.actinit.caption
-msgid "actInit"
-msgstr "Инициализация"
-
 #: tcore.actrestart.caption
+msgctxt "tcore.actrestart.caption"
 msgid "actRestart"
 msgstr "Рестарт"
 
 #: tcore.actrunsupportproc.caption
 msgid "actRunSupportProc"
 msgstr "Доп. программа"
-
-#: tcore.actstartandconnect.caption
-msgid "actStartAndConnect"
-msgstr "Запустить и подключиться"
-
-#: tcore.actstartorconnect.caption
-msgid "actStartOrConnect"
-msgstr "Запустить или подключиться"
-
-#: tcore.actstop.caption
-msgid "actStop"
-msgstr "Стоп"
-
-#: tcore.actstopandexit.caption
-msgid "actStopAndExit"
-msgstr "Остановить и выйти"
 
 #: tcore.actterminate.caption
 msgid "actTerminate"
@@ -262,6 +243,10 @@ msgctxt "tmodulemain.actconnect.caption"
 msgid "actConnect"
 msgstr "Подключиться"
 
+#: tmodulemain.actconnectorstart.caption
+msgid "actConnectOrStart"
+msgstr ""
+
 #: tmodulemain.actcopyselecteddevid.caption
 msgid "actCopySelectedDevID"
 msgstr "Скопировать ID устройства"
@@ -269,6 +254,14 @@ msgstr "Скопировать ID устройства"
 #: tmodulemain.actdisconnect.caption
 msgid "actDisconnect"
 msgstr "Отключиться"
+
+#: tmodulemain.actdisconnectandstop.caption
+msgid "actDisconnectAndStop"
+msgstr ""
+
+#: tmodulemain.actrestartapp.caption
+msgid "actRestartApp"
+msgstr ""
 
 #: tmodulemain.actsetstaterun.caption
 msgid "actSetStateRun"
@@ -298,10 +291,52 @@ msgstr "Просмотр REST данных"
 msgid "actShowWeb"
 msgstr "Открыть веб-интерфейс в браузере"
 
+#: tmodulemain.actstopandexit.caption
+#, fuzzy
+msgctxt "tmodulemain.actstopandexit.caption"
+msgid "actStopAndExit"
+msgstr "Остановить и выйти"
+
+#: tmodulemain.menuitem1.caption
+#, fuzzy
+msgctxt "tmodulemain.menuitem1.caption"
+msgid "actStop"
+msgstr "Стоп"
+
+#: tmodulemain.menuitem2.caption
+#, fuzzy
+msgctxt "tmodulemain.menuitem2.caption"
+msgid "actRestart"
+msgstr "Рестарт"
+
+#: tmodulemain.menuitem3.caption
+#, fuzzy
+msgctxt "tmodulemain.menuitem3.caption"
+msgid "actStartAndConnect"
+msgstr "Запустить и подключиться"
+
 #: tmodulemain.menuitem4.caption
 msgctxt "tmodulemain.menuitem4.caption"
 msgid "actPause"
 msgstr "Пауза"
+
+#: tmodulemain.menuitem5.caption
+#, fuzzy
+msgctxt "tmodulemain.menuitem5.caption"
+msgid "actStopAndExit"
+msgstr "Остановить и выйти"
+
+#: tmodulemain.miexit.caption
+#, fuzzy
+msgctxt "tmodulemain.miexit.caption"
+msgid "actStopAndExit"
+msgstr "Остановить и выйти"
+
+#: tmodulemain.mnrestart.caption
+#, fuzzy
+msgctxt "tmodulemain.mnrestart.caption"
+msgid "actRestart"
+msgstr "Рестарт"
 
 #: tmodulemain.mnserver.caption
 msgid "mnServer"

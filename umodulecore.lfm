@@ -5,97 +5,9 @@ object Core: TCore
   VerticalOffset = 171
   Width = 602
   PPI = 120
-  object ProcessSyncthing: TProcessUTF8
-    PipeBufferSize = 16384
-    Active = False
-    Executable = '/C'
-    Options = [poUsePipes]
-    Priority = ppNormal
-    StartupOptions = []
-    ShowWindow = swoHIDE
-    WindowColumns = 0
-    WindowHeight = 0
-    WindowLeft = 0
-    WindowRows = 0
-    WindowTop = 0
-    WindowWidth = 0
-    FillAttribute = 0
-    Left = 70
-    Top = 20
-  end
-  object TimerReadStdOutput: TTimer
-    Enabled = False
-    OnTimer = TimerReadStdOutputTimer
-    Left = 70
-    Top = 80
-  end
-  object ProcessSupport: TProcessUTF8
-    Active = False
-    Options = [poNoConsole]
-    Priority = ppNormal
-    StartupOptions = []
-    ShowWindow = swoHIDE
-    WindowColumns = 0
-    WindowHeight = 0
-    WindowLeft = 0
-    WindowRows = 0
-    WindowTop = 0
-    WindowWidth = 0
-    FillAttribute = 0
-    Left = 244
-    Top = 20
-  end
   object ActionList: TActionList
     Left = 244
     Top = 88
-    object actStartOrConnect: TAction
-      Category = 'Core'
-      Caption = 'actStartOrConnect'
-      Enabled = False
-      Visible = False
-    end
-    object actStartAndConnect: TAction
-      Category = 'Core'
-      Caption = 'actStartAndConnect'
-      Enabled = False
-      Visible = False
-    end
-    object actStop: TAction
-      Category = 'Core'
-      Caption = 'actStop'
-      Enabled = False
-      Visible = False
-    end
-    object actStopAndExit: TAction
-      Category = 'GUI'
-      Caption = 'actStopAndExit'
-      Enabled = False
-      Visible = False
-      OnExecute = actStopAndExitExecute
-    end
-    object actRestart: TAction
-      Category = 'Core'
-      Caption = 'actRestart'
-      Enabled = False
-      Visible = False
-      OnExecute = actRestartExecute
-    end
-    object actTerminate: TAction
-      Category = 'Core'
-      Caption = 'actTerminate'
-      Visible = False
-      OnExecute = actTerminateExecute
-    end
-    object actRunSupportProc: TAction
-      Category = 'Core'
-      Caption = 'actRunSupportProc'
-      Visible = False
-    end
-    object actInit: TAction
-      Category = 'Core'
-      Caption = 'actInit'
-      Visible = False
-    end
   end
   object TimerInit: TTimer
     Interval = 10

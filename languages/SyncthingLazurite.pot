@@ -1,32 +1,13 @@
 msgid ""
 msgstr "Content-Type: text/plain; charset=UTF-8"
 
-#: tcore.actinit.caption
-msgid "actInit"
-msgstr ""
-
 #: tcore.actrestart.caption
+msgctxt "tcore.actrestart.caption"
 msgid "actRestart"
 msgstr ""
 
 #: tcore.actrunsupportproc.caption
 msgid "actRunSupportProc"
-msgstr ""
-
-#: tcore.actstartandconnect.caption
-msgid "actStartAndConnect"
-msgstr ""
-
-#: tcore.actstartorconnect.caption
-msgid "actStartOrConnect"
-msgstr ""
-
-#: tcore.actstop.caption
-msgid "actStop"
-msgstr ""
-
-#: tcore.actstopandexit.caption
-msgid "actStopAndExit"
 msgstr ""
 
 #: tcore.actterminate.caption
@@ -252,12 +233,24 @@ msgstr ""
 msgid "actConnect"
 msgstr ""
 
+#: tmodulemain.actconnectorstart.caption
+msgid "actConnectOrStart"
+msgstr ""
+
 #: tmodulemain.actcopyselecteddevid.caption
 msgid "actCopySelectedDevID"
 msgstr ""
 
 #: tmodulemain.actdisconnect.caption
 msgid "actDisconnect"
+msgstr ""
+
+#: tmodulemain.actdisconnectandstop.caption
+msgid "actDisconnectAndStop"
+msgstr ""
+
+#: tmodulemain.actrestartapp.caption
+msgid "actRestartApp"
 msgstr ""
 
 #: tmodulemain.actsetstaterun.caption
@@ -288,8 +281,43 @@ msgstr ""
 msgid "actShowWeb"
 msgstr ""
 
+#: tmodulemain.actstopandexit.caption
+msgctxt "tmodulemain.actstopandexit.caption"
+msgid "actStopAndExit"
+msgstr ""
+
+#: tmodulemain.menuitem1.caption
+msgctxt "tmodulemain.menuitem1.caption"
+msgid "actStop"
+msgstr ""
+
+#: tmodulemain.menuitem2.caption
+msgctxt "tmodulemain.menuitem2.caption"
+msgid "actRestart"
+msgstr ""
+
+#: tmodulemain.menuitem3.caption
+msgctxt "tmodulemain.menuitem3.caption"
+msgid "actStartAndConnect"
+msgstr ""
+
 #: tmodulemain.menuitem4.caption
 msgid "actPause"
+msgstr ""
+
+#: tmodulemain.menuitem5.caption
+msgctxt "tmodulemain.menuitem5.caption"
+msgid "actStopAndExit"
+msgstr ""
+
+#: tmodulemain.miexit.caption
+msgctxt "tmodulemain.miexit.caption"
+msgid "actStopAndExit"
+msgstr ""
+
+#: tmodulemain.mnrestart.caption
+msgctxt "tmodulemain.mnrestart.caption"
+msgid "actRestart"
 msgstr ""
 
 #: tmodulemain.mnserver.caption

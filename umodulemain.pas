@@ -29,6 +29,10 @@ type
     actCloseGUI: TAction;
     actConnect: TAction;
     actDisconnect: TAction;
+    actDisconnectAndStop: TAction;
+    actConnectOrStart: TAction;
+    actRestartApp: TAction;
+    actStopAndExit: TAction;
     actShowConsole: TAction;
     actShowEvents: TAction;
     actSetStateStop: TAction;
