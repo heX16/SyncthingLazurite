@@ -5,7 +5,7 @@ unit uSyncthingManager;
 interface
 
 uses
-  Classes, SysUtils, UTF8Process, ExtCtrls, Forms,
+  Classes, SysUtils, UTF8Process, ExtCtrls,
   syncthing_api, fpjson, XMLRead, DOM, LazUTF8, LazFileUtils;
 
 // Вспомогательная функция для поиска XML узлов
@@ -109,11 +109,12 @@ type
 implementation
 
 uses
+  Forms,
   ulogging,
   DateUtils,
   process,
   TypInfo,
-  LCLTranslator, LConvEncoding, uFormOptions, uFormMain;
+  LCLTranslator, LConvEncoding;
 
 { TSyncthingManager }
 
@@ -376,10 +377,8 @@ begin
       FDoc.Free;
   end;
 
-  // Если не нашли в файле, берем из формы настроек
-  if Result = '' then
-    if frmOptions <> nil then
-      Result := frmOptions.edAPIKey.Text;
+  // Если не нашли в файле, возвращаем пустую строку
+  // API-ключ должен передаваться извне через SetAPIKey
 end;
 
 function TSyncthingManager.ReadConfigFromFile: TJSONObject;
@@ -416,12 +415,8 @@ end;
 
 procedure TSyncthingManager.LoadConfigFromDisk;
 begin
-  // Загружаем пути из формы настроек, если доступны
-  if frmOptions <> nil then
-  begin
-    SetHomePath(frmOptions.edPathToConfigDir.Text);
-    SetExecPath(frmOptions.edPathToExecWithFilename.Text);
-  end;
+  // Загружаем пути из параметров (должны быть установлены извне)
+  // SetHomePath и SetExecPath должны вызываться до этого метода
 
   // Читаем API-ключ из конфигурации
   if FHomePath <> '' then
@@ -484,23 +479,13 @@ begin
 
   try
     {$IFDEF WINDOWS}
-    if (frmOptions <> nil) and frmOptions.chUseProxyOutputForFixBug.Checked then
-    begin
-      // Используем cmd.exe для перенаправления вывода (исправление бага Windows)
-      FProcessSyncthing.Executable := GetEnvironmentVariableUTF8('WINDIR') + '\system32\cmd.exe';
-      FProcessSyncthing.Parameters.Text :=
-        '/C "' + FExecPath + ' ' +
-        '--no-browser ' +
-        '--home=' + FHomePath + ' ' +
-        '| find /v " empty_find_just_for_redirect_stdio_00686558 " "';
-    end
-    else
-    begin
-      FProcessSyncthing.Executable := FExecPath;
-      FProcessSyncthing.Parameters.Text :=
-        '--no-browser ' +
-        '--home=' + FHomePath;
-    end;
+    // Используем cmd.exe для перенаправления вывода (исправление бага Windows)
+    FProcessSyncthing.Executable := GetEnvironmentVariableUTF8('WINDIR') + '\system32\cmd.exe';
+    FProcessSyncthing.Parameters.Text :=
+      '/C "' + FExecPath + ' ' +
+      '--no-browser ' +
+      '--home=' + FHomePath + ' ' +
+      '| find /v " empty_find_just_for_redirect_stdio_00686558 " "';
     {$ELSE}
     // Linux/macOS версия
     FProcessSyncthing.Executable := FExecPath;
@@ -660,12 +645,8 @@ end;
 
 procedure TSyncthingManager.AddToConsole(const Text: UTF8String);
 begin
-  if frmMain <> nil then
-  begin
-    if frmMain.edConsole.Lines.Count > 100 then
-      frmMain.edConsole.Lines.Delete(0);
-    frmMain.edConsole.Lines.Add(Text);
-  end;
+  if Assigned(FOnConsoleOutput) then
+    FOnConsoleOutput(Self, Text);
 end;
 
 // Вспомогательная функция для поиска XML узлов
