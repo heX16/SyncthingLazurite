@@ -510,7 +510,7 @@ var
 
 begin
   l := Length(S);
-  if l=0 then exit;
+  if l=0 then exit('');
   Result:='';
   SetLength(Result, l);
   P:=PChar(Result);
@@ -945,6 +945,7 @@ begin
   if not ReadString(StatusLine) then
     Exit(0);
   Result:=ParseStatusLine(StatusLine);
+  S:='';
   Repeat
     if ReadString(S) and (S<>'') then
       begin
