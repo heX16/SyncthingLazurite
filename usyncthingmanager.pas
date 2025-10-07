@@ -10,7 +10,7 @@ unit uSyncthingManager;
 interface
 
 uses
-  Classes, SysUtils, UTF8Process, ExtCtrls,
+  Classes, SysUtils, UTF8Process, AsyncProcess, ExtCtrls,
   syncthing_api, fpjson, XMLRead, DOM, LazUTF8, LazFileUtils;
 
 // Вспомогательная функция для поиска XML узлов
@@ -35,14 +35,13 @@ type
 
   TSyncthingManager = class(TSyncthingAPI)
   private
-    FProcessSyncthing: TProcessUTF8;
+    FProcessSyncthing: TAsyncProcess;
 
     FHomePath: UTF8String;
     FExecPath: UTF8String;
 
     FProcessState: TProcessState;
 
-    FTimerReadOutput: TTimer;
     FTimerCheckProcess: TTimer;
 
     FOutputBuffer: RawByteString;
@@ -52,7 +51,7 @@ type
     procedure InitializeProcesses;
     procedure InitializeTimers;
 
-    procedure TimerReadOutputTimer(Sender: TObject);
+    procedure ProcessReadData(Sender: TObject);
     procedure TimerCheckProcessTimer(Sender: TObject);
 
     procedure ProcessTerminated(Sender: TObject);
@@ -121,7 +120,6 @@ const
   PROCESS_CHECK_ITERATIONS = PROCESS_START_TIMEOUT_MS div PROCESS_CHECK_INTERVAL_MS;
 
   // Интервалы таймеров в миллисекундах
-  PROCESS_OUTPUT_READ_INTERVAL_MS = 100;    // Интервал чтения вывода процесса
   PROCESS_STATE_CHECK_INTERVAL_MS = 1000;   // Интервал проверки состояния процесса
 
   // Времена ожидания в миллисекундах
@@ -147,9 +145,6 @@ begin
   if Assigned(FProcessSyncthing) then
     FreeAndNil(FProcessSyncthing);
 
-  if Assigned(FTimerReadOutput) then
-    FreeAndNil(FTimerReadOutput);
-
   if Assigned(FTimerCheckProcess) then
     FreeAndNil(FTimerCheckProcess);
 
@@ -158,18 +153,16 @@ end;
 
 procedure TSyncthingManager.InitializeProcesses;
 begin
-  FProcessSyncthing := TProcessUTF8.Create(nil);
+  FProcessSyncthing := TAsyncProcess.Create(nil);
   FProcessSyncthing.Options := [poUsePipes, poStderrToOutPut];
   FProcessSyncthing.ShowWindow := swoHIDE;
+  // Подписываемся на события: данные готовы и процесс завершён
+  FProcessSyncthing.OnReadData := @ProcessReadData; // используем обработчик чтения
+  FProcessSyncthing.OnTerminate := @ProcessTerminated;
 end;
 
 procedure TSyncthingManager.InitializeTimers;
 begin
-  FTimerReadOutput := TTimer.Create(Self);
-  FTimerReadOutput.Enabled := False;
-  FTimerReadOutput.Interval := PROCESS_OUTPUT_READ_INTERVAL_MS;
-  FTimerReadOutput.OnTimer := @TimerReadOutputTimer;
-
   FTimerCheckProcess := TTimer.Create(Self);
   FTimerCheckProcess.Enabled := False;
   FTimerCheckProcess.Interval := PROCESS_STATE_CHECK_INTERVAL_MS;
@@ -177,7 +170,7 @@ begin
 end;
 
 
-procedure TSyncthingManager.TimerReadOutputTimer(Sender: TObject);
+procedure TSyncthingManager.ProcessReadData(Sender: TObject);
 begin
   ReadProcessOutput;
 end;
@@ -270,6 +263,8 @@ end;
 procedure TSyncthingManager.ProcessStateChanged(NewState: TProcessState);
 var
   OldState: TProcessState;
+  TailUtf: UTF8String;
+  conv_ok: boolean;
 begin
   OldState := FProcessState;
   FProcessState := NewState;
@@ -281,20 +276,16 @@ begin
   case FProcessState of
     psStarting, psRunning:
       begin
-        FTimerReadOutput.Enabled := True;
         FTimerCheckProcess.Enabled := True;
       end;
     psStopped, psError:
       begin
-        FTimerReadOutput.Enabled := False;
         FTimerCheckProcess.Enabled := False;
         // Дочитываем хвост буфера как последнюю строку, если остался
         if Length(FOutputBuffer) > 0 then
         begin
           // Пытаемся сконвертировать и вывести хвост как строку
           // Здесь важно избежать потери данных при отсутствии завершающего перевода строки
-          var TailUtf: UTF8String;
-          var conv_ok: boolean;
           TailUtf := ConvertEncodingToUTF8(FOutputBuffer, GetConsoleTextEncoding(), conv_ok);
           if not conv_ok then
           begin
@@ -381,7 +372,6 @@ end;
 
 function TSyncthingManager.StartSyncthingProcess: Boolean;
 var
-  StartTime: TDateTime;
   i: Integer;
 begin
   Result := False;
