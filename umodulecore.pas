@@ -14,9 +14,6 @@ uses
   Classes, SysUtils, UTF8Process, ExtCtrls, ActnList, Forms;
 
 type
-
-  TAddConsoleLine = procedure (Line: UTF8String) of object;
-
   { TCore }
 
   //todo: extract real core code to 'model'(or 'control') and 'utils'
@@ -27,8 +24,6 @@ type
 
     procedure TimerAfterStartCheckRunErrorTimer(Sender: TObject);
     procedure TimerInitTimer(Sender: TObject);
-  private
-    OutputChankStr: UTF8String;
   public
     // Flag that core is inited
     Inited: boolean;
@@ -47,16 +42,12 @@ type
     function GetSyncthigHomePath(): UTF8String; virtual;
     function ReadAPIKeyFromCfg(): string; virtual;
     procedure FillSyncthingExecPath();
-    procedure FillSupportExecPath();
-
 
     procedure AddStringToConsole(Str: UTF8String);
   end;
 
 var
   Core: TCore;
-
-function HttpRequestToJson(Request: THttpRequest; out Json: TJSONData): boolean;
 
 implementation
 
@@ -69,51 +60,10 @@ uses
   synautil,
   Graphics,
   LConvEncoding,
-  LazFileUtils,
-  jsonparser,
-  jsonscanner;
+  LazFileUtils;
 
 {$R *.lfm}
 
-function HttpRequestToJson(Request: THttpRequest; out Json: TJSONData): boolean;
-var
-  JN: TJSONParser;
-  JData: TJSONData;
-  MS: TMemoryStream;
-begin
-  Result := false;
-  Json := nil;
-  if (Request = nil) then Exit;
-  if Request.Status = 499 then Exit;
-
-  if (Request.Response <> nil) and (Request.Response.Size > 0) then
-  begin
-    JN := nil;
-    MS := TMemoryStream.Create;
-    try
-      // Copy response into a local stream to decouple from Request.Response
-      Request.Response.Position := 0;
-      MS.CopyFrom(Request.Response, Request.Response.Size);
-      MS.Position := 0;
-
-      JN := TJSONParser.Create(MS, [joUTF8]);
-      try
-        JData := JN.Parse();
-      except
-        on EJSONParser do JData := nil;
-      end;
-      if JData <> nil then
-      begin
-        Json := JData;
-        Result := true;
-      end;
-    finally
-      if JN <> nil then
-        JN.Free();
-      MS.Free;
-    end;
-  end;
-end;
 
 { TCore }
 
@@ -176,7 +126,7 @@ begin
     SyncthigHost:='127.0.0.1';
     SyncthigPort:=8384;
 
-    // TODO: WIP...
+    // GPT: устаревший код.
     SyncthigExecPath:=GetSyncthigExecPath();
     SyncthigHome:=GetSyncthigHomePath();
     APIKey:=ReadAPIKeyFromCfg();
@@ -191,6 +141,8 @@ end;
 procedure TCore.TimerAfterStartCheckRunErrorTimer(Sender: TObject);
 begin
   TimerAfterStartCheckRunError.Enabled:=False;
+  // GPT: устаревший код. нужен в качестве примера как генерировать сообщение о ошибке при запуске.
+  (*
   if not ProcessSyncthing.Running then
   begin
     ShowMessage('Run fail. Exit code: '+IntToStr(ProcessSyncthing.ExitCode)+
@@ -200,6 +152,7 @@ begin
       ProcessSyncthing.Executable + ' ' + ProcessSyncthing.Parameters.Text
     );
   end;
+  *)
 end;
 
 procedure TCore.AddStringToConsole(Str: UTF8String);
@@ -211,20 +164,18 @@ end;
 
 function TCore.GetSyncthigExecPath: UTF8String;
 begin
-  //OLD: result := 'D:\NetDrive\AppsPortableHex\Programs\_Net\syncthing\syncthing.exe';
   result := frmOptions.edPathToExecWithFilename.Text;
 end;
 
 function TCore.GetSyncthigHomePath: UTF8String;
 begin
-  //OLD: result := 'h:\Dat\syncthing\';
   result := frmOptions.edPathToConfigDir.Text;
 end;
 
 procedure TCore.FillSyncthingExecPath();
 begin
-  {$IFDEF WINDOWS}
-
+  // GPT: устаревший код. нужен только как пример. будет удален в будущем.
+  (*
   if frmOptions.chUseProxyOutputForFixBug.Checked then
   begin
     {Note:
@@ -250,21 +201,7 @@ begin
       '--no-browser '+
       '--home=' + SyncthigHome;
   end;
-
-  {$ELSE}
-  //todo: WIP: FillSyncthingExecPath linux
-  ProcessSyncthing.Executable := FindSyncthigPath();
-  ProcessSyncthing.Parameters.Clear;
-  ProcessSyncthing.Parameters.Add('--home=' + SyncthigHome);
-  ProcessSyncthing.Parameters.Add('--no-browser');
-  {$ENDIF}
-end;
-
-procedure TCore.FillSupportExecPath();
-begin
-  //todo: WIP: FillSupportExecPath
-  ProcessSupport.Executable := 'D:\NetDrive\AppsPortableHex\Programs\_Net\syncthing\syncthing-inotify.exe';
-  ProcessSupport.Parameters.Text := '--home=' + SyncthigHome;
+  *)
 end;
 
 end.

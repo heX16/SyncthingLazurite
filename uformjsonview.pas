@@ -7,6 +7,7 @@ interface
 uses
   uModuleCore,
   syncthing_api,
+  uUtils,
   AsyncHttp, fpjson,
   Classes, SysUtils, Forms, Controls, StdCtrls,
   ExtCtrls, ComCtrls, Menus;

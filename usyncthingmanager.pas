@@ -11,7 +11,7 @@ interface
 
 uses
   Classes, SysUtils, UTF8Process, AsyncProcess, ExtCtrls,
-  syncthing_api, fpjson, XMLRead, DOM, LazUTF8, LazFileUtils;
+  syncthing_api, XMLRead, DOM, LazUTF8, LazFileUtils;
 
 // Вспомогательная функция для поиска XML узлов
 function GetXmlNode(var Node: TDOMNode; Name: WideString): boolean;
@@ -31,6 +31,18 @@ type
   TProcessEvent = procedure(Sender: TObject; State: TProcessState) of object;
   TConsoleOutputEvent = procedure(Sender: TObject; const Line: UTF8String) of object;
 
+  // Информация о неудачном запуске процесса
+  TStartFailureInfo = record
+    ErrorMessage: UTF8String;  // Текст исключения или пусто
+    ExecPath: UTF8String;      // Путь к исполняемому файлу (намеренный)
+    IsException: Boolean;      // Признак, что ошибка пришла из исключения Execute
+    OSLastError: LongInt;      // Код последней ошибки ОС (если есть)
+    Process: TAsyncProcess;    // Экземпляр процесса
+  end;
+
+  // Событие о неудаче запуска
+  TStartFailedEvent = procedure(Sender: TObject; const Info: TStartFailureInfo) of object;
+
   { TSyncthingManager }
 
   TSyncthingManager = class(TSyncthingAPI)
@@ -48,6 +60,7 @@ type
 
     FOnProcessStateChanged: TProcessEvent;
     FOnConsoleOutput: TConsoleOutputEvent;
+    FOnStartFailed: TStartFailedEvent;
     procedure InitializeProcesses;
     procedure InitializeTimers;
 
@@ -84,6 +97,7 @@ type
     // События
     property OnProcessStateChanged: TProcessEvent read FOnProcessStateChanged write FOnProcessStateChanged;
     property OnConsoleOutput: TConsoleOutputEvent read FOnConsoleOutput write FOnConsoleOutput;
+    property OnStartFailed: TStartFailedEvent read FOnStartFailed write FOnStartFailed;
 
   end;
 
@@ -373,6 +387,7 @@ end;
 function TSyncthingManager.StartSyncthingProcess: Boolean;
 var
   i: Integer;
+  Info: TStartFailureInfo;
 begin
   Result := False;
 
@@ -438,6 +453,16 @@ begin
     begin
       DebugLog('Failed to start Syncthing process. Exit code: ' + IntToStr(FProcessSyncthing.ExitCode));
       ProcessStateChanged(psError);
+      if Assigned(FOnStartFailed) then
+      begin
+        FillChar(Info, SizeOf(Info), 0);
+        Info.ErrorMessage := '';
+        Info.ExecPath := FExecPath;
+        Info.IsException := False;
+        Info.OSLastError := GetLastOSError;
+        Info.Process := FProcessSyncthing;
+        FOnStartFailed(Self, Info);
+      end;
     end;
 
   except
@@ -445,6 +470,16 @@ begin
     begin
       DebugLog('Exception while starting Syncthing: ' + E.Message);
       ProcessStateChanged(psError);
+      if Assigned(FOnStartFailed) then
+      begin
+        FillChar(Info, SizeOf(Info), 0);
+        Info.ErrorMessage := UTF8String(E.Message);
+        Info.ExecPath := FExecPath;
+        Info.IsException := True;
+        Info.OSLastError := GetLastOSError;
+        Info.Process := FProcessSyncthing;
+        FOnStartFailed(Self, Info);
+      end;
     end;
   end;
 end;
