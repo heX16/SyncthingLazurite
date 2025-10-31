@@ -46,7 +46,7 @@ object frmAbout: TfrmAbout
     EditLabel.ParentFont = False
     ParentFont = False
     TabOrder = 0
-    Text = 'https://bitbucket.org/heXor/...'
+    Text = 'https://github.com/heX16/SyncthingLazurite'
   end
   object lbAuthor: TLabel
     Left = 216
