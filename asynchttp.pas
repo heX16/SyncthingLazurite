@@ -615,8 +615,8 @@ begin
          (ARequest.Status = HTTPErrorCode_HTTPClientException) then
       begin
         HTTPClient_DisconnectFromServer(Client);
-        // Do request (first try, again)
-        // the previous attempt does not count because the socket was broken
+        // Broken keep-alive socket is not a real error - retry with a clean socket.
+        // This gives us 2 + RetryCount total attempts (instead of 1 + RetryCount).
         Self.PerformSingleHttpAttempt(ARequest, Client);
       end;
 
