@@ -2,10 +2,10 @@ unit uSyncthingManager;
 
 {$mode objfpc}{$H+}
 
-// Директива компилятора для отключения исправления бага Windows с выводом процессов
-// Определите в проекте для отключения cmd.exe перенаправления stdout/stderr:
+// Legacy notice: ранее использовалось перенаправление вывода через cmd.exe на Windows.
+// Теперь syncthing запускается напрямую, аргументы передаются через Parameters.Add
+// (корректное экранирование путей и значений). Директива ниже сохранена для совместимости.
 // {$DEFINE DISABLE_WINDOWS_OUTPUT_FIX}
-// По умолчанию исправление ВКЛЮЧЕНО для совместимости с Windows
 
 interface
 
@@ -388,6 +388,11 @@ function TSyncthingManager.StartSyncthingProcess: Boolean;
 var
   i: Integer;
   Info: TStartFailureInfo;
+  {$IFDEF WINDOWS}
+  {$IFNDEF DISABLE_WINDOWS_OUTPUT_FIX}
+  InnerCmd: UTF8String;
+  {$ENDIF}
+  {$ENDIF}
 begin
   Result := False;
 
@@ -409,25 +414,26 @@ begin
   try
     {$IFDEF WINDOWS}
     {$IFNDEF DISABLE_WINDOWS_OUTPUT_FIX}
-    // Используем cmd.exe для перенаправления вывода (исправление бага Windows)
-    // Включено по умолчанию для совместимости
+    // Windows + output fix: запускаем через cmd.exe и передаём всю команду одной строкой вторым параметром
     FProcessSyncthing.Executable := GetEnvironmentVariableUTF8('WINDIR') + '\system32\cmd.exe';
-    FProcessSyncthing.Parameters.Text :=
-      '/C "' + FExecPath + ' ' +
-      '--no-browser ' +
-      '--home=' + FHomePath + ' ' +
-      '| find /v " empty_find_just_for_redirect_stdio_00686558 " "';
+    FProcessSyncthing.Parameters.Clear;
+    FProcessSyncthing.Parameters.Add('/C');
+    InnerCmd := '"' + FExecPath + '" --no-browser --home="' +
+      FHomePath +
+      '" | find /v " empty_find_just_for_redirect_stdio_00686558 "';
+    FProcessSyncthing.Parameters.Add(InnerCmd);
     {$ELSE}
+    // Windows без фикса: запускаем напрямую с раздельными параметрами
     FProcessSyncthing.Executable := FExecPath;
-    FProcessSyncthing.Parameters.Text :=
-      '--no-browser ' +
-      '--home=' + FHomePath;
+    FProcessSyncthing.Parameters.Clear;
+    FProcessSyncthing.Parameters.Add('--no-browser');
+    FProcessSyncthing.Parameters.Add('--home=' + FHomePath);
     {$ENDIF}
     {$ELSE}
     FProcessSyncthing.Executable := FExecPath;
     FProcessSyncthing.Parameters.Clear;
-    FProcessSyncthing.Parameters.Add('--home=' + FHomePath);
     FProcessSyncthing.Parameters.Add('--no-browser');
+    FProcessSyncthing.Parameters.Add('--home=' + FHomePath);
     {$ENDIF}
 
     FProcessSyncthing.Execute;
@@ -597,7 +603,8 @@ begin
 
   {$IFDEF WINDOWS}
   FProcessSupport.Executable := ExecPath;
-  FProcessSupport.Parameters.Text := '--home=' + HomePath;
+  FProcessSupport.Parameters.Clear;
+  FProcessSupport.Parameters.Add('--home=' + HomePath);
   {$ELSE}
   {$ENDIF}
 
