@@ -1,4 +1,12 @@
 
+
+---------------------------
+
+
+
+
+NOTE: кажется этот баг уже исправлен. нужно еще раз проверить.
+
 При закрытии syncthing, наша программма не замечает отключения.
 Вообще не замечает.
 И даже таймаут на подключение к long pooling не срабатывает.
@@ -15,6 +23,8 @@
 Нужно писать юнит тесты для AsyncHTTP. Возможно проблема в этой библиотеке.
 
 -----------------------------
+
+NOTE: кажется этот баг уже исправлен. нужно еще раз проверить.
 
 Connect:
   FSM_Process: State=ssOffline, Command=ssCmdConnect
@@ -222,6 +232,8 @@ FSM_Process: State=ssOnlineUnstable, Command=ssCmdLongPollingDisconnected
 
 ------------------------
 
+NOTE: кажется этот баг уже исправлен. нужно еще раз проверить.
+
 Disconnect:
   FSM_Process: State=ssOnlineUnstable, Command=ssCmdDisconnect
   FSyncthingAPI.OnStateChanged: ssDisconnecting
@@ -280,6 +292,8 @@ Online - ALL OK
 
 
 -------------------------
+
+NOTE: кажется этот баг уже исправлен. нужно еще раз проверить.
 
 Connect:
 [04:55:16] FSM_Process: State=ssOffline, Command=ssCmdConnect
