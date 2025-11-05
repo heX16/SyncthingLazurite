@@ -13,6 +13,7 @@ uses
   UniqueInstance,
   SyncObjs,
   syncthing_api,
+  uSyncthingManager,
   uLogging;
 
 resourcestring
@@ -75,7 +76,7 @@ type
     MenuItem7: TMenuItem;
     mnServer: TMenuItem;
     menuTrayIcon: TPopupMenu;
-    miExit: TMenuItem;
+    mnStopAndExit: TMenuItem;
     menuDevList: TPopupMenu;
     TimerUpdate: TTimer;
     TrayIcon: TTrayIcon;
@@ -90,11 +91,15 @@ type
     procedure actShowOptionsExecute(Sender: TObject);
     procedure actShowRestViewExecute(Sender: TObject);
     procedure actShowWebExecute(Sender: TObject);
+    procedure actConnectOrStartExecute(Sender: TObject);
+    procedure actDisconnectAndStopExecute(Sender: TObject);
+    procedure actStopAndExitExecute(Sender: TObject);
+    procedure actRestartAppExecute(Sender: TObject);
     procedure DataModuleCreate(Sender: TObject);
     procedure DataModuleDestroy(Sender: TObject);
     procedure TrayIconDblClick(Sender: TObject);
   private
-    FSyncthingAPI: TSyncthingAPI; // Core Syncthing API instance (created manually)
+    FSyncthingAPI: TSyncthingManager; // Core Syncthing Manager instance (created manually)
 
     procedure AddLineToEventsLog(const Line: string);
     function MapHttpErrorCodeToText(const Code: Integer): string;
@@ -103,6 +108,15 @@ type
     procedure Syn_OnEvent(Sender: TObject; Event: TJSONObject);
     procedure Syn_OnTreeChanged(Sender: TObject; EndpointId: TSyncthingEndpointId; const Path: UTF8String);
     procedure Syn_OnStateChanged(Sender: TObject; NewState: TSyncthingFSM_State);
+
+    // Manager-specific events
+    procedure Mgr_OnProcessStateChanged(Sender: TObject; State: TProcessState);
+    procedure Mgr_OnConsoleOutput(Sender: TObject; const Line: UTF8String);
+    procedure Mgr_OnStartFailed(Sender: TObject; const Info: TStartFailureInfo);
+
+    // Helpers
+    procedure LoadManagerSettingsFromOptions;
+    procedure UpdateActionsEnabled;
   public
     // Returns display text for folder node by index using current JSON tree
     function GetFolderDisplayText(const Index: Integer): string;
@@ -129,7 +143,6 @@ uses
   LCLIntf, //OpenURL
   Clipbrd,
   DateUtils,
-  uModuleCore,
   Forms,
   FormAbout,
   uSyncthingTypes,
@@ -183,15 +196,25 @@ begin
 end;
 
 procedure TModuleMain.actConnectExecute(Sender: TObject);
+var
+  host: UTF8String;
+  port: Integer;
+  useTLS: Boolean;
+  apiKey: UTF8String;
 begin
+  // Configure endpoint and API key from Options (no Core dependency)
+  host := '127.0.0.1';
+  port := 8384;
   //TODO: add support TLS
-  // Configure endpoint and API key from Core settings
-  FSyncthingAPI.SetEndpoint(
-    Core.SyncthigHost,
-    Core.SyncthigPort,
-    false
-  );
-  FSyncthingAPI.SetAPIKey(Core.APIKey);
+  useTLS := false;
+  if Assigned(frmOptions) then
+    apiKey := UTF8String(frmOptions.edAPIKey.Text)
+  else
+    apiKey := '';
+
+  FSyncthingAPI.SetEndpoint(host, port, useTLS);
+  if apiKey <> '' then
+    FSyncthingAPI.SetAPIKey(apiKey);
 
   // Connect to Syncthing
   FSyncthingAPI.Connect();
@@ -249,8 +272,10 @@ end;
 
 procedure TModuleMain.actShowWebExecute(Sender: TObject);
 begin
-  //TODO: !!! make function `Core.SyncthigServer()`
-  //OpenURL(Core.SyncthigServer());
+  // Open Web UI using options (defaults to http://127.0.0.1:8384/)
+  // Note: TLS is not used at this stage
+  // TODO: need update this code - build URL from real data
+  OpenURL('http://127.0.0.1:8384/');
 end;
 
 procedure TModuleMain.DataModuleCreate(Sender: TObject);
@@ -265,21 +290,31 @@ begin
   //frmMain.LanguageChanged();
 
 
-  // Create Syncthing API instance manually (do not place on form)
-  FSyncthingAPI := TSyncthingAPI.Create(Self);
-  // Bind event handlers
+  // Create Syncthing Manager instance manually (do not place on form)
+  FSyncthingAPI := TSyncthingManager.Create(Self);
+  // Bind API event handlers
   FSyncthingAPI.OnConnected := @Syn_OnConnected;
   FSyncthingAPI.OnConnectError := @Syn_OnConnectError;
   FSyncthingAPI.OnEvent := @Syn_OnEvent;
   FSyncthingAPI.OnTreeChanged := @Syn_OnTreeChanged;
   FSyncthingAPI.OnStateChanged := @Syn_OnStateChanged;
+  // Bind Manager-specific handlers
+  FSyncthingAPI.OnProcessStateChanged := @Mgr_OnProcessStateChanged;
+  FSyncthingAPI.OnConsoleOutput := @Mgr_OnConsoleOutput;
+  FSyncthingAPI.OnStartFailed := @Mgr_OnStartFailed;
+
+  UpdateActionsEnabled;
 end;
 
 procedure TModuleMain.DataModuleDestroy(Sender: TObject);
 begin
   // Free Syncthing API instance
   if Assigned(FSyncthingAPI) then
+  begin
+    // TODO: WIP... - я думаю останавливать процессы не нужно.
+    // FSyncthingAPI.StopAllProcesses;
     FreeAndNil(FSyncthingAPI);
+  end;
 end;
 
 procedure TModuleMain.Syn_OnConnected(Sender: TObject);
@@ -465,6 +500,7 @@ begin
     c := clPurple;
   end;
   frmMain.shStatusCircle.Brush.Color := c;
+  UpdateActionsEnabled;
 end;
 
 function TModuleMain.GetFolderDisplayText(const Index: Integer): string;
@@ -699,6 +735,126 @@ begin
   else
     ver := '';
   Result := ver;
+end;
+
+procedure TModuleMain.Mgr_OnProcessStateChanged(Sender: TObject; State: TProcessState);
+begin
+  UpdateActionsEnabled;
+end;
+
+procedure TModuleMain.Mgr_OnConsoleOutput(Sender: TObject; const Line: UTF8String);
+begin
+  // TODO: над этой функцией нужно поработать. кжется тут дублирование кода и лишний функционал.
+  //       `Length(Line) > 255` - вот это я думаю можно перенести? или оставить... подумать
+  if frmMain.edConsole.Lines.Count > 500 then
+    frmMain.edConsole.Lines.Delete(0);
+  frmMain.edConsole.Lines.Add(string(Line));
+  // Also duplicate a compact line into events log
+  if Length(Line) > 255 then
+    AddLineToEventsLog(Copy(string(Line), 1, 255) + '...')
+  else
+    AddLineToEventsLog(string(Line));
+end;
+
+procedure TModuleMain.Mgr_OnStartFailed(Sender: TObject; const Info: TStartFailureInfo);
+var
+  msg: UTF8String;
+begin
+  msg := 'Failed to start Syncthing';
+  if Info.IsException and (Info.ErrorMessage <> '') then
+    msg := msg + ': ' + Info.ErrorMessage
+  else if Info.OSLastError <> 0 then
+    msg := msg + ' (OS err=' + UTF8String(IntToStr(Info.OSLastError)) + ')';
+  AddLineToEventsLog(string(msg));
+end;
+
+procedure TModuleMain.LoadManagerSettingsFromOptions;
+var
+  host: UTF8String;
+  port: Integer;
+  useTLS: Boolean;
+  apiKey: UTF8String;
+  execPath, homePath: UTF8String;
+begin
+  host := '127.0.0.1';
+  port := 8384;
+  useTLS := false;
+
+  if Assigned(frmOptions) then
+  begin
+    execPath := UTF8String(frmOptions.edPathToExecWithFilename.Text);
+    homePath := UTF8String(frmOptions.edPathToConfigDir.Text);
+    apiKey := UTF8String(frmOptions.edAPIKey.Text);
+  end
+  else
+  begin
+    execPath := '';
+    homePath := '';
+    apiKey := '';
+  end;
+
+  if execPath <> '' then
+    FSyncthingAPI.ExecPath := execPath;
+  if homePath <> '' then
+    FSyncthingAPI.HomePath := homePath;
+  if apiKey <> '' then
+    FSyncthingAPI.SetAPIKey(apiKey)
+  else
+    FSyncthingAPI.LoadConfigFromDisk;
+
+  FSyncthingAPI.SetEndpoint(host, port, useTLS);
+end;
+
+procedure TModuleMain.UpdateActionsEnabled;
+var
+  running: Boolean;
+  online: Boolean;
+begin
+  running := False;
+  if Assigned(FSyncthingAPI) then
+    running := FSyncthingAPI.IsProcessRunning;
+
+  online := False;
+  if Assigned(FSyncthingAPI) then
+    online := FSyncthingAPI.IsOnline;
+
+  self.actConnect.Enabled := not online;
+  self.actDisconnect.Enabled := online;
+  self.actConnectOrStart.Enabled := not running;
+  self.actDisconnectAndStop.Enabled := running;
+  self.actStopAndExit.Enabled := running;
+end;
+
+procedure TModuleMain.actConnectOrStartExecute(Sender: TObject);
+begin
+  if not FSyncthingAPI.IsProcessRunning then
+  begin
+    LoadManagerSettingsFromOptions;
+    FSyncthingAPI.StartSyncthingProcess;
+  end
+  else
+    actConnectExecute(nil);
+end;
+
+procedure TModuleMain.actDisconnectAndStopExecute(Sender: TObject);
+begin
+  FSyncthingAPI.Disconnect;
+  FSyncthingAPI.StopSyncthingProcess;
+end;
+
+procedure TModuleMain.actStopAndExitExecute(Sender: TObject);
+begin
+  FSyncthingAPI.Disconnect;
+  FSyncthingAPI.StopSyncthingProcess;
+  Application.Terminate;
+end;
+
+procedure TModuleMain.actRestartAppExecute(Sender: TObject);
+begin
+  FSyncthingAPI.Disconnect;
+  FSyncthingAPI.StopSyncthingProcess;
+  LoadManagerSettingsFromOptions;
+  FSyncthingAPI.StartSyncthingProcess;
 end;
 
 end.

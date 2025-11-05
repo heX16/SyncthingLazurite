@@ -2,14 +2,13 @@ object ModuleMain: TModuleMain
   OnCreate = DataModuleCreate
   OnDestroy = DataModuleDestroy
   OldCreateOrder = False
-  Height = 349
-  HorizontalOffset = 409
-  VerticalOffset = 173
-  Width = 355
-  PPI = 120
+  Height = 279
+  HorizontalOffset = 327
+  VerticalOffset = 138
+  Width = 284
   object UniqueInstance1: TUniqueInstance
-    Left = 40
-    Top = 20
+    Left = 32
+    Top = 16
   end
   object TrayIcon: TTrayIcon
     PopUpMenu = menuTrayIcon
@@ -152,12 +151,12 @@ object ModuleMain: TModuleMain
     }
     Visible = True
     OnDblClick = TrayIconDblClick
-    Left = 160
-    Top = 24
+    Left = 128
+    Top = 19
   end
   object menuTrayIcon: TPopupMenu
-    Left = 160
-    Top = 100
+    Left = 128
+    Top = 80
     object mnShowWeb: TMenuItem
       Action = actShowWeb
     end
@@ -180,10 +179,8 @@ object ModuleMain: TModuleMain
       Enabled = False
       Visible = False
     end
-    object miExit: TMenuItem
-      Caption = 'actStopAndExit'
-      Enabled = False
-      Visible = False
+    object mnStopAndExit: TMenuItem
+      Action = actStopAndExit
     end
     object N1: TMenuItem
       Caption = '-'
@@ -193,8 +190,8 @@ object ModuleMain: TModuleMain
     end
   end
   object ActionListGUI: TActionList
-    Left = 160
-    Top = 180
+    Left = 128
+    Top = 144
     object actShowOptions: TAction
       Caption = 'actShowOptions'
       OnExecute = actShowOptionsExecute
@@ -245,25 +242,29 @@ object ModuleMain: TModuleMain
     end
     object actConnectOrStart: TAction
       Caption = 'actConnectOrStart'
+      OnExecute = actConnectOrStartExecute
     end
     object actDisconnectAndStop: TAction
       Caption = 'actDisconnectAndStop'
+      OnExecute = actDisconnectAndStopExecute
     end
     object actStopAndExit: TAction
       Caption = 'actStopAndExit'
+      OnExecute = actStopAndExitExecute
     end
     object actRestartApp: TAction
       Caption = 'actRestartApp'
+      OnExecute = actRestartAppExecute
     end
   end
   object TimerUpdate: TTimer
     Interval = 5000
-    Left = 40
-    Top = 256
+    Left = 32
+    Top = 205
   end
   object MainMenu1: TMainMenu
-    Left = 160
-    Top = 256
+    Left = 128
+    Top = 205
     object mnServer: TMenuItem
       Caption = 'mnServer'
       object MenuItem20: TMenuItem
@@ -271,6 +272,12 @@ object ModuleMain: TModuleMain
       end
       object MenuItem21: TMenuItem
         Action = actDisconnect
+      end
+      object MenuItem22: TMenuItem
+        Action = actConnectOrStart
+      end
+      object MenuItem23: TMenuItem
+        Action = actDisconnectAndStop
       end
       object MenuItem3: TMenuItem
         Caption = 'actStartAndConnect'
@@ -301,9 +308,7 @@ object ModuleMain: TModuleMain
         Caption = '-'
       end
       object MenuItem5: TMenuItem
-        Caption = 'actStopAndExit'
-        Enabled = False
-        Visible = False
+        Action = actStopAndExit
       end
       object MenuItem13: TMenuItem
         Action = actCloseGUI
@@ -341,8 +346,8 @@ object ModuleMain: TModuleMain
     end
   end
   object imgTreeViewIcon: TImageList
-    Left = 40
-    Top = 100
+    Left = 32
+    Top = 80
     Bitmap = {
       4C7A0300000010000000100000009C0500000000000078DAED95EB4F545710C0
       471169ADB514220F511045AAD6F2D885956797651749A46203B6D5D2C6461711
@@ -393,8 +398,8 @@ object ModuleMain: TModuleMain
     }
   end
   object menuDevList: TPopupMenu
-    Left = 264
-    Top = 180
+    Left = 211
+    Top = 144
     object MenuItem11: TMenuItem
       Action = actCopySelectedDevID
     end

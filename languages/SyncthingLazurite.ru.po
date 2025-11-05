@@ -320,18 +320,6 @@ msgctxt "tmodulemain.menuitem4.caption"
 msgid "actPause"
 msgstr "Пауза"
 
-#: tmodulemain.menuitem5.caption
-#, fuzzy
-msgctxt "tmodulemain.menuitem5.caption"
-msgid "actStopAndExit"
-msgstr "Остановить и выйти"
-
-#: tmodulemain.miexit.caption
-#, fuzzy
-msgctxt "tmodulemain.miexit.caption"
-msgid "actStopAndExit"
-msgstr "Остановить и выйти"
-
 #: tmodulemain.mnrestart.caption
 #, fuzzy
 msgctxt "tmodulemain.mnrestart.caption"

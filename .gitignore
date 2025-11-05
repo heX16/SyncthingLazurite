@@ -19,3 +19,4 @@ syncthing folder.lnk
 *.png~
 /images/*
 .vscode/extensions.json
+backup/**

@@ -305,16 +305,6 @@ msgstr ""
 msgid "actPause"
 msgstr ""
 
-#: tmodulemain.menuitem5.caption
-msgctxt "tmodulemain.menuitem5.caption"
-msgid "actStopAndExit"
-msgstr ""
-
-#: tmodulemain.miexit.caption
-msgctxt "tmodulemain.miexit.caption"
-msgid "actStopAndExit"
-msgstr ""
-
 #: tmodulemain.mnrestart.caption
 msgctxt "tmodulemain.mnrestart.caption"
 msgid "actRestart"
