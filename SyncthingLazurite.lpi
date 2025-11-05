@@ -33,7 +33,7 @@
       <MajorVersionNr Value="1"/>
       <MinorVersionNr Value="1"/>
       <RevisionNr Value="2510"/>
-      <BuildNr Value="141"/>
+      <BuildNr Value="142"/>
     </VersionInfo>
     <BuildModes Count="4">
       <Item1 Name="Debug" Default="True"/>
@@ -215,77 +215,74 @@
         <UnitName Value="uFormMain"/>
       </Unit1>
       <Unit2>
-        <Filename Value="umodulecore.pas"/>
-        <IsPartOfProject Value="True"/>
-        <ComponentName Value="Core"/>
-        <HasResources Value="True"/>
-        <ResourceBaseClass Value="DataModule"/>
-        <UnitName Value="uModuleCore"/>
-      </Unit2>
-      <Unit3>
         <Filename Value="uformoptions.pas"/>
         <IsPartOfProject Value="True"/>
         <ComponentName Value="frmOptions"/>
         <HasResources Value="True"/>
         <ResourceBaseClass Value="Form"/>
         <UnitName Value="uFormOptions"/>
-      </Unit3>
-      <Unit4>
+      </Unit2>
+      <Unit3>
         <Filename Value="asynchttp.pas"/>
         <IsPartOfProject Value="True"/>
         <UnitName Value="AsyncHTTP"/>
-      </Unit4>
-      <Unit5>
+      </Unit3>
+      <Unit4>
         <Filename Value="umodulemain.pas"/>
         <IsPartOfProject Value="True"/>
         <ComponentName Value="ModuleMain"/>
         <HasResources Value="True"/>
         <ResourceBaseClass Value="DataModule"/>
         <UnitName Value="uModuleMain"/>
-      </Unit5>
-      <Unit6>
+      </Unit4>
+      <Unit5>
         <Filename Value="uformjsonview.pas"/>
         <IsPartOfProject Value="True"/>
         <ComponentName Value="frmJSONView"/>
         <HasResources Value="True"/>
         <ResourceBaseClass Value="Form"/>
         <UnitName Value="uFormJsonView"/>
-      </Unit6>
-      <Unit7>
+      </Unit5>
+      <Unit6>
         <Filename Value="hashmapstr.pas"/>
         <IsPartOfProject Value="True"/>
         <UnitName Value="HashMapStr"/>
-      </Unit7>
-      <Unit8>
+      </Unit6>
+      <Unit7>
         <Filename Value="formabout.lfm"/>
         <IsPartOfProject Value="True"/>
-      </Unit8>
-      <Unit9>
+      </Unit7>
+      <Unit8>
         <Filename Value="formabout.pas"/>
         <IsPartOfProject Value="True"/>
         <ComponentName Value="frmAbout"/>
         <HasResources Value="True"/>
         <ResourceBaseClass Value="Form"/>
         <UnitName Value="FormAbout"/>
-      </Unit9>
-      <Unit10>
+      </Unit8>
+      <Unit9>
         <Filename Value="usyncthingtypes.pas"/>
         <IsPartOfProject Value="True"/>
         <UnitName Value="uSyncthingTypes"/>
-      </Unit10>
-      <Unit11>
+      </Unit9>
+      <Unit10>
         <Filename Value="syncthing_api.pas"/>
         <IsPartOfProject Value="True"/>
-      </Unit11>
-      <Unit12>
+      </Unit10>
+      <Unit11>
         <Filename Value="uutils.pas"/>
         <IsPartOfProject Value="True"/>
         <UnitName Value="uUtils"/>
-      </Unit12>
-      <Unit13>
+      </Unit11>
+      <Unit12>
         <Filename Value="ulogging.pas"/>
         <IsPartOfProject Value="True"/>
         <UnitName Value="uLogging"/>
+      </Unit12>
+      <Unit13>
+        <Filename Value="usyncthingmanager.pas"/>
+        <IsPartOfProject Value="True"/>
+        <UnitName Value="uSyncthingManager"/>
       </Unit13>
     </Units>
   </ProjectOptions>

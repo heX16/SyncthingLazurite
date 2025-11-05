@@ -8,7 +8,7 @@ uses
   Classes,
   Math,
   SysUtils,
-  uModuleCore, VirtualTrees, Forms, Controls,
+  VirtualTrees, Forms, Controls,
   StdCtrls, ExtCtrls, Graphics, IniPropStorage;
 
 const
@@ -145,10 +145,9 @@ procedure TfrmMain.treeFoldersGetImageIndex(Sender: TBaseVirtualTree;
 var
   item: TFolderInfo;
 begin
-  // WIP
   ImageIndex:=0;
-  // migration: commented Core usage
-  // if Core.MapFolderInfo.GetValue(Core.ListFolderInfo[Node^.Index], item) then
+  // TODO: WIP treeFoldersGetImageIndex
+  // if Folder[Node^.Index] then
   // begin
   //   (*
   //   if not item.DirectoryExists() then

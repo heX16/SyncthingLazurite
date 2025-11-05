@@ -5,7 +5,7 @@ unit uFormJsonView;
 interface
 
 uses
-  uModuleCore,
+  uModuleMain,
   syncthing_api,
   uUtils,
   AsyncHttp, fpjson,
@@ -276,7 +276,7 @@ begin
       self.endpoint := Copy(self.endpoint, 1, Pos(' (', self.endpoint) - 1);
 
     url := edServerURL.Text + '/rest/' + self.endpoint;
-    headers := 'X-API-Key: ' + Core.APIKey + LineEnding +
+    headers := 'X-API-Key: ' + ModuleMain.GetAPIKey + LineEnding +
                'Accept: application/json';
 
     http.Get(url, @httpGetAPItoTree, headers);
@@ -469,7 +469,7 @@ procedure TfrmJSONView.mnTestConnectClick(Sender: TObject);
 begin
   // TODO: remove me
   sync_api := TSyncthingAPI.Create(self);
-  sync_api.SetAPIKey(Core.APIKey);
+  sync_api.SetAPIKey(ModuleMain.GetAPIKey);
   sync_api.SetEndpoint('127.0.0.1', 8384, false);
   sync_api.Connect();
 end;

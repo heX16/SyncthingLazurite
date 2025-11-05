@@ -59,7 +59,7 @@
 
 - `uFormMain.pas` — главная форма (деревья устройств/папок, лог событий, индикатор статуса).
 - `uFormOptions.pas` — диалог настроек (пути/ключи/флаги).
-- `uFormJsonView.pas` — просмотр JSON (HTTP через `AsyncHTTP`, подсказочные поля).
+- `uFormJsonView.pas` — просмотр JSON (HTTP через `AsyncHTTP`, подсказочные поля; без зависимости от `uModuleCore`).
 - `uModuleCore.pas` — чтение API‑ключа из `config.xml`, подготовка запуска Syncthing (частично WIP), таймеры/консоль. Устаревший модуль. Подлежит замене и последующему удалению (в будущем). Функционал будет переноситься в другие модули.
 - Утилиты: `syncthing_api_utils.pas`, `usyncthingtypes.pas`, `uutils.pas`, `vtutils.pas`, `ulogging.pas`.
 
@@ -221,7 +221,7 @@
 ### Известные WIP/задачи
 - `uModuleCore` - устаревший модуль. Функционал будет перенесен. Еще не переперенос логики запуска/остановки Syncthing.
 - `uModuleCore` не задействован в новой схеме.
-- `uFormJsonView` содержит тестовые методы (mnTestConnect/mnTestJson).
+- `uFormJsonView` содержит тестовые методы (mnTestConnect/mnTestJson). Остаточные обращения к `Core` удалены: заголовок `X-API-Key` берется из `frmOptions.edAPIKey`, тестовое подключение использует `SetAPIKey(frmOptions.edAPIKey.Text)`.
 - Не реализованы действия «Open Web UI» и часть обработчиков.
 
 -----------------------------------------

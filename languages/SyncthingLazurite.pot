@@ -1,19 +1,6 @@
 msgid ""
 msgstr "Content-Type: text/plain; charset=UTF-8"
 
-#: tcore.actrestart.caption
-msgctxt "tcore.actrestart.caption"
-msgid "actRestart"
-msgstr ""
-
-#: tcore.actrunsupportproc.caption
-msgid "actRunSupportProc"
-msgstr ""
-
-#: tcore.actterminate.caption
-msgid "actTerminate"
-msgstr ""
-
 #: tfrmabout.button1.caption
 msgid "btnClose"
 msgstr ""

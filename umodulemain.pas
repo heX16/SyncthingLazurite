@@ -129,6 +129,8 @@ type
     function BuildOnlineDevicesHint: string;
     // Returns system version string from JSON tree (empty if not available)
     function GetSystemVersionString: string;
+    // Returns API key from options (empty if not set)
+    function GetAPIKey: string;
   end;
 
 var
@@ -184,9 +186,10 @@ var
   CpText: string;
 begin
   CpText := '';
-  // migration: commented Core usage
+  // TODO: WIP.
   // for i in frmMain.treeDevices.SelectedNodes() do begin
-  //   if Core.MapDevInfo.GetValue(Core.ListDevInfo[i^.Index], d) then begin
+  //   if Dev[i^.Index] then
+  //   begin
   //     CpText := CpText + #13 + d.Id;
   //   end;
   // end;
@@ -735,6 +738,14 @@ begin
   else
     ver := '';
   Result := ver;
+end;
+
+function TModuleMain.GetAPIKey: string;
+begin
+  if Assigned(frmOptions) then
+    Result := frmOptions.edAPIKey.Text
+  else
+    Result := '';
 end;
 
 procedure TModuleMain.Mgr_OnProcessStateChanged(Sender: TObject; State: TProcessState);
