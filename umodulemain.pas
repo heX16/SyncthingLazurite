@@ -117,6 +117,7 @@ type
     // Helpers
     procedure LoadManagerSettingsFromOptions;
     procedure UpdateActionsEnabled;
+    function GetPortFromOptions: Integer;
   public
     // Returns display text for folder node by index using current JSON tree
     function GetFolderDisplayText(const Index: Integer): string;
@@ -207,7 +208,7 @@ var
 begin
   // Configure endpoint and API key from Options (no Core dependency)
   host := '127.0.0.1';
-  port := 8384;
+  port := GetPortFromOptions;
   //TODO: add support TLS
   useTLS := false;
   if Assigned(frmOptions) then
@@ -274,11 +275,14 @@ begin
 end;
 
 procedure TModuleMain.actShowWebExecute(Sender: TObject);
+var
+  port: Integer;
 begin
   // Open Web UI using options (defaults to http://127.0.0.1:8384/)
   // Note: TLS is not used at this stage
   // TODO: need update this code - build URL from real data
-  OpenURL('http://127.0.0.1:8384/');
+  port := GetPortFromOptions;
+  OpenURL(Format('http://127.0.0.1:%d/', [port]));
 end;
 
 procedure TModuleMain.DataModuleCreate(Sender: TObject);
@@ -748,6 +752,29 @@ begin
     Result := '';
 end;
 
+function TModuleMain.GetPortFromOptions: Integer;
+const
+  DEFAULT_PORT = 8384;
+  MIN_PORT = 1;
+  MAX_PORT = 65535;
+var
+  portStr: string;
+  portValue: Integer;
+begin
+  Result := DEFAULT_PORT;
+  
+  if Assigned(frmOptions) then
+  begin
+    portStr := Trim(frmOptions.edPortNumber.Text);
+    if portStr <> '' then
+    begin
+      portValue := StrToIntDef(portStr, -1);
+      if (portValue >= MIN_PORT) and (portValue <= MAX_PORT) then
+        Result := portValue;
+    end;
+  end;
+end;
+
 procedure TModuleMain.Mgr_OnProcessStateChanged(Sender: TObject; State: TProcessState);
 begin
   UpdateActionsEnabled;
@@ -788,7 +815,7 @@ var
   execPath, homePath: UTF8String;
 begin
   host := '127.0.0.1';
-  port := 8384;
+  port := GetPortFromOptions;
   useTLS := false;
 
   if Assigned(frmOptions) then

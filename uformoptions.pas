@@ -20,6 +20,7 @@ type
     chUseProxyOutputForFixBug: TCheckBox;
     chScheduleIntervalMode: TCheckBox;
     chRunSyncOnStart: TCheckBox;
+    edPortNumber: TLabeledEdit;
     edInterval: TComboBox;
     edPathToConfigDir: TLabeledEdit;
     edPathToExecWithFilename: TLabeledEdit;

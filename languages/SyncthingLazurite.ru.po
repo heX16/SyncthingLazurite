@@ -178,6 +178,7 @@ msgid "edAPIKey"
 msgstr "API Key"
 
 #: tfrmoptions.edapikey.editlabel.hint
+msgctxt "tfrmoptions.edapikey.editlabel.hint"
 msgid ""
 "Goto:\n"
 "Settings -> Common -> API Key\n"
@@ -206,6 +207,28 @@ msgstr "Путь к программе"
 msgctxt "tfrmoptions.edpathtoexecwithfilename.text"
 msgid "./"
 msgstr "./"
+
+#: tfrmoptions.edportnumber.editlabel.caption
+msgid "edPortNumber"
+msgstr ""
+
+#: tfrmoptions.edportnumber.editlabel.hint
+#, fuzzy
+msgctxt "tfrmoptions.edportnumber.editlabel.hint"
+msgid ""
+"Goto:\n"
+"Settings -> Common -> API Key\n"
+"\n"
+"API Key example: xzMwbz6rDUuAv9tjVSbqfVMNta4kPWss"
+msgstr ""
+"Перейдите:\n"
+"Настройки -> Общие -> API Key\n"
+"\n"
+"Пример API Key: xzMwbz6rDUuAv9tjVSbqfVMNta4kPWss"
+
+#: tfrmoptions.edportnumber.text
+msgid "8384"
+msgstr ""
 
 #: tfrmoptions.grpschedule.caption
 msgctxt "tfrmoptions.grpschedule.caption"

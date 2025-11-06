@@ -20,3 +20,7 @@ syncthing folder.lnk
 /images/*
 .vscode/extensions.json
 backup/**
+
+/*.zip
+SyncthingLazuriteConfig.ini
+SyncthingLazuritePos.ini

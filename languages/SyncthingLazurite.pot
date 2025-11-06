@@ -175,6 +175,7 @@ msgid "edAPIKey"
 msgstr ""
 
 #: tfrmoptions.edapikey.editlabel.hint
+msgctxt "tfrmoptions.edapikey.editlabel.hint"
 msgid ""
 "Goto:\n"
 "Settings -> Common -> API Key\n"
@@ -198,6 +199,23 @@ msgstr ""
 #: tfrmoptions.edpathtoexecwithfilename.text
 msgctxt "tfrmoptions.edpathtoexecwithfilename.text"
 msgid "./"
+msgstr ""
+
+#: tfrmoptions.edportnumber.editlabel.caption
+msgid "edPortNumber"
+msgstr ""
+
+#: tfrmoptions.edportnumber.editlabel.hint
+msgctxt "tfrmoptions.edportnumber.editlabel.hint"
+msgid ""
+"Goto:\n"
+"Settings -> Common -> API Key\n"
+"\n"
+"API Key example: xzMwbz6rDUuAv9tjVSbqfVMNta4kPWss"
+msgstr ""
+
+#: tfrmoptions.edportnumber.text
+msgid "8384"
 msgstr ""
 
 #: tfrmoptions.grpschedule.caption
