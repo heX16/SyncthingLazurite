@@ -43,24 +43,34 @@
 
 - `uSyncthingManager.pas` — управление процессом "Syncthing":
   - Класс `TSyncthingManager` наследуется от `TSyncthingAPI` и добавляет функционал запуска программы "syncthing".
-  - Запуск/остановка процесса "syncthing".
-  - Машина состояний (FMS): `psUnknown` → `psStarting` → `psRunning` → `psStopping` → `psStopped`.
-  - Извлечение настроек (включая API‑ключ) из `config.xml` файла.
-  - События: `OnProcessStateChanged` для отслеживания состояния процесса, `OnConsoleOutput` для вывода консоли.
+  - Запуск/остановка процесса "syncthing" через `TAsyncProcess`.
+  - Машина состояний процесса (FMS): `psUnknown` → `psStarting` → `psRunning` → `psStopping` → `psStopped` → `psError`.
+  - Извлечение настроек (включая API‑ключ) из `config.xml` файла через `ExtractConfigSettings` / `LoadConfigFromDisk`.
+  - События процесса:
+    - `OnProcessStateChanged` — изменение состояния процесса (для обновления UI).
+    - `OnConsoleOutput` — вывод консоли процесса (строки UTF‑8, буферизация по строкам).
+    - `OnStartFailed` — ошибка запуска процесса (с деталями: путь, код ошибки ОС, исключение).
+  - При успешном запуске процесса автоматически вызывает `Connect()` для подключения к API.
+  - При остановке вызывает REST `system/shutdown`, затем `Terminate(0)` и `Disconnect()`.
 
 - `AsyncHTTP.pas` — очередь асинхронных HTTP‑запросов:
   - Worker‑поток, `TFPHTTPClient`; таймауты, ретраи, keep‑alive.
   - Коллбеки и служебные события исполняются в главном потоке (`Synchronize`).
 
 - `uModuleMain.pas` — главный модуль GUI:
-  - Создает `TSyncthingAPI`, подписывается на события.
+  - Создает `TSyncthingManager` (наследник `TSyncthingAPI`), подписывается на события API и процесса.
   - Обновляет `treeDevices`, `treeFolders` по изменениям `FTreeRoot`.
   - Подсказка трея (онлайн‑устройства; локальные адреса помечаются `(local)`).
+  - Управление процессом: читает настройки из `uFormOptions` (ExecPath, HomePath, APIKey), запускает/останавливает Syncthing.
+  - Действия: `actConnect`, `actDisconnect`, `actConnectOrStart`, `actDisconnectAndStop`, `actStopAndExit`, `actRestartApp`.
+  - Вывод консоли процесса в `frmMain.edConsole` и лог событий через `OnConsoleOutput`.
+  - Автоматическое включение/выключение действий по состоянию процесса (`ProcessState`) и сети (`TSyncthingFSM_State`).
+  - Настройки берутся из `uFormOptions`.
+  - Дополнительно: `actStopSyncthing` отправляет REST `system/shutdown` (graceful), без принудительного `Terminate`.
 
 - `uFormMain.pas` — главная форма (деревья устройств/папок, лог событий, индикатор статуса).
 - `uFormOptions.pas` — диалог настроек (пути/ключи/флаги).
-- `uFormJsonView.pas` — просмотр JSON (HTTP через `AsyncHTTP`, подсказочные поля; без зависимости от `uModuleCore`).
-- `uModuleCore.pas` — чтение API‑ключа из `config.xml`, подготовка запуска Syncthing (частично WIP), таймеры/консоль. Устаревший модуль. Подлежит замене и последующему удалению (в будущем). Функционал будет переноситься в другие модули.
+- `uFormJsonView.pas` — просмотр JSON (HTTP через `AsyncHTTP`, подсказочные поля).
 - Утилиты: `syncthing_api_utils.pas`, `usyncthingtypes.pas`, `uutils.pas`, `vtutils.pas`, `ulogging.pas`.
 
 -----------------------------------------
@@ -144,7 +154,6 @@
 - Автоматическое обновление данных по событиям
 - Потокобезопасная работа с GUI
 
-Модуль спроектирован как современная замена старому `uModuleCore.pas`.
 
 #### Роль и ответственность
 - Единая точка интеграции с REST и Event API Syncthing.
@@ -219,10 +228,10 @@
 
 -----------------------------------------
 ### Известные WIP/задачи
-- `uModuleCore` - устаревший модуль. Функционал будет перенесен. Еще не переперенос логики запуска/остановки Syncthing.
-- `uModuleCore` не задействован в новой схеме.
-- `uFormJsonView` содержит тестовые методы (mnTestConnect/mnTestJson). Остаточные обращения к `Core` удалены: заголовок `X-API-Key` берется из `frmOptions.edAPIKey`, тестовое подключение использует `SetAPIKey(frmOptions.edAPIKey.Text)`.
-- Не реализованы действия «Open Web UI» и часть обработчиков.
+- `uFormJsonView` содержит тестовые методы (mnTestConnect/mnTestJson). Заголовок `X-API-Key` берется из `frmOptions.edAPIKey`, тестовое подключение использует `SetAPIKey(frmOptions.edAPIKey.Text)`.
+- `actShowWeb` реализован базово: открывает `http://127.0.0.1:8384/` (хост/порт пока не читаются из опций, TLS не поддерживается).
+- Действия `actConnectOrStart`, `actDisconnectAndStop`, `actStopAndExit`, `actRestartApp` реализованы и привязаны к меню/трею.
+- Консоль процесса выводится в `frmMain.edConsole` с ограничением 500 строк; также дублируется в лог событий (первые 255 символов).
 
 -----------------------------------------
 ### Сборка/запуск (кратко)

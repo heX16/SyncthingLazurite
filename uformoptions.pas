@@ -17,19 +17,15 @@ type
     btnSelectDirConfig: TButton;
     btnSelectFileExec: TButton;
     chAuto: TCheckBox;
+    chConnectOnStart: TCheckBox;
     chUseProxyOutputForFixBug: TCheckBox;
-    chScheduleIntervalMode: TCheckBox;
     chRunSyncOnStart: TCheckBox;
     edPortNumber: TLabeledEdit;
-    edInterval: TComboBox;
     edPathToConfigDir: TLabeledEdit;
     edPathToExecWithFilename: TLabeledEdit;
     edAPIKey: TLabeledEdit;
-    grpSchedule: TGroupBox;
     IniPropStorageConfig: TIniPropStorage;
-    lbSchedulePauseBetweenRuns: TLabel;
-    procedure chScheduleIntervalModeChange(Sender: TObject);
-    procedure FormShow(Sender: TObject);
+    procedure chRunSyncOnStartChange(Sender: TObject);
   private
 
   public
@@ -45,14 +41,10 @@ implementation
 
 { TfrmOptions }
 
-procedure TfrmOptions.FormShow(Sender: TObject);
+procedure TfrmOptions.chRunSyncOnStartChange(Sender: TObject);
 begin
-  lbSchedulePauseBetweenRuns.Enabled:=chScheduleIntervalMode.Checked;
-end;
-
-procedure TfrmOptions.chScheduleIntervalModeChange(Sender: TObject);
-begin
-  lbSchedulePauseBetweenRuns.Enabled:=chScheduleIntervalMode.Checked;
+  if chRunSyncOnStart.Checked then
+    chConnectOnStart.Checked := True;
 end;
 
 end.

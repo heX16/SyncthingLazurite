@@ -32,6 +32,7 @@ type
     actDisconnect: TAction;
     actDisconnectAndStop: TAction;
     actConnectOrStart: TAction;
+    actStopSyncthing: TAction;
     actRestartApp: TAction;
     actStopAndExit: TAction;
     actShowConsole: TAction;
@@ -56,6 +57,8 @@ type
     MenuItem19: TMenuItem;
     MenuItem20: TMenuItem;
     MenuItem21: TMenuItem;
+    MenuItem22: TMenuItem;
+    MenuItem23: TMenuItem;
     Separator2: TMenuItem;
     Separator1: TMenuItem;
     mnView: TMenuItem;
@@ -95,6 +98,7 @@ type
     procedure actDisconnectAndStopExecute(Sender: TObject);
     procedure actStopAndExitExecute(Sender: TObject);
     procedure actRestartAppExecute(Sender: TObject);
+    procedure actStopSyncthingExecute(Sender: TObject);
     procedure DataModuleCreate(Sender: TObject);
     procedure DataModuleDestroy(Sender: TObject);
     procedure TrayIconDblClick(Sender: TObject);
@@ -893,6 +897,18 @@ begin
   FSyncthingAPI.StopSyncthingProcess;
   LoadManagerSettingsFromOptions;
   FSyncthingAPI.StartSyncthingProcess;
+end;
+
+procedure TModuleMain.actStopSyncthingExecute(Sender: TObject);
+begin
+  // Request graceful shutdown via REST API (no forced terminate)
+  if Assigned(FSyncthingAPI) and FSyncthingAPI.IsOnline then
+  begin
+    FSyncthingAPI.API_Get('system/shutdown', nil, '');
+    AddLineToEventsLog('Shutdown requested via API');
+  end
+  else
+    AddLineToEventsLog('Cannot shutdown via API: not online');
 end;
 
 end.

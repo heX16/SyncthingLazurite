@@ -158,12 +158,12 @@ msgstr ""
 msgid "chAuto"
 msgstr ""
 
-#: tfrmoptions.chrunsynconstart.caption
-msgid "chRunSyncOnStart"
+#: tfrmoptions.chconnectonstart.caption
+msgid "chConnectOnStart"
 msgstr ""
 
-#: tfrmoptions.chscheduleintervalmode.caption
-msgid "chScheduleIntervalMode"
+#: tfrmoptions.chrunsynconstart.caption
+msgid "chRunSyncOnStart"
 msgstr ""
 
 #: tfrmoptions.chuseproxyoutputforfixbug.caption
@@ -216,14 +216,6 @@ msgstr ""
 
 #: tfrmoptions.edportnumber.text
 msgid "8384"
-msgstr ""
-
-#: tfrmoptions.grpschedule.caption
-msgid "grpSchedule"
-msgstr ""
-
-#: tfrmoptions.lbschedulepausebetweenruns.caption
-msgid "lbSchedulePauseBetweenRuns"
 msgstr ""
 
 #: tmodulemain.actabout.caption
@@ -289,6 +281,10 @@ msgstr ""
 #: tmodulemain.actstopandexit.caption
 msgctxt "tmodulemain.actstopandexit.caption"
 msgid "actStopAndExit"
+msgstr ""
+
+#: tmodulemain.actstopsyncthing.caption
+msgid "actStopSyncthing"
 msgstr ""
 
 #: tmodulemain.menuitem1.caption

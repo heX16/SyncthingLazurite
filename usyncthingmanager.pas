@@ -2,10 +2,10 @@ unit uSyncthingManager;
 
 {$mode objfpc}{$H+}
 
-// Legacy notice: ранее использовалось перенаправление вывода через cmd.exe на Windows.
-// Теперь syncthing запускается напрямую, аргументы передаются через Parameters.Add
-// (корректное экранирование путей и значений). Директива ниже сохранена для совместимости.
+// Директива компилятора для отключения исправления бага Windows с выводом процессов
+// Определите в проекте для отключения cmd.exe перенаправления stdout/stderr:
 // {$DEFINE DISABLE_WINDOWS_OUTPUT_FIX}
+// По умолчанию исправление ВКЛЮЧЕНО для совместимости с Windows
 
 interface
 
@@ -458,6 +458,11 @@ begin
     else
     begin
       DebugLog('Failed to start Syncthing process. Exit code: ' + IntToStr(FProcessSyncthing.ExitCode));
+      DebugLog(Format('Start diagnostics: Executable="%s"; Params="%s"; OSLastError=%d (%s)'
+        , [FProcessSyncthing.Executable,
+           UTF8String(FProcessSyncthing.Parameters.Text),
+           GetLastOSError,
+           UTF8String(SysErrorMessage(GetLastOSError))]));
       ProcessStateChanged(psError);
       if Assigned(FOnStartFailed) then
       begin

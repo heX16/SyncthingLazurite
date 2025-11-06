@@ -399,11 +399,6 @@ type
     procedure HTTP_RestAPI(Request: THttpRequest);
     // Events callbacks
     procedure HTTP_EventAPI(Request: THttpRequest);
-    // REST helper
-    procedure API_Get(
-      const Api: UTF8String;
-      Callback: THttpRequestCallbackFunction;
-      userString: string);
     // Build endpoints table
     procedure InitEndpointTable;
 
@@ -486,6 +481,12 @@ type
     stats_folder: TJSONArray;
   
   public
+    // REST API
+    procedure API_Get(
+      const Api: UTF8String;
+      Callback: THttpRequestCallbackFunction;
+      userString: string);
+
     { Creates the core object without starting any network activity }
     constructor Create(AOwner: TComponent); override;
     { Frees resources and detaches clients }

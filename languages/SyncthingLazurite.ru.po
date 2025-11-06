@@ -160,14 +160,13 @@ msgstr "Опции"
 msgid "chAuto"
 msgstr "Авто"
 
+#: tfrmoptions.chconnectonstart.caption
+msgid "chConnectOnStart"
+msgstr ""
+
 #: tfrmoptions.chrunsynconstart.caption
 msgid "chRunSyncOnStart"
 msgstr "Запускать синхронизацию при старте программы"
-
-#: tfrmoptions.chscheduleintervalmode.caption
-msgctxt "tfrmoptions.chscheduleintervalmode.caption"
-msgid "chScheduleIntervalMode"
-msgstr "Интервальный режим"
 
 #: tfrmoptions.chuseproxyoutputforfixbug.caption
 msgid "chUseProxyOutputForFixBug"
@@ -229,16 +228,6 @@ msgstr ""
 #: tfrmoptions.edportnumber.text
 msgid "8384"
 msgstr ""
-
-#: tfrmoptions.grpschedule.caption
-msgctxt "tfrmoptions.grpschedule.caption"
-msgid "grpSchedule"
-msgstr "Расписание"
-
-#: tfrmoptions.lbschedulepausebetweenruns.caption
-msgctxt "tfrmoptions.lbschedulepausebetweenruns.caption"
-msgid "lbSchedulePauseBetweenRuns"
-msgstr "Пауза между запусками"
 
 #: tmodulemain.actabout.caption
 msgid "actAbout"
@@ -306,6 +295,10 @@ msgstr "Открыть веб-интерфейс в браузере"
 msgctxt "tmodulemain.actstopandexit.caption"
 msgid "actStopAndExit"
 msgstr "Остановить и выйти"
+
+#: tmodulemain.actstopsyncthing.caption
+msgid "actStopSyncthing"
+msgstr ""
 
 #: tmodulemain.menuitem1.caption
 #, fuzzy

@@ -7,8 +7,7 @@ object frmOptions: TfrmOptions
   ClientHeight = 360
   ClientWidth = 354
   Position = poDefault
-  SessionProperties = 'chIntervalMode.Checked;chRunSyncOnStart.Checked;chUseProxyOutputForFixBug.Checked;edAPIKey.Text;edInterval.Text;edPathToConfigDir.Text;edPathToExecWithFilename.Text;edPortNumber.Text'
-  OnShow = FormShow
+  SessionProperties = 'chRunSyncOnStart.Checked;chUseProxyOutputForFixBug.Checked;edAPIKey.Text;edPathToConfigDir.Text;edPathToExecWithFilename.Text;edPortNumber.Text'
   object BitBtn1: TBitBtn
     Left = 6
     Height = 30
@@ -24,7 +23,7 @@ object frmOptions: TfrmOptions
   object edPathToConfigDir: TLabeledEdit
     Left = 6
     Height = 23
-    Top = 45
+    Top = 64
     Width = 318
     Anchors = [akTop, akLeft, akRight]
     EditLabel.Height = 15
@@ -37,7 +36,7 @@ object frmOptions: TfrmOptions
   object btnSelectDirConfig: TButton
     Left = 324
     Height = 20
-    Top = 45
+    Top = 64
     Width = 19
     Anchors = [akTop, akRight]
     Caption = '...'
@@ -47,7 +46,7 @@ object frmOptions: TfrmOptions
   object edPathToExecWithFilename: TLabeledEdit
     Left = 6
     Height = 23
-    Top = 83
+    Top = 102
     Width = 318
     Anchors = [akTop, akLeft, akRight]
     EditLabel.Height = 15
@@ -60,7 +59,7 @@ object frmOptions: TfrmOptions
   object btnSelectFileExec: TButton
     Left = 324
     Height = 20
-    Top = 83
+    Top = 102
     Width = 19
     Anchors = [akTop, akRight]
     Caption = '...'
@@ -70,7 +69,7 @@ object frmOptions: TfrmOptions
   object edAPIKey: TLabeledEdit
     Left = 6
     Height = 23
-    Top = 122
+    Top = 141
     Width = 254
     Anchors = [akTop, akLeft, akRight]
     EditLabel.Height = 15
@@ -83,7 +82,7 @@ object frmOptions: TfrmOptions
   object chAuto: TCheckBox
     Left = 263
     Height = 17
-    Top = 122
+    Top = 141
     Width = 80
     Anchors = [akTop, akRight]
     AutoSize = False
@@ -92,7 +91,7 @@ object frmOptions: TfrmOptions
     TabOrder = 6
   end
   object chRunSyncOnStart: TCheckBox
-    Left = 6
+    Left = 8
     Height = 19
     Top = 6
     Width = 117
@@ -100,68 +99,22 @@ object frmOptions: TfrmOptions
     Checked = True
     State = cbChecked
     TabOrder = 7
-  end
-  object grpSchedule: TGroupBox
-    Left = 6
-    Height = 96
-    Top = 224
-    Width = 337
-    Anchors = [akTop, akLeft, akRight]
-    Caption = 'grpSchedule'
-    ClientHeight = 76
-    ClientWidth = 333
-    TabOrder = 8
-    Visible = False
-    object edInterval: TComboBox
-      Left = 154
-      Height = 23
-      Top = 26
-      Width = 100
-      ItemHeight = 15
-      ItemIndex = 0
-      Items.Strings = (
-        '0.5 day'
-        '1 day'
-        '2 day'
-        '3 day'
-        '7 day'
-        '14 day'
-      )
-      TabOrder = 0
-      Text = '0.5 day'
-    end
-    object lbSchedulePauseBetweenRuns: TLabel
-      Left = 6
-      Height = 15
-      Top = 28
-      Width = 160
-      Caption = 'lbSchedulePauseBetweenRuns'
-      ParentColor = False
-    end
-    object chScheduleIntervalMode: TCheckBox
-      Left = 6
-      Height = 19
-      Top = 6
-      Width = 149
-      Caption = 'chScheduleIntervalMode'
-      TabOrder = 1
-      OnChange = chScheduleIntervalModeChange
-    end
+    OnChange = chRunSyncOnStartChange
   end
   object chUseProxyOutputForFixBug: TCheckBox
     Left = 6
     Height = 19
-    Top = 154
+    Top = 173
     Width = 171
     Caption = 'chUseProxyOutputForFixBug'
     Checked = True
     State = cbChecked
-    TabOrder = 9
+    TabOrder = 8
   end
   object edPortNumber: TLabeledEdit
     Left = 6
     Height = 23
-    Top = 192
+    Top = 211
     Width = 86
     Anchors = [akTop, akLeft, akRight]
     EditLabel.Height = 15
@@ -170,13 +123,23 @@ object frmOptions: TfrmOptions
     EditLabel.Caption = 'edPortNumber'
     EditLabel.ParentColor = False
     NumbersOnly = True
-    TabOrder = 10
+    TabOrder = 9
     Text = '8384'
+  end
+  object chConnectOnStart: TCheckBox
+    Left = 6
+    Height = 19
+    Top = 24
+    Width = 116
+    Caption = 'chConnectOnStart'
+    Checked = True
+    State = cbChecked
+    TabOrder = 10
   end
   object IniPropStorageConfig: TIniPropStorage
     StoredValues = <>
     IniFileName = 'SyncthingLazuriteConfig.ini'
-    Left = 301
-    Top = 13
+    Left = 184
+    Top = 288
   end
 end

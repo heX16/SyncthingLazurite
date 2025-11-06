@@ -256,6 +256,10 @@ object ModuleMain: TModuleMain
       Caption = 'actRestartApp'
       OnExecute = actRestartAppExecute
     end
+    object actStopSyncthing: TAction
+      Caption = 'actStopSyncthing'
+      OnExecute = actStopSyncthingExecute
+    end
   end
   object TimerUpdate: TTimer
     Interval = 5000
