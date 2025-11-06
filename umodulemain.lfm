@@ -302,6 +302,9 @@ object ModuleMain: TModuleMain
         Enabled = False
         Visible = False
       end
+      object MenuItem24: TMenuItem
+        Action = actStopSyncthing
+      end
       object MenuItem9: TMenuItem
         Caption = '-'
       end

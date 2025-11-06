@@ -4,7 +4,7 @@ unit uSyncthingManager;
 
 // Директива компилятора для отключения исправления бага Windows с выводом процессов
 // Определите в проекте для отключения cmd.exe перенаправления stdout/stderr:
-// {$DEFINE DISABLE_WINDOWS_OUTPUT_FIX}
+{$DEFINE DISABLE_WINDOWS_OUTPUT_FIX}
 // По умолчанию исправление ВКЛЮЧЕНО для совместимости с Windows
 
 interface
@@ -449,7 +449,7 @@ begin
 
     if FProcessSyncthing.Running then
     begin
-      DebugLog('Syncthing process started successfully');
+      DebugLog(Format('Syncthing process started successfully (PID=%d)', [FProcessSyncthing.ProcessID]));
       ProcessStateChanged(psRunning);
 
       Connect;
@@ -511,7 +511,7 @@ begin
   try
     if IsOnline then
     begin
-      API_Get('system/shutdown', nil, '');
+      API_Post('system/shutdown', nil, '');
       Sleep(API_SHUTDOWN_WAIT_MS);
     end;
 

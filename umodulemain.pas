@@ -59,6 +59,7 @@ type
     MenuItem21: TMenuItem;
     MenuItem22: TMenuItem;
     MenuItem23: TMenuItem;
+    MenuItem24: TMenuItem;
     Separator2: TMenuItem;
     Separator1: TMenuItem;
     mnView: TMenuItem;
@@ -904,7 +905,7 @@ begin
   // Request graceful shutdown via REST API (no forced terminate)
   if Assigned(FSyncthingAPI) and FSyncthingAPI.IsOnline then
   begin
-    FSyncthingAPI.API_Get('system/shutdown', nil, '');
+    FSyncthingAPI.API_Post('system/shutdown', nil, '');
     AddLineToEventsLog('Shutdown requested via API');
   end
   else

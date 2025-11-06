@@ -1,4 +1,51 @@
 
+2025-11-06 20:35:14
+
+после выходи из syncthing,
+sync.laz. считает что он онлайн.
+и попадает в какойто бесконечный цикл переподключений.
+
+[20:31:55] FSM_Process: State=ssOnlineLongPollingWait, Command=ssCmdLongPollingConnect
+[20:31:55] StartLongPolling: Starting long-polling request to URL=http://127.0.0.1:8383/rest/events?since=3629&limit=10&timeout=60
+[20:31:56] FSM_Process: State=ssOnlineLongPollingWait, Command=ssCmdLongPollingConnect
+[20:31:56] FSM_Process: State=ssOnlineLongPollingWait, Command=ssCmdLongPollingConnect
+[20:31:56] FSyncthingAPI.OnStateChanged: ssOnline
+[20:31:56] FSM_Process: State=ssOnline, Command=ssCmdLongPollingConnect (repeat)
+[20:31:57] HTTP_EventAPI: Received event data, StatusCode=200
+[20:33:00] FSM_Process: State=ssOnline, Command=ssCmdLongPollingForceRestart
+[20:33:00] FSyncthingAPI.OnStateChanged: ssOnlineLongPollingWait
+[20:33:00] FSM_Process: State=ssOnlineLongPollingWait, Command=ssCmdLongPollingForceRestart (repeat)
+[20:33:01] FSM_Process: State=ssOnlineLongPollingWait, Command=ssCmdLongPollingConnect
+[20:33:01] StartLongPolling: Starting long-polling request to URL=http://127.0.0.1:8383/rest/events?since=3629&limit=10&timeout=60
+[20:33:01] LongPollingError: HTTP Error Code=16009, URL=http://127.0.0.1:8383/rest/events?since=3629&limit=10&timeout=60
+[20:33:01] FSM_Process: State=ssOnlineLongPollingWait, Command=ssCmdLongPollingError
+[20:33:01] FSM_Process: State=ssOnlineLongPollingWait, Command=ssCmdLongPollingConnect
+[20:33:01] StartLongPolling: Starting long-polling request to URL=http://127.0.0.1:8383/rest/events?since=3629&limit=10&timeout=60
+[20:33:02] FSM_Process: State=ssOnlineLongPollingWait, Command=ssCmdLongPollingConnect
+[20:33:02] FSM_Process: State=ssOnlineLongPollingWait, Command=ssCmdLongPollingConnect
+[20:33:02] LongPollingError: HTTP Error Code=16008, URL=http://127.0.0.1:8383/rest/events?since=3629&limit=10&timeout=60
+[20:33:02] FSM_Process: State=ssOnlineLongPollingWait, Command=ssCmdLongPollingError
+[20:33:02] FSM_Process: State=ssOnlineLongPollingWait, Command=ssCmdLongPollingErrorDisconnected
+[20:33:03] FSM_Process: State=ssOnlineLongPollingWait, Command=ssCmdLongPollingConnect
+[20:33:03] StartLongPolling: Starting long-polling request to URL=http://127.0.0.1:8383/rest/events?since=3629&limit=10&timeout=60
+[20:33:03] FSM_Process: State=ssOnlineLongPollingWait, Command=ssCmdLongPollingConnect
+[20:33:04] FSM_Process: State=ssOnlineLongPollingWait, Command=ssCmdLongPollingConnect
+[20:33:04] LongPollingError: HTTP Error Code=16008, URL=http://127.0.0.1:8383/rest/events?since=3629&limit=10&timeout=60
+[20:33:04] FSM_Process: State=ssOnlineLongPollingWait, Command=ssCmdLongPollingError
+[20:33:04] FSM_Process: State=ssOnlineLongPollingWait, Command=ssCmdLongPollingErrorDisconnected
+[20:33:04] FSM_Process: State=ssOnlineLongPollingWait, Command=ssCmdLongPollingConnect
+[20:33:04] StartLongPolling: Starting long-polling request to URL=http://127.0.0.1:8383/rest/events?since=3629&limit=10&timeout=60
+[20:33:05] FSM_Process: State=ssOnlineLongPollingWait, Command=ssCmdLongPollingConnect
+[20:33:05] FSM_Process: State=ssOnlineLongPollingWait, Command=ssCmdLongPollingConnect
+[20:33:05] LongPollingError: HTTP Error Code=16008, URL=http://127.0.0.1:8383/rest/events?since=3629&limit=10&timeout=60
+
+
+
+
+
+
+
+
 
 ---------------------------
 

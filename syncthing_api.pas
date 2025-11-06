@@ -486,6 +486,11 @@ type
       const Api: UTF8String;
       Callback: THttpRequestCallbackFunction;
       userString: string);
+    procedure API_Post(
+      const Api: UTF8String;
+      Callback: THttpRequestCallbackFunction;
+      userString: string;
+      const Data: string = '');
 
     { Creates the core object without starting any network activity }
     constructor Create(AOwner: TComponent); override;
@@ -1680,6 +1685,23 @@ begin
     Api,                    // operationName
     nil,                         // userObject
     userString,                         // userString
+    True                         // clearDuplicates
+  );
+end;
+
+procedure TSyncthingAPI.API_Post(const Api: UTF8String;
+  Callback: THttpRequestCallbackFunction; userString: string; const Data: string);
+begin
+  if not Assigned(FHTTP) then Exit;
+
+  FHTTP.Post(
+    FServerURL + 'rest/' + Api, // url
+    Data,                        // data (empty for no body)
+    Callback,                    // callback
+    '',                          // headers
+    Api,                         // operationName
+    nil,                         // userObject
+    userString,                  // userString
     True                         // clearDuplicates
   );
 end;
