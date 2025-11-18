@@ -1,7 +1,98 @@
 
-2025-11-06 20:35:14
+# 2025-11-06 20:35:14
 
-после выходи из syncthing,
+после успешного запуска sync.
+приложение попадает в странное состояние
+видно в конце что оно в какомто цикле состояний
+и оно считает что sync. оффлай.
+но при этом если нажать кнопку connect то успешно подключается и работает.
+но цикл состояний сохраняется.
+
+[20:45:31] Process state changed: psUnknown -> psStarting
+[20:45:31] Syncthing process started successfully (PID=8380)
+[20:45:31] Process state changed: psStarting -> psRunning
+[20:45:31] FSM_Process: State=ssOffline, Command=ssCmdConnect
+[20:45:31] FSyncthingAPI.OnStateChanged: ssConnectingInitAndPing
+[20:45:31] FSM_Process: State=ssConnectingInitAndPing, Command=ssCmdConnect (repeat)
+[20:45:31] FSyncthingAPI.OnStateChanged: ssConnectingPingWait
+[20:45:31] FSM_Process: State=ssConnectingPingWait, Command=ssCmdConnect (repeat)
+[20:45:32] Process state changed: psRunning -> psUnknown
+[20:45:33] Process state changed: psUnknown -> psRunning
+[20:45:33] FSM_Process: State=ssConnectingPingWait, Command=ssCmdConnectingPingFault
+[20:45:33] FSyncthingAPI.OnStateChanged: ssOffline
+[20:45:33] FSM_Process: State=ssOffline, Command=ssCmdConnectingPingFault (repeat)
+[20:45:34] Process state changed: psRunning -> psUnknown
+[20:45:35] Process state changed: psUnknown -> psRunning
+[20:45:36] Process state changed: psRunning -> psUnknown
+[20:45:37] Process state changed: psUnknown -> psRunning
+[20:45:38] Process state changed: psRunning -> psUnknown
+[20:45:39] Process state changed: psUnknown -> psRunning
+[20:45:40] Process state changed: psRunning -> psUnknown
+[20:45:41] Process state changed: psUnknown -> psRunning
+[20:45:42] Process state changed: psRunning -> psUnknown
+[20:45:43] Process state changed: psUnknown -> psRunning
+[20:45:44] Process state changed: psRunning -> psUnknown
+[20:45:45] Process state changed: psUnknown -> psRunning
+[20:45:46] Process state changed: psRunning -> psUnknown
+[20:45:47] Process state changed: psUnknown -> psRunning
+[20:45:48] Process state changed: psRunning -> psUnknown
+[20:45:49] Process state changed: psUnknown -> psRunning
+[20:45:50] Process state changed: psRunning -> psUnknown
+[20:45:51] Process state changed: psUnknown -> psRunning
+
+....
+
+
+[20:49:12] Process state changed: psUnknown -> psRunning
+[20:49:13] Process state changed: psRunning -> psUnknown
+[20:49:14] Process state changed: psUnknown -> psRunning
+[20:49:15] Process state changed: psRunning -> psUnknown
+[20:49:16] Process state changed: psUnknown -> psRunning
+[20:49:17] Process state changed: psRunning -> psUnknown
+[20:49:18] Process state changed: psUnknown -> psRunning
+[20:49:19] Process state changed: psRunning -> psUnknown
+[20:49:20] Process state changed: psUnknown -> psRunning
+[20:49:21] Process state changed: psRunning -> psUnknown
+[20:49:22] Process state changed: psUnknown -> psRunning
+[20:49:23] Process state changed: psRunning -> psUnknown
+[20:49:24] Process state changed: psUnknown -> psRunning
+[20:49:25] Process state changed: psRunning -> psUnknown
+[20:49:26] Process state changed: psUnknown -> psRunning
+[20:49:27] Process state changed: psRunning -> psUnknown
+[20:49:28] Process state changed: psUnknown -> psRunning
+[20:49:29] Process state changed: psRunning -> psUnknown
+[20:49:30] Process state changed: psUnknown -> psRunning
+[20:49:31] Process state changed: psRunning -> psUnknown
+[20:49:35] HTTP_EventAPI: Received event data, StatusCode=200
+[20:49:35] HTTP_EventAPI: Parsed 1 events
+[20:49:35] FSM_Process: State=ssOnline, Command=ssCmdLongPollingDataReceived
+[20:49:35] FSyncthingAPI.OnStateChanged: ssOnlineLongPollingWait
+[20:49:35] FSM_Process: State=ssOnlineLongPollingWait, Command=ssCmdLongPollingDataReceived (repeat)
+[20:49:35] Process state changed: psUnknown -> psRunning
+[20:49:36] FSyncthingAPI.OnTreeChanged: epStats_Device
+[20:49:36] FSM_Process: State=ssOnlineLongPollingWait, Command=ssCmdDataReceived
+[20:49:36] FSM_Process: State=ssOnlineLongPollingWait, Command=ssCmdLongPollingConnect
+[20:49:36] StartLongPolling: Starting long-polling request to URL=http://127.0.0.1:8383/rest/events?since=290&limit=10&timeout=60
+[20:49:36] HTTP_EventAPI: Received event data, StatusCode=200
+[20:49:36] HTTP_EventAPI: Parsed 10 events
+[20:49:36] FSM_Process: State=ssOnlineLongPollingWait, Command=ssCmdLongPollingDataReceived
+[20:49:36] FSyncthingAPI.OnTreeChanged: epStats_Folder
+[20:49:36] FSM_Process: State=ssOnlineLongPollingWait, Command=ssCmdDataReceived
+[20:49:36] FSyncthingAPI.OnTreeChanged: epStats_Folder
+[20:49:36] FSM_Process: State=ssOnlineLongPollingWait, Command=ssCmdDataReceived
+[20:49:36] Process state changed: psRunning -> psUnknown
+[20:49:36] FSM_Process: State=ssOnlineLongPollingWait, Command=ssCmdLongPollingConnect
+[20:49:36] StartLongPolling: Starting long-polling request to URL=http://127.0.0.1:8383/rest/events?since=306&limit=10&timeout=60
+[20:49:37] FSM_Process: State=ssOnlineLongPollingWait, Command=ssCmdLongPollingConnect
+
+
+
+
+
+
+# 2025-11-06 20:35:14
+
+после выключения syncthing,
 sync.laz. считает что он онлайн.
 и попадает в какойто бесконечный цикл переподключений.
 
