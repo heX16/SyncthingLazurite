@@ -58,6 +58,9 @@ type
 
     FTimerCheckProcess: TTimer;
 
+    // Startup helper: number of timer ticks left before we treat start as failed
+    FStartChecksRemaining: Integer;
+
     FOutputBuffer: RawByteString;
 
     FOnProcessStateChanged: TProcessEvent;
@@ -85,7 +88,7 @@ type
     procedure SetHomePath(const Path: UTF8String); virtual;
     procedure SetExecPath(const Path: UTF8String); virtual;
 
-    function StartSyncthingProcess: Boolean; virtual;
+    procedure StartSyncthingProcess; virtual;
     function StopSyncthingProcess: Boolean; virtual;
     function StopAllProcesses: Boolean; virtual;
 
@@ -194,23 +197,50 @@ end;
 procedure TSyncthingManager.TimerCheckProcessTimer(Sender: TObject);
 var
   NewState: TProcessState;
+  Info: TStartFailureInfo;
 begin
-  NewState := FProcessState;
-  if FProcessSyncthing.Running then
+  // Timer is used only during startup phase (psStarting)
+  if FProcessState <> psStarting then
   begin
-    if FProcessState = psStarting then
-      NewState := psRunning
-    else if FProcessState <> psRunning then
-      NewState := psRunning;
-  end
-  else if FProcessState in [psRunning, psStarting] then
-  begin
-    NewState := psStopped;
+    FTimerCheckProcess.Enabled := False;
+    Exit;
   end;
 
-  if NewState <> FProcessState then
+  // If process is running at OS level, promote to psRunning and stop timer
+  if FProcessSyncthing.Running then
   begin
-    ProcessStateChanged(NewState);
+    ProcessStateChanged(psRunning);
+    Exit;
+  end;
+
+  // Process is not running yet, track timeout
+  if FStartChecksRemaining > 0 then
+  begin
+    Dec(FStartChecksRemaining);
+    if FStartChecksRemaining = 0 then
+    begin
+      DebugLog('Failed to start Syncthing process. Process is not running after timeout.');
+      DebugLog('Start diagnostics: ' +
+        Format('Executable="%s"; Params="%s"; OSLastError=%d (%s); ExitCode=%d',
+          [FProcessSyncthing.Executable,
+           UTF8String(FProcessSyncthing.Parameters.Text),
+           GetLastOSError,
+           UTF8String(SysErrorMessage(GetLastOSError)),
+           FProcessSyncthing.ExitCode]));
+
+      ProcessStateChanged(psError);
+
+      if Assigned(FOnStartFailed) then
+      begin
+        FillChar(Info, SizeOf(Info), 0);
+        Info.ErrorMessage := '';
+        Info.ExecPath := FExecPath;
+        Info.IsException := False;
+        Info.OSLastError := GetLastOSError;
+        Info.Process := FProcessSyncthing;
+        FOnStartFailed(Self, Info);
+      end;
+    end;
   end;
 end;
 
@@ -278,19 +308,38 @@ end;
 
 procedure TSyncthingManager.ProcessStateChanged(NewState: TProcessState);
 var
+  OldState: TProcessState;
   TailUtf: UTF8String;
   conv_ok: boolean;
 begin
+  OldState := FProcessState;
   DebugLog(Format('Process state changed: %s -> %s',
-    [GetEnumName(TypeInfo(TProcessState), Ord(FProcessState)),
+    [GetEnumName(TypeInfo(TProcessState), Ord(OldState)),
      GetEnumName(TypeInfo(TProcessState), Ord(NewState))]));
-
   FProcessState := NewState;
 
   case FProcessState of
-    psStarting, psRunning:
+    psStarting:
       begin
+        // Initialize startup timeout counter and enable timer
+        FStartChecksRemaining := PROCESS_START_TIMEOUT_MS div PROCESS_STATE_CHECK_INTERVAL_MS;
         FTimerCheckProcess.Enabled := True;
+      end;
+    psRunning:
+      begin
+        // Startup finished, timer no longer needed
+        FTimerCheckProcess.Enabled := False;
+        // Log successful start with PID when we transition from starting phase
+        if (OldState = psStarting) and Assigned(FProcessSyncthing) and FProcessSyncthing.Running then
+          DebugLog(Format('Syncthing process started successfully (PID=%d)', [FProcessSyncthing.ProcessID]));
+        // Automatically connect to Syncthing API after process is running
+        try
+          if not IsOnline then
+            Connect;
+        except
+          on E: Exception do
+            DebugLog('Exception while auto-connecting after process start: ' + E.Message);
+        end;
       end;
     psStopped, psError:
       begin
@@ -384,9 +433,8 @@ begin
   FExecPath := Path;
 end;
 
-function TSyncthingManager.StartSyncthingProcess: Boolean;
+procedure TSyncthingManager.StartSyncthingProcess;
 var
-  i: Integer;
   Info: TStartFailureInfo;
   {$IFDEF WINDOWS}
   {$IFNDEF DISABLE_WINDOWS_OUTPUT_FIX}
@@ -394,7 +442,6 @@ var
   {$ENDIF}
   {$ENDIF}
 begin
-  Result := False;
 
   if FExecPath = '' then
   begin
@@ -406,7 +453,7 @@ begin
   if FProcessState = psRunning then
   begin
     DebugLog('Syncthing process already running');
-    Exit(True);
+    Exit;
   end;
 
   ProcessStateChanged(psStarting);
@@ -437,44 +484,6 @@ begin
     {$ENDIF}
 
     FProcessSyncthing.Execute;
-
-    for I := 1 to PROCESS_CHECK_ITERATIONS do
-    begin
-      if FProcessSyncthing.Running then
-        Break;
-
-      Sleep(PROCESS_CHECK_INTERVAL_MS);
-      Application.ProcessMessages;
-    end;
-
-    if FProcessSyncthing.Running then
-    begin
-      DebugLog(Format('Syncthing process started successfully (PID=%d)', [FProcessSyncthing.ProcessID]));
-      ProcessStateChanged(psRunning);
-
-      Connect;
-      Result := True;
-    end
-    else
-    begin
-      DebugLog('Failed to start Syncthing process. Exit code: ' + IntToStr(FProcessSyncthing.ExitCode));
-      DebugLog(Format('Start diagnostics: Executable="%s"; Params="%s"; OSLastError=%d (%s)'
-        , [FProcessSyncthing.Executable,
-           UTF8String(FProcessSyncthing.Parameters.Text),
-           GetLastOSError,
-           UTF8String(SysErrorMessage(GetLastOSError))]));
-      ProcessStateChanged(psError);
-      if Assigned(FOnStartFailed) then
-      begin
-        FillChar(Info, SizeOf(Info), 0);
-        Info.ErrorMessage := '';
-        Info.ExecPath := FExecPath;
-        Info.IsException := False;
-        Info.OSLastError := GetLastOSError;
-        Info.Process := FProcessSyncthing;
-        FOnStartFailed(Self, Info);
-      end;
-    end;
 
   except
     on E: Exception do
