@@ -52,6 +52,8 @@ type
     FHomePath: UTF8String;
     FExecPath: UTF8String;
 
+    // Invariant: FProcessState must be changed only inside ProcessStateChanged();
+    // do not assign FProcessState directly in other methods.
     FProcessState: TProcessState;
 
     FTimerCheckProcess: TTimer;
@@ -193,7 +195,7 @@ procedure TSyncthingManager.TimerCheckProcessTimer(Sender: TObject);
 var
   NewState: TProcessState;
 begin
-  NewState := TProcessState.psUnknown;
+  NewState := FProcessState;
   if FProcessSyncthing.Running then
   begin
     if FProcessState = psStarting then
@@ -204,12 +206,12 @@ begin
   else if FProcessState in [psRunning, psStarting] then
   begin
     NewState := psStopped;
-  end
-  else
-    NewState := FProcessState;
+  end;
 
   if NewState <> FProcessState then
+  begin
     ProcessStateChanged(NewState);
+  end;
 end;
 
 
@@ -276,16 +278,14 @@ end;
 
 procedure TSyncthingManager.ProcessStateChanged(NewState: TProcessState);
 var
-  OldState: TProcessState;
   TailUtf: UTF8String;
   conv_ok: boolean;
 begin
-  OldState := FProcessState;
-  FProcessState := NewState;
-
   DebugLog(Format('Process state changed: %s -> %s',
-    [GetEnumName(TypeInfo(TProcessState), Ord(OldState)),
+    [GetEnumName(TypeInfo(TProcessState), Ord(FProcessState)),
      GetEnumName(TypeInfo(TProcessState), Ord(NewState))]));
+
+  FProcessState := NewState;
 
   case FProcessState of
     psStarting, psRunning:
