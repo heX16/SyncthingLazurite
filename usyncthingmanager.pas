@@ -31,6 +31,16 @@ type
   TProcessEvent = procedure(Sender: TObject; State: TProcessState) of object;
   TConsoleOutputEvent = procedure(Sender: TObject; const Line: UTF8String) of object;
 
+  // Kinds of process errors to provide more context in ProcessStateChanged
+  TProcessErrorKind = (
+    pekNone,                 // No error
+    pekStartTimeout,         // Process did not start within timeout
+    pekStartExecuteException,// Exception while calling Execute()
+    pekStartConfigError,     // Start failed due to configuration error (e.g. missing exec path)
+    pekStopFailed,           // Process did not stop after shutdown/terminate
+    pekStopException         // Exception while stopping process
+  );
+
   // Информация о неудачном запуске процесса
   TStartFailureInfo = record
     ErrorMessage: UTF8String;  // Текст исключения или пусто
@@ -75,7 +85,9 @@ type
     procedure ProcessTerminated(Sender: TObject);
     procedure ReadProcessOutput;
     procedure ProcessOutputLine(const Line: UTF8String); virtual;
-    procedure ProcessStateChanged(NewState: TProcessState); virtual;
+    procedure ProcessStateChanged(NewState: TProcessState;
+      AErrorKind: TProcessErrorKind = pekNone;
+      const AErrorMessage: UTF8String = ''); virtual;
 
   public
     constructor Create(AOwner: TComponent); override;
@@ -219,16 +231,9 @@ begin
     Dec(FStartChecksRemaining);
     if FStartChecksRemaining = 0 then
     begin
-      DebugLog('Failed to start Syncthing process. Process is not running after timeout.');
-      DebugLog('Start diagnostics: ' +
-        Format('Executable="%s"; Params="%s"; OSLastError=%d (%s); ExitCode=%d',
-          [FProcessSyncthing.Executable,
-           UTF8String(FProcessSyncthing.Parameters.Text),
-           GetLastOSError,
-           UTF8String(SysErrorMessage(GetLastOSError)),
-           FProcessSyncthing.ExitCode]));
-
-      ProcessStateChanged(psError);
+      // Mark startup timeout error; ProcessStateChanged will log details
+      ProcessStateChanged(psError, pekStartTimeout,
+        'Process did not start within timeout');
 
       if Assigned(FOnStartFailed) then
       begin
@@ -306,7 +311,7 @@ begin
     FOnConsoleOutput(Self, Line);
 end;
 
-procedure TSyncthingManager.ProcessStateChanged(NewState: TProcessState);
+procedure TSyncthingManager.ProcessStateChanged(NewState: TProcessState; AErrorKind: TProcessErrorKind);
 var
   OldState: TProcessState;
   TailUtf: UTF8String;
@@ -357,6 +362,32 @@ begin
           end;
           ProcessOutputLine(TailUtf);
           FOutputBuffer := '';
+        end;
+
+        // Log additional diagnostics for error states based on error kind
+        if (FProcessState = psError) then
+        begin
+          case AErrorKind of
+            pekStartTimeout:
+              begin
+                DebugLog('Failed to start Syncthing process. Process is not running after timeout.');
+                DebugLog('Start diagnostics: ' +
+                  Format('Executable="%s"; Params="%s"; OSLastError=%d (%s); ExitCode=%d',
+                    [FProcessSyncthing.Executable,
+                     UTF8String(FProcessSyncthing.Parameters.Text),
+                     GetLastOSError,
+                     UTF8String(SysErrorMessage(GetLastOSError)),
+                     FProcessSyncthing.ExitCode]));
+              end;
+            pekStartExecuteException, pekStartConfigError,
+            pekStopFailed, pekStopException:
+              begin
+                if AErrorMessage <> '' then
+                  DebugLog('Process error details: ' + AErrorMessage);
+              end;
+          else
+            ; // no extra diagnostics
+          end;
         end;
       end;
   end;
@@ -446,7 +477,8 @@ begin
   if FExecPath = '' then
   begin
     DebugLog('Cannot start Syncthing: executable path not set');
-    ProcessStateChanged(psError);
+    ProcessStateChanged(psError, pekStartConfigError,
+      'Executable path not set');
     Exit;
   end;
 
@@ -489,7 +521,8 @@ begin
     on E: Exception do
     begin
       DebugLog('Exception while starting Syncthing: ' + E.Message);
-      ProcessStateChanged(psError);
+      ProcessStateChanged(psError, pekStartExecuteException,
+        UTF8String(E.Message));
       if Assigned(FOnStartFailed) then
       begin
         FillChar(Info, SizeOf(Info), 0);
@@ -505,6 +538,8 @@ begin
 end;
 
 function TSyncthingManager.StopSyncthingProcess: Boolean;
+var
+  err: Integer;
 begin
   Result := False;
 
@@ -539,14 +574,19 @@ begin
     else
     begin
       DebugLog('Failed to stop Syncthing process');
-      ProcessStateChanged(psError);
+      err := GetLastOSError;
+      ProcessStateChanged(
+        psError,
+        pekStopFailed,
+        'Process did not stop after terminate, OSLastError=' + UTF8String(IntToStr(err))
+      );
     end;
 
   except
     on E: Exception do
     begin
       DebugLog('Exception while stopping Syncthing: ' + E.Message);
-      ProcessStateChanged(psError);
+      ProcessStateChanged(psError, pekStopException, UTF8String(E.Message));
     end;
   end;
 end;
