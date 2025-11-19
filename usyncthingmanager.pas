@@ -311,7 +311,8 @@ begin
     FOnConsoleOutput(Self, Line);
 end;
 
-procedure TSyncthingManager.ProcessStateChanged(NewState: TProcessState; AErrorKind: TProcessErrorKind);
+procedure TSyncthingManager.ProcessStateChanged(NewState: TProcessState;
+  AErrorKind: TProcessErrorKind; const AErrorMessage: UTF8String);
 var
   OldState: TProcessState;
   TailUtf: UTF8String;
