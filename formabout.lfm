@@ -1,44 +1,43 @@
 object frmAbout: TfrmAbout
   Left = 330
-  Height = 467
+  Height = 374
   Top = 259
-  Width = 607
+  Width = 486
   Caption = 'About'
-  ClientHeight = 467
-  ClientWidth = 607
-  DesignTimePPI = 120
-  Font.Height = -15
+  ClientHeight = 374
+  ClientWidth = 486
+  Font.Height = -12
   Position = poMainFormCenter
   LCLVersion = '4.2.0.0'
   OnCreate = FormCreate
   OnShow = FormShow
   object Shape1: TShape
-    Left = 9
-    Height = 196
-    Top = 6
-    Width = 196
+    Left = 7
+    Height = 157
+    Top = 5
+    Width = 157
     Brush.Color = clNone
     Pen.Color = clBlue
     Pen.Width = 2
   end
   object lbProgramName: TLabel
-    Left = 216
-    Height = 48
-    Top = 8
-    Width = 256
+    Left = 173
+    Height = 38
+    Top = 6
+    Width = 205
     Alignment = taCenter
     AutoSize = False
     Caption = 'SyncthingLazurite'
-    Font.Height = -27
+    Font.Height = -22
     Font.Style = [fsBold]
     ParentColor = False
     ParentFont = False
   end
   object lbRepURL: TLabeledEdit
-    Left = 9
+    Left = 7
     Height = 28
-    Top = 432
-    Width = 303
+    Top = 346
+    Width = 242
     EditLabel.Height = 20
     EditLabel.Width = 303
     EditLabel.Caption = 'Source code repository:'
@@ -49,29 +48,29 @@ object frmAbout: TfrmAbout
     Text = 'https://github.com/heX16/SyncthingLazurite'
   end
   object lbAuthor: TLabel
-    Left = 216
-    Height = 24
-    Top = 56
-    Width = 256
+    Left = 173
+    Height = 19
+    Top = 45
+    Width = 205
     AutoSize = False
     ParentColor = False
     ParentFont = False
   end
   object lbTranslateAuthor1: TLabel
-    Left = 216
-    Height = 24
-    Top = 88
-    Width = 368
+    Left = 173
+    Height = 19
+    Top = 70
+    Width = 294
     AutoSize = False
     Caption = 'Author of localization: Alexander Kerner'
     ParentColor = False
     ParentFont = False
   end
   object lbAboutText: TMemo
-    Left = 9
-    Height = 160
-    Top = 248
-    Width = 591
+    Left = 7
+    Height = 128
+    Top = 198
+    Width = 473
     Lines.Strings = (
       'This is GUI client for Syncthing application.'
       ''
@@ -85,10 +84,10 @@ object frmAbout: TfrmAbout
     TabOrder = 1
   end
   object lbSyncthingVersion: TLabeledEdit
-    Left = 384
+    Left = 307
     Height = 28
-    Top = 185
-    Width = 88
+    Top = 148
+    Width = 70
     EditLabel.Height = 28
     EditLabel.Width = 125
     EditLabel.Caption = 'lbSyncthingVersion'
@@ -100,10 +99,10 @@ object frmAbout: TfrmAbout
     Text = '...'
   end
   object Image1: TImage
-    Left = 11
-    Height = 192
-    Top = 8
-    Width = 192
+    Left = 9
+    Height = 154
+    Top = 6
+    Width = 154
     Picture.Data = {
       0A544A706567496D616765E0350000FFD8FFDB00C5000506060B080B0B0B0B0B
       0D0B0B0B0D0E0E0D0D0E0E0F0D0E0E0E0D0F1010101111101010100F1312130F
@@ -540,40 +539,40 @@ object frmAbout: TfrmAbout
     }
   end
   object lbTranslateAuthor2: TLabel
-    Left = 216
-    Height = 24
-    Top = 112
-    Width = 368
+    Left = 173
+    Height = 19
+    Top = 90
+    Width = 294
     AutoSize = False
     ParentColor = False
     ParentFont = False
   end
   object lbProgramVer: TLabel
-    Left = 480
-    Height = 32
-    Top = 14
-    Width = 105
+    Left = 384
+    Height = 26
+    Top = 11
+    Width = 84
     AutoSize = False
     Caption = 'vX.X'
-    Font.Height = -20
+    Font.Height = -16
     Font.Style = [fsBold]
     ParentColor = False
     ParentFont = False
   end
   object Button1: TButton
-    Left = 440
-    Height = 44
-    Top = 416
-    Width = 160
+    Left = 352
+    Height = 35
+    Top = 333
+    Width = 128
     Caption = 'btnClose'
     TabOrder = 3
     OnClick = Button1Click
   end
   object lbSyncthingWebSite: TLabeledEdit
-    Left = 384
+    Left = 307
     Height = 28
-    Top = 212
-    Width = 184
+    Top = 170
+    Width = 147
     EditLabel.Height = 28
     EditLabel.Width = 132
     EditLabel.Caption = 'lbSyncthingWebSite'
@@ -585,24 +584,24 @@ object frmAbout: TfrmAbout
     Text = 'https://syncthing.net/'
   end
   object lbProgramVerDate: TLabel
-    Left = 480
-    Height = 16
-    Top = 48
-    Width = 105
+    Left = 384
+    Height = 13
+    Top = 38
+    Width = 84
     AutoSize = False
     Caption = 'Date: 2025 Oct'
-    Font.Height = -13
+    Font.Height = -10
     ParentColor = False
     ParentFont = False
   end
   object lbProgramVerBuild: TLabel
-    Left = 480
-    Height = 16
-    Top = 64
-    Width = 105
+    Left = 384
+    Height = 13
+    Top = 51
+    Width = 84
     AutoSize = False
     Caption = 'Build: XXX'
-    Font.Height = -13
+    Font.Height = -10
     ParentColor = False
     ParentFont = False
   end

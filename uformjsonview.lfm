@@ -1,30 +1,30 @@
 object frmJSONView: TfrmJSONView
   Left = 327
-  Height = 523
+  Height = 418
   Top = 138
-  Width = 513
+  Width = 410
   Caption = 'frmJSONView'
-  ClientHeight = 523
-  ClientWidth = 513
-  DesignTimePPI = 120
+  ClientHeight = 418
+  ClientWidth = 410
   Menu = MainMenu
+  LCLVersion = '4.2.0.0'
   OnCreate = FormCreate
   OnDestroy = FormDestroy
   object panelHintFieldsList: TPanel
     Left = 0
-    Height = 32
+    Height = 26
     Top = 32
     Width = 513
     Align = alTop
-    ClientHeight = 32
+    ClientHeight = 26
     ClientWidth = 513
     TabOrder = 3
     Visible = False
     object edHintFieldsList: TLabeledEdit
-      Left = 96
+      Left = 77
       Height = 28
       Top = 1
-      Width = 360
+      Width = 390
       Anchors = [akTop, akLeft, akRight]
       EditLabel.Height = 28
       EditLabel.Width = 105
@@ -33,10 +33,10 @@ object frmJSONView: TfrmJSONView
       TabOrder = 0
     end
     object btnHintUpd: TButton
-      Left = 464
-      Height = 28
+      Left = 474
+      Height = 22
       Top = 1
-      Width = 48
+      Width = 38
       Anchors = [akTop, akRight]
       Caption = 'Update'
       TabOrder = 1
@@ -45,19 +45,19 @@ object frmJSONView: TfrmJSONView
   end
   object panelServerURL: TPanel
     Left = 0
-    Height = 32
+    Height = 26
     Top = 0
     Width = 513
     Align = alTop
-    ClientHeight = 32
+    ClientHeight = 26
     ClientWidth = 513
     TabOrder = 6
     Visible = False
     object edServerURL: TLabeledEdit
-      Left = 96
+      Left = 77
       Height = 28
       Top = 1
-      Width = 413
+      Width = 433
       Anchors = [akTop, akLeft, akRight]
       EditLabel.Height = 28
       EditLabel.Width = 84
@@ -71,7 +71,7 @@ object frmJSONView: TfrmJSONView
     Left = 0
     Height = 459
     Top = 64
-    Width = 128
+    Width = 102
     Align = alLeft
     Items.Strings = (
       '# Config'
@@ -154,7 +154,7 @@ object frmJSONView: TfrmJSONView
       '# Noauth'
       'noauth/health'
     )
-    ItemHeight = 20
+    ItemHeight = 16
     TabOrder = 0
     OnDblClick = listGetAPIClick
   end
@@ -162,7 +162,7 @@ object frmJSONView: TfrmJSONView
     Left = 128
     Height = 459
     Top = 64
-    Width = 5
+    Width = 4
   end
   object treeJsonData: TTreeView
     Left = 133
@@ -175,18 +175,18 @@ object frmJSONView: TfrmJSONView
     TabOrder = 1
   end
   object Splitter2: TSplitter
-    Left = 326
+    Left = 327
     Height = 459
     Top = 64
-    Width = 5
+    Width = 4
     Align = alRight
     ResizeAnchor = akRight
   end
   object edJSONView: TMemo
-    Left = 331
+    Left = 367
     Height = 459
     Top = 64
-    Width = 182
+    Width = 146
     Align = alRight
     ScrollBars = ssAutoBoth
     TabOrder = 2
@@ -194,8 +194,8 @@ object frmJSONView: TfrmJSONView
   end
   object imgJSON: TImageList
     DrawingStyle = dsTransparent
-    Left = 200
-    Top = 208
+    Left = 160
+    Top = 166
     Bitmap = {
       4C7A120000001000000010000000F11600000000000078DAED9B09581447DAC7
       A3C6EC66A331A749DC2F269A684CBCE550A3A0E27D20112FE28982208A288A0A
@@ -385,8 +385,8 @@ object frmJSONView: TfrmJSONView
     }
   end
   object MainMenu: TMainMenu
-    Left = 200
-    Top = 104
+    Left = 160
+    Top = 83
     object mnExpandAll: TMenuItem
       Caption = 'mnExpandAll'
     end
@@ -413,12 +413,12 @@ object frmJSONView: TfrmJSONView
     Enabled = False
     Interval = 10
     OnTimer = TimerUpdateTreeViewTimer
-    Left = 201
-    Top = 296
+    Left = 161
+    Top = 237
   end
   object PopupMenuJson: TPopupMenu
-    Left = 200
-    Top = 376
+    Left = 160
+    Top = 301
     object mnCopyPath: TMenuItem
       Caption = 'mnCopyPath'
       OnClick = mnCopyPathClick

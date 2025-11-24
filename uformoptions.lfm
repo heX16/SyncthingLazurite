@@ -8,6 +8,7 @@ object frmOptions: TfrmOptions
   ClientWidth = 354
   Position = poDefault
   SessionProperties = 'chRunSyncOnStart.Checked;chUseProxyOutputForFixBug.Checked;edAPIKey.Text;edPathToConfigDir.Text;edPathToExecWithFilename.Text;edPortNumber.Text'
+  LCLVersion = '4.2.0.0'
   object BitBtn1: TBitBtn
     Left = 6
     Height = 30

@@ -1,29 +1,13 @@
 msgid ""
 msgstr "Content-Type: text/plain; charset=UTF-8"
 
-#: tcore.actinit.caption
-msgid "actInit"
-msgstr "Initialize"
-
 #: tcore.actpause.caption
 msgid "actPause"
 msgstr "Pause"
 
-#: tcore.actreloadconfig.caption
-msgid "actReloadConfig"
-msgstr "Reload configuration"
-
 #: tcore.actrestart.caption
 msgid "actRestart"
 msgstr "Restart"
-
-#: tcore.actrunsupportproc.caption
-msgid "actRunSupportProc"
-msgstr "Run support program"
-
-#: tcore.actstart.caption
-msgid "actStart"
-msgstr "Start"
 
 #: tcore.actstop.caption
 msgid "actStop"
@@ -32,10 +16,6 @@ msgstr "Stop"
 #: tcore.actstopandexit.caption
 msgid "actStopAndExit"
 msgstr "Stop and exit"
-
-#: tcore.actterminate.caption
-msgid "actTerminate"
-msgstr "Terminate"
 
 #: tfrmabout.caption
 msgid "About"
@@ -58,10 +38,6 @@ msgctxt "tfrmabout.lbsyncthingversion.text"
 msgid "..."
 msgstr "..."
 
-#: tfrmabout.lbtranslateauthor.caption
-msgid "Author of localization: -"
-msgstr "Author of localization: -"
-
 #: tfrmjsonview.caption
 msgid "frmJSONView"
 msgstr "JSON View"
@@ -81,10 +57,6 @@ msgstr "Events"
 #: tfrmmain.grpfolders.caption
 msgid "grpFolders"
 msgstr "Folders"
-
-#: tfrmmain.lbexcdetected.caption
-msgid "!EX!"
-msgstr "!EX!"
 
 #: tfrmoptions.btnselectdirconfig.caption
 msgctxt "tfrmoptions.btnselectdirconfig.caption"
@@ -107,11 +79,6 @@ msgstr "Auto"
 #: tfrmoptions.chrunsynconstart.caption
 msgid "chRunSyncOnStart"
 msgstr "Run sync on startup"
-
-#: tfrmoptions.chscheduleintervalmode.caption
-msgctxt "tfrmoptions.chscheduleintervalmode.caption"
-msgid "chScheduleIntervalMode"
-msgstr "Interval mode"
 
 #: tfrmoptions.chuseproxyoutputforfixbug.caption
 msgid "chUseProxyOutputForFixBug"
@@ -150,16 +117,6 @@ msgstr "Path to program"
 msgctxt "tfrmoptions.edpathtoexecwithfilename.text"
 msgid "./"
 msgstr "./"
-
-#: tfrmoptions.grpschedule.caption
-msgctxt "tfrmoptions.grpschedule.caption"
-msgid "grpSchedule"
-msgstr "Schedule"
-
-#: tfrmoptions.lbschedulepausebetweenruns.caption
-msgctxt "tfrmoptions.lbschedulepausebetweenruns.caption"
-msgid "lbSchedulePauseBetweenRuns"
-msgstr "Pause between runs:"
 
 #: tmodulemain.actabout.caption
 msgid "actAbout"
@@ -234,10 +191,6 @@ msgstr "Connect"
 #: tcore.actstartandconnect.caption
 msgid "actStartAndConnect"
 msgstr "Start and connect"
-
-#: tcore.actstartorconnect.caption
-msgid "actStartOrConnect"
-msgstr "Start or connect"
 
 #: tfrmjsonview.btnhintupd.caption
 msgid "Update"
@@ -322,3 +275,59 @@ msgstr "Pause"
 msgctxt "tmodulemain.menuitem4.caption"
 msgid "actPause"
 msgstr "Pause"
+
+#: added.missing.btnclose
+msgid "btnClose"
+msgstr "Close"
+
+#: added.missing.about.version
+msgid "vX.X"
+msgstr "vX.X"
+
+#: added.missing.about.build
+msgid "Build: XXX"
+msgstr "Build: XXX"
+
+#: added.missing.about.date
+msgid "Date: 2025 Oct"
+msgstr "Date: 2025 Oct"
+
+#: added.missing.about.website.label
+msgid "lbSyncthingWebSite"
+msgstr "Syncthing website"
+
+#: added.missing.about.website.url
+msgid "https://syncthing.net/"
+msgstr "https://syncthing.net/"
+
+#: added.missing.about.localization.author
+msgid "Author of localization: Alexander Kerner"
+msgstr "Author of localization: Alexander Kerner"
+
+#: added.missing.actions.connectorstart
+msgid "actConnectOrStart"
+msgstr "Connect or start"
+
+#: added.missing.actions.disconnectandstop
+msgid "actDisconnectAndStop"
+msgstr "Disconnect and stop"
+
+#: added.missing.actions.restartapp
+msgid "actRestartApp"
+msgstr "Restart app"
+
+#: added.missing.actions.stopsyncthing
+msgid "actStopSyncthing"
+msgstr "Stop Syncthing"
+
+#: added.missing.options.connectonstart
+msgid "chConnectOnStart"
+msgstr "Connect on startup"
+
+#: added.missing.options.portnumber.label
+msgid "edPortNumber"
+msgstr "Port number"
+
+#: added.missing.options.portnumber.value
+msgid "8384"
+msgstr "8384"
