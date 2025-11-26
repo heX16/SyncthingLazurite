@@ -13,7 +13,8 @@ uses
   Interfaces, // this includes the LCL widgetset
   Forms, uFormMain, laz_synapse, uniqueinstance_package, AsyncHttp,
   uFormOptions, uModuleMain, uformjsonview, hashmapstr, FormAbout,
-  usyncthingtypes, syncthing_api, uSyncthingManager, uLogging;
+  usyncthingtypes, syncthing_api, uSyncthingManager, uLogging, VTUtils,
+  fphttpclient_fixed, syncthing_api_utils, uget_os_language;
 
 {$R *.res}
 

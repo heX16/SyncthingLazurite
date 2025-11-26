@@ -33,7 +33,7 @@
       <MajorVersionNr Value="1"/>
       <MinorVersionNr Value="2"/>
       <RevisionNr Value="2511"/>
-      <BuildNr Value="150"/>
+      <BuildNr Value="151"/>
     </VersionInfo>
     <BuildModes Count="4">
       <Item1 Name="Debug" Default="True"/>
@@ -201,7 +201,7 @@
         <PackageName Value="LCL"/>
       </Item7>
     </RequiredPackages>
-    <Units Count="14">
+    <Units Count="18">
       <Unit0>
         <Filename Value="SyncthingLazurite.lpr"/>
         <IsPartOfProject Value="True"/>
@@ -284,6 +284,23 @@
         <IsPartOfProject Value="True"/>
         <UnitName Value="uSyncthingManager"/>
       </Unit13>
+      <Unit14>
+        <Filename Value="fphttpclient_fixed.pp"/>
+        <IsPartOfProject Value="True"/>
+      </Unit14>
+      <Unit15>
+        <Filename Value="vtutils.pas"/>
+        <IsPartOfProject Value="True"/>
+        <UnitName Value="VTUtils"/>
+      </Unit15>
+      <Unit16>
+        <Filename Value="syncthing_api_utils.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit16>
+      <Unit17>
+        <Filename Value="uget_os_language.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit17>
     </Units>
   </ProjectOptions>
   <CompilerOptions>

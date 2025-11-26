@@ -4,7 +4,7 @@
 SyncthingLazurite is a lightweight desktop companion for Syncthing, built with Lazarus/FreePascal. It connects to local Syncthing via REST/Event APIs, maintains a unified JSON tree of Syncthing state, and displays devices, folders, and events in a simple UI with system tray integration.
 
 ## Essential Reading
-**ALWAYS read `info.md` first** - it contains comprehensive technical documentation about:
+**ALWAYS read `doc/GPT_info.md` file first** - it contains comprehensive technical documentation about:
 - Project architecture and module relationships
 - JSONTree data model (the core concept)
 - syncthing_api.pas details (FSM, HTTP clients, endpoints)
@@ -28,7 +28,6 @@ The project uses Pascal FPC and Lazarus.
 - `AsyncHTTP.pas` - HTTP request queue with worker thread
 - `uModuleMain.pas` - Main GUI logic and event handling
 - `uFormMain.pas` - Main form with device/folder trees
-- `uModuleCore.pas` - old module, will remove.
 
 ### When Making Changes
 1. Understand the JSONTree concept and data flow
