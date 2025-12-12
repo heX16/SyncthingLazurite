@@ -20,11 +20,13 @@ type
     chConnectOnStart: TCheckBox;
     chUseProxyOutputForFixBug: TCheckBox;
     chRunSyncOnStart: TCheckBox;
+    cbLanguages: TComboBox;
     edPortNumber: TLabeledEdit;
     edPathToConfigDir: TLabeledEdit;
     edPathToExecWithFilename: TLabeledEdit;
     edAPIKey: TLabeledEdit;
     IniPropStorageConfig: TIniPropStorage;
+    lbLanguages: TLabel;
     procedure chRunSyncOnStartChange(Sender: TObject);
   private
 
