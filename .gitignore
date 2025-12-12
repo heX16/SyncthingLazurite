@@ -24,3 +24,5 @@ backup/**
 /*.zip
 SyncthingLazuriteConfig.ini
 SyncthingLazuritePos.ini
+
+/SyncthingLazurite

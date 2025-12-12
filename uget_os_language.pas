@@ -21,6 +21,11 @@ function GetOSLanguage: string;
 
 implementation
 
+// Examples of switching UI language at runtime (caller side):
+//   SetDefaultLang(GetOSLanguage, IncludeTrailingPathDelimiter(ExtractFilePath(Application.ExeName)) + 'languages');
+//   SetDefaultLang('ru', IncludeTrailingPathDelimiter(ExtractFilePath(Application.ExeName)) + 'languages');
+// Requires units Forms and DefaultTranslator in the caller.
+
 function GetOSLanguage: string;
 var
   l, fbl: string;

@@ -17,6 +17,8 @@ uses
   uLogging;
 
 resourcestring
+  cLanguageName = 'cLanguageName';
+  cLanguageNameEng = 'cLanguageNameEng';
   cProgramName = 'SyncthingLazurite';
   cStrLocal = ' (local)';
 
@@ -158,7 +160,10 @@ uses
   uFormOptions,
   uFormMain,
   Graphics,
-  TypInfo;
+  TypInfo,
+  LCLType,
+  LCLTranslator,
+  DefaultTranslator;
 
 { TModuleMain }
 
@@ -181,8 +186,35 @@ begin
 end;
 
 procedure TModuleMain.actShowOptionsExecute(Sender: TObject);
+var
+  modalRes: Integer;
+  langFile: string;
+  langCode: string;
+  langDir: string;
+  prefix: string;
 begin
-  frmOptions.ShowModal();
+  modalRes := frmOptions.ShowModal();
+  if modalRes = mrOK then
+  begin
+    langFile := frmOptions.cbLanguages.Text;
+    if langFile <> '' then
+    begin
+      langCode := ChangeFileExt(langFile, '');
+      prefix := 'SyncthingLazurite.';
+      if Copy(langCode, 1, Length(prefix)) = prefix then
+        langCode := Copy(langCode, Length(prefix) + 1, MaxInt);
+
+      langDir := IncludeTrailingPathDelimiter(ExtractFilePath(Application.ExeName)) + 'languages';
+      SetDefaultLang(langCode, langDir);
+
+      // Refresh UI text immediately after language switch
+      (*
+      TranslateComponent(frmMain);
+      TranslateComponent(frmOptions);
+      TranslateComponent(frmJSONView);
+      *)
+    end;
+  end;
 end;
 
 procedure TModuleMain.actCopySelectedDevIDExecute(Sender: TObject);

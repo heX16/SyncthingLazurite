@@ -20,11 +20,12 @@
     <i18n>
       <EnableI18N Value="True"/>
       <OutDir Value="languages"/>
-      <ExcludedIdentifiers Count="4">
+      <ExcludedIdentifiers Count="5">
         <Item1 Value="tfrmoptions.edpathtoconfig.text"/>
         <Item2 Value="tfrmoptions.edpathtoexec.text"/>
         <Item3 Value="tfrmoptions.edapikey.text"/>
         <Item4 Value="tfrmoptions.edinterval.text"/>
+        <Item5 Value="tfrmoptions.lblanguage_fixed.caption"/>
       </ExcludedIdentifiers>
     </i18n>
     <VersionInfo>
@@ -33,7 +34,7 @@
       <MajorVersionNr Value="1"/>
       <MinorVersionNr Value="2"/>
       <RevisionNr Value="2511"/>
-      <BuildNr Value="151"/>
+      <BuildNr Value="157"/>
     </VersionInfo>
     <BuildModes Count="4">
       <Item1 Name="Debug" Default="True"/>
@@ -161,10 +162,6 @@
             </CompilerMessages>
             <CustomOptions Value="-dUseCThreads
 -dDEBUG"/>
-            <OtherDefines Count="2">
-              <Define0 Value="UseCThreads"/>
-              <Define1 Value="DEBUG"/>
-            </OtherDefines>
           </Other>
         </CompilerOptions>
       </Item4>
