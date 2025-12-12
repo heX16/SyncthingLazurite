@@ -1,0 +1,395 @@
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Language: ja\n"
+"Plural-Forms: nplurals=1; plural=0;\n"
+
+#: fphttpclient_fixed.serrchunklineendmissing
+msgid "Chunk line end missing"
+msgstr "チャンクの行末がありません"
+
+#: fphttpclient_fixed.serrchunktoobig
+#, object-pascal-format
+msgid "Chunk too big: Got %d, maximum allowed size: %d"
+msgstr "チャンクが大きすぎます: 受信 %d、最大許可サイズ: %d"
+
+#: fphttpclient_fixed.serrinvalidprotocol
+#, object-pascal-format
+msgid "Invalid protocol : \"%s\""
+msgstr "無効なプロトコル: \"%s\""
+
+#: fphttpclient_fixed.serrinvalidprotocolversion
+#, object-pascal-format
+msgid "Invalid protocol version in response: \"%s\""
+msgstr "レスポンスのプロトコルバージョンが無効です: \"%s\""
+
+#: fphttpclient_fixed.serrinvalidstatuscode
+#, object-pascal-format
+msgid "Invalid response status code: %s"
+msgstr "無効なレスポンスステータスコード: %s"
+
+#: fphttpclient_fixed.serrmaxredirectsreached
+#, object-pascal-format
+msgid "Maximum allowed redirects reached : %d"
+msgstr "許可された最大リダイレクト数に達しました: %d"
+
+#: fphttpclient_fixed.serrreadingsocket
+msgid "Error reading data from socket"
+msgstr "ソケットからのデータ読み取りエラー"
+
+#: fphttpclient_fixed.serrunexpectedresponse
+#, object-pascal-format
+msgid "Unexpected response status code: %d"
+msgstr "予期しないレスポンスステータスコード: %d"
+
+#: tfrmabout.button1.caption
+msgid "btnClose"
+msgstr "閉じる"
+
+#: tfrmabout.caption
+msgid "About"
+msgstr "バージョン情報"
+
+#: tfrmabout.lbprogramname.caption
+msgctxt "tfrmabout.lbprogramname.caption"
+msgid "SyncthingLazurite"
+msgstr "SyncthingLazurite"
+
+#: tfrmabout.lbprogramver.caption
+msgid "vX.X"
+msgstr "vX.X"
+
+#: tfrmabout.lbprogramverbuild.caption
+msgid "Build: XXX"
+msgstr "ビルド: XXX"
+
+#: tfrmabout.lbprogramverdate.caption
+msgid "Date: 2025 Oct"
+msgstr "日付: 2025年10月"
+
+#: tfrmabout.lbrepurl.editlabel.caption
+msgid "Source code repository:"
+msgstr "ソースコードリポジトリ:"
+
+#: tfrmabout.lbrepurl.text
+msgid "https://github.com/heX16/SyncthingLazurite"
+msgstr "https://github.com/heX16/SyncthingLazurite"
+
+#: tfrmabout.lbsyncthingversion.editlabel.caption
+msgid "lbSyncthingVersion"
+msgstr "Syncthing バージョン"
+
+#: tfrmabout.lbsyncthingversion.text
+msgctxt "tfrmabout.lbsyncthingversion.text"
+msgid "..."
+msgstr "..."
+
+#: tfrmabout.lbsyncthingwebsite.editlabel.caption
+msgid "lbSyncthingWebSite"
+msgstr "Syncthing ウェブサイト"
+
+#: tfrmabout.lbsyncthingwebsite.text
+msgid "https://syncthing.net/"
+msgstr "https://syncthing.net/"
+
+#: tfrmabout.lbtranslateauthor1.caption
+msgid "Author of localization: Alexander Kerner"
+msgstr "ローカライズ作者: Alexander Kerner"
+
+#: tfrmjsonview.btnhintupd.caption
+msgid "Update"
+msgstr "更新"
+
+#: tfrmjsonview.caption
+msgid "frmJSONView"
+msgstr "JSONビュー"
+
+#: tfrmjsonview.edhintfieldslist.editlabel.caption
+msgid "edHintFieldsList"
+msgstr "ヒントフィールド一覧"
+
+#: tfrmjsonview.edserverurl.editlabel.caption
+msgid "edServerURL"
+msgstr "サーバーURL"
+
+#: tfrmjsonview.edserverurl.text
+msgid "http://127.0.0.1:8384"
+msgstr "http://127.0.0.1:8384"
+
+#: tfrmjsonview.mncollapseall.caption
+msgid "mnCollapseAll"
+msgstr "すべて折りたたむ"
+
+#: tfrmjsonview.mncopyexpandrecursive.caption
+msgid "mnCopyExpandRecursive"
+msgstr "コピー (再帰的に展開)"
+
+#: tfrmjsonview.mncopyjsonrecursive.caption
+msgid "mnCopyJsonRecursive"
+msgstr "JSON を再帰的にコピー"
+
+#: tfrmjsonview.mncopyname.caption
+msgid "mnCopyName"
+msgstr "名前をコピー"
+
+#: tfrmjsonview.mncopypath.caption
+msgid "mnCopyPath"
+msgstr "パスをコピー"
+
+#: tfrmjsonview.mncopyvalue.caption
+msgid "mnCopyValue"
+msgstr "値をコピー"
+
+#: tfrmjsonview.mncopyvaluetext.caption
+msgid "mnCopyValueText"
+msgstr "値のテキストをコピー"
+
+#: tfrmjsonview.mnexpandall.caption
+msgid "mnExpandAll"
+msgstr "すべて展開"
+
+#: tfrmjsonview.mnshowhintpanel.caption
+msgid "mnShowHintPanel"
+msgstr "ヒントパネルを表示"
+
+#: tfrmjsonview.mntestconnect.caption
+msgctxt "tfrmjsonview.mntestconnect.caption"
+msgid "mnTestConnect"
+msgstr "接続テスト"
+
+#: tfrmjsonview.mntestgrp.caption
+msgid "mnTestGrp"
+msgstr "テストグループ"
+
+#: tfrmjsonview.mntestjson.caption
+msgid "mnTestJson"
+msgstr "JSONテスト"
+
+#: tfrmmain.caption
+msgctxt "tfrmmain.caption"
+msgid "SyncthingLazurite"
+msgstr "SyncthingLazurite"
+
+#: tfrmmain.grpdevices.caption
+msgid "grpDevices"
+msgstr "デバイス"
+
+#: tfrmmain.grpevents.caption
+msgid "grpEvents"
+msgstr "イベント"
+
+#: tfrmmain.grpfolders.caption
+msgid "grpFolders"
+msgstr "フォルダー"
+
+#: tfrmoptions.btnselectdirconfig.caption
+msgctxt "tfrmoptions.btnselectdirconfig.caption"
+msgid "..."
+msgstr "..."
+
+#: tfrmoptions.btnselectfileexec.caption
+msgctxt "tfrmoptions.btnselectfileexec.caption"
+msgid "..."
+msgstr "..."
+
+#: tfrmoptions.caption
+msgid "frmOptions"
+msgstr "設定"
+
+#: tfrmoptions.chauto.caption
+msgid "chAuto"
+msgstr "自動"
+
+#: tfrmoptions.chconnectonstart.caption
+msgid "chConnectOnStart"
+msgstr "起動時に接続"
+
+#: tfrmoptions.chrunsynconstart.caption
+msgid "chRunSyncOnStart"
+msgstr "起動時に同期を実行"
+
+#: tfrmoptions.chuseproxyoutputforfixbug.caption
+msgid "chUseProxyOutputForFixBug"
+msgstr "バグ修正のためプロキシ出力を使用"
+
+#: tfrmoptions.edapikey.editlabel.caption
+msgid "edAPIKey"
+msgstr "APIキー"
+
+#: tfrmoptions.edapikey.editlabel.hint
+msgctxt "tfrmoptions.edapikey.editlabel.hint"
+msgid ""
+"Goto:\n"
+"Settings -> Common -> API Key\n"
+"\n"
+"API Key example: xzMwbz6rDUuAv9tjVSbqfVMNta4kPWss"
+msgstr ""
+"移動:\n"
+"Settings -> Common -> API Key\n"
+"\n"
+"APIキー例: xzMwbz6rDUuAv9tjVSbqfVMNta4kPWss"
+
+#: tfrmoptions.edpathtoconfigdir.editlabel.caption
+msgid "edPathToConfigDir"
+msgstr "設定へのパス"
+
+#: tfrmoptions.edpathtoconfigdir.text
+msgctxt "tfrmoptions.edpathtoconfigdir.text"
+msgid "./"
+msgstr "./"
+
+#: tfrmoptions.edpathtoexecwithfilename.editlabel.caption
+msgid "edPathToExecWithFilename"
+msgstr "プログラムへのパス"
+
+#: tfrmoptions.edpathtoexecwithfilename.text
+msgctxt "tfrmoptions.edpathtoexecwithfilename.text"
+msgid "./"
+msgstr "./"
+
+#: tfrmoptions.edportnumber.editlabel.caption
+msgid "edPortNumber"
+msgstr "ポート番号"
+
+#: tfrmoptions.edportnumber.editlabel.hint
+#, object-pascal-format
+msgctxt "tfrmoptions.edportnumber.editlabel.hint"
+msgid ""
+"Goto:\n"
+"Settings -> Common -> API Key\n"
+"\n"
+"API Key example: xzMwbz6rDUuAv9tjVSbqfVMNta4kPWss"
+msgstr ""
+"移動:\n"
+"Settings -> Common -> API Key\n"
+"\n"
+"APIキー例: xzMwbz6rDUuAv9tjVSbqfVMNta4kPWss"
+
+#: tfrmoptions.edportnumber.text
+msgid "8384"
+msgstr "8384"
+
+#: tmodulemain.actabout.caption
+msgid "actAbout"
+msgstr "バージョン情報"
+
+#: tmodulemain.actclosegui.caption
+msgid "actCloseGUI"
+msgstr "GUI を閉じる"
+
+#: tmodulemain.actconnect.caption
+msgctxt "tmodulemain.actconnect.caption"
+msgid "actConnect"
+msgstr "接続"
+
+#: tmodulemain.actconnectorstart.caption
+msgid "actConnectOrStart"
+msgstr "接続または起動"
+
+#: tmodulemain.actcopyselecteddevid.caption
+msgid "actCopySelectedDevID"
+msgstr "デバイスIDをコピー"
+
+#: tmodulemain.actdisconnect.caption
+msgid "actDisconnect"
+msgstr "切断"
+
+#: tmodulemain.actdisconnectandstop.caption
+msgid "actDisconnectAndStop"
+msgstr "切断して停止"
+
+#: tmodulemain.actrestartapp.caption
+msgid "actRestartApp"
+msgstr "アプリを再起動"
+
+#: tmodulemain.actsetstaterun.caption
+msgid "actSetStateRun"
+msgstr "開始"
+
+#: tmodulemain.actsetstatestop.caption
+msgid "actSetStateStop"
+msgstr "停止"
+
+#: tmodulemain.actshowconsole.caption
+msgid "actShowConsole"
+msgstr "コンソールを表示"
+
+#: tmodulemain.actshowevents.caption
+msgid "actShowEvents"
+msgstr "イベントを表示"
+
+#: tmodulemain.actshowoptions.caption
+msgid "actShowOptions"
+msgstr "設定"
+
+#: tmodulemain.actshowrestview.caption
+msgid "actShowRestView"
+msgstr "RESTデータを表示"
+
+#: tmodulemain.actshowweb.caption
+msgid "actShowWeb"
+msgstr "ブラウザでWebインターフェースを開く"
+
+#: tmodulemain.actstopandexit.caption
+msgctxt "tmodulemain.actstopandexit.caption"
+msgid "actStopAndExit"
+msgstr "停止して終了"
+
+#: tmodulemain.actstopsyncthing.caption
+msgid "actStopSyncthing"
+msgstr "Syncthing を停止"
+
+#: tmodulemain.menuitem1.caption
+msgctxt "tmodulemain.menuitem1.caption"
+msgid "actStop"
+msgstr "停止"
+
+#: tmodulemain.menuitem2.caption
+msgctxt "tmodulemain.menuitem2.caption"
+msgid "actRestart"
+msgstr "再起動"
+
+#: tmodulemain.menuitem3.caption
+msgctxt "tmodulemain.menuitem3.caption"
+msgid "actStartAndConnect"
+msgstr "起動して接続"
+
+#: tmodulemain.menuitem4.caption
+msgid "actPause"
+msgstr "一時停止"
+
+#: tmodulemain.mnrestart.caption
+msgctxt "tmodulemain.mnrestart.caption"
+msgid "actRestart"
+msgstr "再起動"
+
+#: tmodulemain.mnserver.caption
+msgid "mnServer"
+msgstr "サーバー"
+
+#: tmodulemain.mnview.caption
+msgid "mnView"
+msgstr "表示"
+
+#: uformmain.caddress
+msgid "Address"
+msgstr "アドレス"
+
+#: uformmain.cdays
+msgid "days"
+msgstr "日"
+
+#: uformmain.coffline
+msgid "Offline"
+msgstr "オフライン"
+
+#: umodulemain.cprogramname
+msgctxt "umodulemain.cprogramname"
+msgid "SyncthingLazurite"
+msgstr "SyncthingLazurite"
+
+#: umodulemain.cstrlocal
+msgid " (local)"
+msgstr " (ローカル)"
+
+

@@ -1,0 +1,395 @@
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Language: pt_BR\n"
+"Plural-Forms: nplurals=2; plural=(n>1);\n"
+
+#: fphttpclient_fixed.serrchunklineendmissing
+msgid "Chunk line end missing"
+msgstr "Fim de linha do bloco ausente"
+
+#: fphttpclient_fixed.serrchunktoobig
+#, object-pascal-format
+msgid "Chunk too big: Got %d, maximum allowed size: %d"
+msgstr "Bloco grande demais: recebido %d, tamanho máximo permitido: %d"
+
+#: fphttpclient_fixed.serrinvalidprotocol
+#, object-pascal-format
+msgid "Invalid protocol : \"%s\""
+msgstr "Protocolo inválido: \"%s\""
+
+#: fphttpclient_fixed.serrinvalidprotocolversion
+#, object-pascal-format
+msgid "Invalid protocol version in response: \"%s\""
+msgstr "Versão de protocolo inválida na resposta: \"%s\""
+
+#: fphttpclient_fixed.serrinvalidstatuscode
+#, object-pascal-format
+msgid "Invalid response status code: %s"
+msgstr "Código de status de resposta inválido: %s"
+
+#: fphttpclient_fixed.serrmaxredirectsreached
+#, object-pascal-format
+msgid "Maximum allowed redirects reached : %d"
+msgstr "Número máximo de redirecionamentos atingido: %d"
+
+#: fphttpclient_fixed.serrreadingsocket
+msgid "Error reading data from socket"
+msgstr "Erro ao ler dados do soquete"
+
+#: fphttpclient_fixed.serrunexpectedresponse
+#, object-pascal-format
+msgid "Unexpected response status code: %d"
+msgstr "Código de status de resposta inesperado: %d"
+
+#: tfrmabout.button1.caption
+msgid "btnClose"
+msgstr "Fechar"
+
+#: tfrmabout.caption
+msgid "About"
+msgstr "Sobre"
+
+#: tfrmabout.lbprogramname.caption
+msgctxt "tfrmabout.lbprogramname.caption"
+msgid "SyncthingLazurite"
+msgstr "SyncthingLazurite"
+
+#: tfrmabout.lbprogramver.caption
+msgid "vX.X"
+msgstr "vX.X"
+
+#: tfrmabout.lbprogramverbuild.caption
+msgid "Build: XXX"
+msgstr "Compilação: XXX"
+
+#: tfrmabout.lbprogramverdate.caption
+msgid "Date: 2025 Oct"
+msgstr "Data: out 2025"
+
+#: tfrmabout.lbrepurl.editlabel.caption
+msgid "Source code repository:"
+msgstr "Repositório do código-fonte:"
+
+#: tfrmabout.lbrepurl.text
+msgid "https://github.com/heX16/SyncthingLazurite"
+msgstr "https://github.com/heX16/SyncthingLazurite"
+
+#: tfrmabout.lbsyncthingversion.editlabel.caption
+msgid "lbSyncthingVersion"
+msgstr "Versão do Syncthing"
+
+#: tfrmabout.lbsyncthingversion.text
+msgctxt "tfrmabout.lbsyncthingversion.text"
+msgid "..."
+msgstr "..."
+
+#: tfrmabout.lbsyncthingwebsite.editlabel.caption
+msgid "lbSyncthingWebSite"
+msgstr "Site do Syncthing"
+
+#: tfrmabout.lbsyncthingwebsite.text
+msgid "https://syncthing.net/"
+msgstr "https://syncthing.net/"
+
+#: tfrmabout.lbtranslateauthor1.caption
+msgid "Author of localization: Alexander Kerner"
+msgstr "Autor da localização: Alexander Kerner"
+
+#: tfrmjsonview.btnhintupd.caption
+msgid "Update"
+msgstr "Atualizar"
+
+#: tfrmjsonview.caption
+msgid "frmJSONView"
+msgstr "Visualização JSON"
+
+#: tfrmjsonview.edhintfieldslist.editlabel.caption
+msgid "edHintFieldsList"
+msgstr "Lista de campos de dica"
+
+#: tfrmjsonview.edserverurl.editlabel.caption
+msgid "edServerURL"
+msgstr "URL do servidor"
+
+#: tfrmjsonview.edserverurl.text
+msgid "http://127.0.0.1:8384"
+msgstr "http://127.0.0.1:8384"
+
+#: tfrmjsonview.mncollapseall.caption
+msgid "mnCollapseAll"
+msgstr "Recolher tudo"
+
+#: tfrmjsonview.mncopyexpandrecursive.caption
+msgid "mnCopyExpandRecursive"
+msgstr "Copiar (expandir recursivamente)"
+
+#: tfrmjsonview.mncopyjsonrecursive.caption
+msgid "mnCopyJsonRecursive"
+msgstr "Copiar JSON recursivamente"
+
+#: tfrmjsonview.mncopyname.caption
+msgid "mnCopyName"
+msgstr "Copiar nome"
+
+#: tfrmjsonview.mncopypath.caption
+msgid "mnCopyPath"
+msgstr "Copiar caminho"
+
+#: tfrmjsonview.mncopyvalue.caption
+msgid "mnCopyValue"
+msgstr "Copiar valor"
+
+#: tfrmjsonview.mncopyvaluetext.caption
+msgid "mnCopyValueText"
+msgstr "Copiar texto do valor"
+
+#: tfrmjsonview.mnexpandall.caption
+msgid "mnExpandAll"
+msgstr "Expandir tudo"
+
+#: tfrmjsonview.mnshowhintpanel.caption
+msgid "mnShowHintPanel"
+msgstr "Mostrar painel de dicas"
+
+#: tfrmjsonview.mntestconnect.caption
+msgctxt "tfrmjsonview.mntestconnect.caption"
+msgid "mnTestConnect"
+msgstr "Testar conexão"
+
+#: tfrmjsonview.mntestgrp.caption
+msgid "mnTestGrp"
+msgstr "Grupo de teste"
+
+#: tfrmjsonview.mntestjson.caption
+msgid "mnTestJson"
+msgstr "Testar JSON"
+
+#: tfrmmain.caption
+msgctxt "tfrmmain.caption"
+msgid "SyncthingLazurite"
+msgstr "SyncthingLazurite"
+
+#: tfrmmain.grpdevices.caption
+msgid "grpDevices"
+msgstr "Dispositivos"
+
+#: tfrmmain.grpevents.caption
+msgid "grpEvents"
+msgstr "Eventos"
+
+#: tfrmmain.grpfolders.caption
+msgid "grpFolders"
+msgstr "Pastas"
+
+#: tfrmoptions.btnselectdirconfig.caption
+msgctxt "tfrmoptions.btnselectdirconfig.caption"
+msgid "..."
+msgstr "..."
+
+#: tfrmoptions.btnselectfileexec.caption
+msgctxt "tfrmoptions.btnselectfileexec.caption"
+msgid "..."
+msgstr "..."
+
+#: tfrmoptions.caption
+msgid "frmOptions"
+msgstr "Opções"
+
+#: tfrmoptions.chauto.caption
+msgid "chAuto"
+msgstr "Auto"
+
+#: tfrmoptions.chconnectonstart.caption
+msgid "chConnectOnStart"
+msgstr "Conectar na inicialização"
+
+#: tfrmoptions.chrunsynconstart.caption
+msgid "chRunSyncOnStart"
+msgstr "Executar sincronização ao iniciar"
+
+#: tfrmoptions.chuseproxyoutputforfixbug.caption
+msgid "chUseProxyOutputForFixBug"
+msgstr "Usar saída proxy para corrigir o bug"
+
+#: tfrmoptions.edapikey.editlabel.caption
+msgid "edAPIKey"
+msgstr "Chave API"
+
+#: tfrmoptions.edapikey.editlabel.hint
+msgctxt "tfrmoptions.edapikey.editlabel.hint"
+msgid ""
+"Goto:\n"
+"Settings -> Common -> API Key\n"
+"\n"
+"API Key example: xzMwbz6rDUuAv9tjVSbqfVMNta4kPWss"
+msgstr ""
+"Ir para:\n"
+"Settings -> Common -> API Key\n"
+"\n"
+"Exemplo de API Key: xzMwbz6rDUuAv9tjVSbqfVMNta4kPWss"
+
+#: tfrmoptions.edpathtoconfigdir.editlabel.caption
+msgid "edPathToConfigDir"
+msgstr "Caminho para configuração"
+
+#: tfrmoptions.edpathtoconfigdir.text
+msgctxt "tfrmoptions.edpathtoconfigdir.text"
+msgid "./"
+msgstr "./"
+
+#: tfrmoptions.edpathtoexecwithfilename.editlabel.caption
+msgid "edPathToExecWithFilename"
+msgstr "Caminho do programa"
+
+#: tfrmoptions.edpathtoexecwithfilename.text
+msgctxt "tfrmoptions.edpathtoexecwithfilename.text"
+msgid "./"
+msgstr "./"
+
+#: tfrmoptions.edportnumber.editlabel.caption
+msgid "edPortNumber"
+msgstr "Número da porta"
+
+#: tfrmoptions.edportnumber.editlabel.hint
+#, object-pascal-format
+msgctxt "tfrmoptions.edportnumber.editlabel.hint"
+msgid ""
+"Goto:\n"
+"Settings -> Common -> API Key\n"
+"\n"
+"API Key example: xzMwbz6rDUuAv9tjVSbqfVMNta4kPWss"
+msgstr ""
+"Ir para:\n"
+"Settings -> Common -> API Key\n"
+"\n"
+"Exemplo de API Key: xzMwbz6rDUuAv9tjVSbqfVMNta4kPWss"
+
+#: tfrmoptions.edportnumber.text
+msgid "8384"
+msgstr "8384"
+
+#: tmodulemain.actabout.caption
+msgid "actAbout"
+msgstr "Sobre"
+
+#: tmodulemain.actclosegui.caption
+msgid "actCloseGUI"
+msgstr "Fechar GUI"
+
+#: tmodulemain.actconnect.caption
+msgctxt "tmodulemain.actconnect.caption"
+msgid "actConnect"
+msgstr "Conectar"
+
+#: tmodulemain.actconnectorstart.caption
+msgid "actConnectOrStart"
+msgstr "Conectar ou iniciar"
+
+#: tmodulemain.actcopyselecteddevid.caption
+msgid "actCopySelectedDevID"
+msgstr "Copiar ID do dispositivo"
+
+#: tmodulemain.actdisconnect.caption
+msgid "actDisconnect"
+msgstr "Desconectar"
+
+#: tmodulemain.actdisconnectandstop.caption
+msgid "actDisconnectAndStop"
+msgstr "Desconectar e parar"
+
+#: tmodulemain.actrestartapp.caption
+msgid "actRestartApp"
+msgstr "Reiniciar aplicativo"
+
+#: tmodulemain.actsetstaterun.caption
+msgid "actSetStateRun"
+msgstr "Iniciar"
+
+#: tmodulemain.actsetstatestop.caption
+msgid "actSetStateStop"
+msgstr "Parar"
+
+#: tmodulemain.actshowconsole.caption
+msgid "actShowConsole"
+msgstr "Mostrar console"
+
+#: tmodulemain.actshowevents.caption
+msgid "actShowEvents"
+msgstr "Mostrar eventos"
+
+#: tmodulemain.actshowoptions.caption
+msgid "actShowOptions"
+msgstr "Opções"
+
+#: tmodulemain.actshowrestview.caption
+msgid "actShowRestView"
+msgstr "Ver dados REST"
+
+#: tmodulemain.actshowweb.caption
+msgid "actShowWeb"
+msgstr "Abrir interface web no navegador"
+
+#: tmodulemain.actstopandexit.caption
+msgctxt "tmodulemain.actstopandexit.caption"
+msgid "actStopAndExit"
+msgstr "Parar e sair"
+
+#: tmodulemain.actstopsyncthing.caption
+msgid "actStopSyncthing"
+msgstr "Parar Syncthing"
+
+#: tmodulemain.menuitem1.caption
+msgctxt "tmodulemain.menuitem1.caption"
+msgid "actStop"
+msgstr "Parar"
+
+#: tmodulemain.menuitem2.caption
+msgctxt "tmodulemain.menuitem2.caption"
+msgid "actRestart"
+msgstr "Reiniciar"
+
+#: tmodulemain.menuitem3.caption
+msgctxt "tmodulemain.menuitem3.caption"
+msgid "actStartAndConnect"
+msgstr "Iniciar e conectar"
+
+#: tmodulemain.menuitem4.caption
+msgid "actPause"
+msgstr "Pausar"
+
+#: tmodulemain.mnrestart.caption
+msgctxt "tmodulemain.mnrestart.caption"
+msgid "actRestart"
+msgstr "Reiniciar"
+
+#: tmodulemain.mnserver.caption
+msgid "mnServer"
+msgstr "Servidor"
+
+#: tmodulemain.mnview.caption
+msgid "mnView"
+msgstr "Exibir"
+
+#: uformmain.caddress
+msgid "Address"
+msgstr "Endereço"
+
+#: uformmain.cdays
+msgid "days"
+msgstr "dias"
+
+#: uformmain.coffline
+msgid "Offline"
+msgstr "Offline"
+
+#: umodulemain.cprogramname
+msgctxt "umodulemain.cprogramname"
+msgid "SyncthingLazurite"
+msgstr "SyncthingLazurite"
+
+#: umodulemain.cstrlocal
+msgid " (local)"
+msgstr " (local)"
+
+

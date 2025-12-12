@@ -1,0 +1,395 @@
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Language: zh_CN\n"
+"Plural-Forms: nplurals=1; plural=0;\n"
+
+#: fphttpclient_fixed.serrchunklineendmissing
+msgid "Chunk line end missing"
+msgstr "缺少块的行结束符"
+
+#: fphttpclient_fixed.serrchunktoobig
+#, object-pascal-format
+msgid "Chunk too big: Got %d, maximum allowed size: %d"
+msgstr "数据块过大：收到 %d，允许的最大大小：%d"
+
+#: fphttpclient_fixed.serrinvalidprotocol
+#, object-pascal-format
+msgid "Invalid protocol : \"%s\""
+msgstr "协议无效：\"%s\""
+
+#: fphttpclient_fixed.serrinvalidprotocolversion
+#, object-pascal-format
+msgid "Invalid protocol version in response: \"%s\""
+msgstr "响应中的协议版本无效：\"%s\""
+
+#: fphttpclient_fixed.serrinvalidstatuscode
+#, object-pascal-format
+msgid "Invalid response status code: %s"
+msgstr "响应状态码无效：%s"
+
+#: fphttpclient_fixed.serrmaxredirectsreached
+#, object-pascal-format
+msgid "Maximum allowed redirects reached : %d"
+msgstr "已达到允许的最大重定向次数：%d"
+
+#: fphttpclient_fixed.serrreadingsocket
+msgid "Error reading data from socket"
+msgstr "从套接字读取数据时出错"
+
+#: fphttpclient_fixed.serrunexpectedresponse
+#, object-pascal-format
+msgid "Unexpected response status code: %d"
+msgstr "响应状态码异常：%d"
+
+#: tfrmabout.button1.caption
+msgid "btnClose"
+msgstr "关闭"
+
+#: tfrmabout.caption
+msgid "About"
+msgstr "关于"
+
+#: tfrmabout.lbprogramname.caption
+msgctxt "tfrmabout.lbprogramname.caption"
+msgid "SyncthingLazurite"
+msgstr "SyncthingLazurite"
+
+#: tfrmabout.lbprogramver.caption
+msgid "vX.X"
+msgstr "vX.X"
+
+#: tfrmabout.lbprogramverbuild.caption
+msgid "Build: XXX"
+msgstr "构建：XXX"
+
+#: tfrmabout.lbprogramverdate.caption
+msgid "Date: 2025 Oct"
+msgstr "日期：2025 年 10 月"
+
+#: tfrmabout.lbrepurl.editlabel.caption
+msgid "Source code repository:"
+msgstr "源代码仓库："
+
+#: tfrmabout.lbrepurl.text
+msgid "https://github.com/heX16/SyncthingLazurite"
+msgstr "https://github.com/heX16/SyncthingLazurite"
+
+#: tfrmabout.lbsyncthingversion.editlabel.caption
+msgid "lbSyncthingVersion"
+msgstr "Syncthing 版本"
+
+#: tfrmabout.lbsyncthingversion.text
+msgctxt "tfrmabout.lbsyncthingversion.text"
+msgid "..."
+msgstr "..."
+
+#: tfrmabout.lbsyncthingwebsite.editlabel.caption
+msgid "lbSyncthingWebSite"
+msgstr "Syncthing 网站"
+
+#: tfrmabout.lbsyncthingwebsite.text
+msgid "https://syncthing.net/"
+msgstr "https://syncthing.net/"
+
+#: tfrmabout.lbtranslateauthor1.caption
+msgid "Author of localization: Alexander Kerner"
+msgstr "本地化作者：Alexander Kerner"
+
+#: tfrmjsonview.btnhintupd.caption
+msgid "Update"
+msgstr "更新"
+
+#: tfrmjsonview.caption
+msgid "frmJSONView"
+msgstr "JSON 视图"
+
+#: tfrmjsonview.edhintfieldslist.editlabel.caption
+msgid "edHintFieldsList"
+msgstr "提示字段列表"
+
+#: tfrmjsonview.edserverurl.editlabel.caption
+msgid "edServerURL"
+msgstr "服务器 URL"
+
+#: tfrmjsonview.edserverurl.text
+msgid "http://127.0.0.1:8384"
+msgstr "http://127.0.0.1:8384"
+
+#: tfrmjsonview.mncollapseall.caption
+msgid "mnCollapseAll"
+msgstr "全部折叠"
+
+#: tfrmjsonview.mncopyexpandrecursive.caption
+msgid "mnCopyExpandRecursive"
+msgstr "复制（递归展开）"
+
+#: tfrmjsonview.mncopyjsonrecursive.caption
+msgid "mnCopyJsonRecursive"
+msgstr "递归复制 JSON"
+
+#: tfrmjsonview.mncopyname.caption
+msgid "mnCopyName"
+msgstr "复制名称"
+
+#: tfrmjsonview.mncopypath.caption
+msgid "mnCopyPath"
+msgstr "复制路径"
+
+#: tfrmjsonview.mncopyvalue.caption
+msgid "mnCopyValue"
+msgstr "复制值"
+
+#: tfrmjsonview.mncopyvaluetext.caption
+msgid "mnCopyValueText"
+msgstr "复制值文本"
+
+#: tfrmjsonview.mnexpandall.caption
+msgid "mnExpandAll"
+msgstr "全部展开"
+
+#: tfrmjsonview.mnshowhintpanel.caption
+msgid "mnShowHintPanel"
+msgstr "显示提示面板"
+
+#: tfrmjsonview.mntestconnect.caption
+msgctxt "tfrmjsonview.mntestconnect.caption"
+msgid "mnTestConnect"
+msgstr "测试连接"
+
+#: tfrmjsonview.mntestgrp.caption
+msgid "mnTestGrp"
+msgstr "测试组"
+
+#: tfrmjsonview.mntestjson.caption
+msgid "mnTestJson"
+msgstr "测试 JSON"
+
+#: tfrmmain.caption
+msgctxt "tfrmmain.caption"
+msgid "SyncthingLazurite"
+msgstr "SyncthingLazurite"
+
+#: tfrmmain.grpdevices.caption
+msgid "grpDevices"
+msgstr "设备"
+
+#: tfrmmain.grpevents.caption
+msgid "grpEvents"
+msgstr "事件"
+
+#: tfrmmain.grpfolders.caption
+msgid "grpFolders"
+msgstr "文件夹"
+
+#: tfrmoptions.btnselectdirconfig.caption
+msgctxt "tfrmoptions.btnselectdirconfig.caption"
+msgid "..."
+msgstr "..."
+
+#: tfrmoptions.btnselectfileexec.caption
+msgctxt "tfrmoptions.btnselectfileexec.caption"
+msgid "..."
+msgstr "..."
+
+#: tfrmoptions.caption
+msgid "frmOptions"
+msgstr "选项"
+
+#: tfrmoptions.chauto.caption
+msgid "chAuto"
+msgstr "自动"
+
+#: tfrmoptions.chconnectonstart.caption
+msgid "chConnectOnStart"
+msgstr "启动时连接"
+
+#: tfrmoptions.chrunsynconstart.caption
+msgid "chRunSyncOnStart"
+msgstr "启动时执行同步"
+
+#: tfrmoptions.chuseproxyoutputforfixbug.caption
+msgid "chUseProxyOutputForFixBug"
+msgstr "使用代理输出修复问题"
+
+#: tfrmoptions.edapikey.editlabel.caption
+msgid "edAPIKey"
+msgstr "API 密钥"
+
+#: tfrmoptions.edapikey.editlabel.hint
+msgctxt "tfrmoptions.edapikey.editlabel.hint"
+msgid ""
+"Goto:\n"
+"Settings -> Common -> API Key\n"
+"\n"
+"API Key example: xzMwbz6rDUuAv9tjVSbqfVMNta4kPWss"
+msgstr ""
+"前往:\n"
+"Settings -> Common -> API Key\n"
+"\n"
+"API Key 示例: xzMwbz6rDUuAv9tjVSbqfVMNta4kPWss"
+
+#: tfrmoptions.edpathtoconfigdir.editlabel.caption
+msgid "edPathToConfigDir"
+msgstr "配置路径"
+
+#: tfrmoptions.edpathtoconfigdir.text
+msgctxt "tfrmoptions.edpathtoconfigdir.text"
+msgid "./"
+msgstr "./"
+
+#: tfrmoptions.edpathtoexecwithfilename.editlabel.caption
+msgid "edPathToExecWithFilename"
+msgstr "程序路径"
+
+#: tfrmoptions.edpathtoexecwithfilename.text
+msgctxt "tfrmoptions.edpathtoexecwithfilename.text"
+msgid "./"
+msgstr "./"
+
+#: tfrmoptions.edportnumber.editlabel.caption
+msgid "edPortNumber"
+msgstr "端口号"
+
+#: tfrmoptions.edportnumber.editlabel.hint
+#, object-pascal-format
+msgctxt "tfrmoptions.edportnumber.editlabel.hint"
+msgid ""
+"Goto:\n"
+"Settings -> Common -> API Key\n"
+"\n"
+"API Key example: xzMwbz6rDUuAv9tjVSbqfVMNta4kPWss"
+msgstr ""
+"前往:\n"
+"Settings -> Common -> API Key\n"
+"\n"
+"API Key 示例: xzMwbz6rDUuAv9tjVSbqfVMNta4kPWss"
+
+#: tfrmoptions.edportnumber.text
+msgid "8384"
+msgstr "8384"
+
+#: tmodulemain.actabout.caption
+msgid "actAbout"
+msgstr "关于"
+
+#: tmodulemain.actclosegui.caption
+msgid "actCloseGUI"
+msgstr "关闭 GUI"
+
+#: tmodulemain.actconnect.caption
+msgctxt "tmodulemain.actconnect.caption"
+msgid "actConnect"
+msgstr "连接"
+
+#: tmodulemain.actconnectorstart.caption
+msgid "actConnectOrStart"
+msgstr "连接或启动"
+
+#: tmodulemain.actcopyselecteddevid.caption
+msgid "actCopySelectedDevID"
+msgstr "复制设备 ID"
+
+#: tmodulemain.actdisconnect.caption
+msgid "actDisconnect"
+msgstr "断开连接"
+
+#: tmodulemain.actdisconnectandstop.caption
+msgid "actDisconnectAndStop"
+msgstr "断开并停止"
+
+#: tmodulemain.actrestartapp.caption
+msgid "actRestartApp"
+msgstr "重启应用"
+
+#: tmodulemain.actsetstaterun.caption
+msgid "actSetStateRun"
+msgstr "运行"
+
+#: tmodulemain.actsetstatestop.caption
+msgid "actSetStateStop"
+msgstr "停止"
+
+#: tmodulemain.actshowconsole.caption
+msgid "actShowConsole"
+msgstr "显示控制台"
+
+#: tmodulemain.actshowevents.caption
+msgid "actShowEvents"
+msgstr "显示事件"
+
+#: tmodulemain.actshowoptions.caption
+msgid "actShowOptions"
+msgstr "选项"
+
+#: tmodulemain.actshowrestview.caption
+msgid "actShowRestView"
+msgstr "查看 REST 数据"
+
+#: tmodulemain.actshowweb.caption
+msgid "actShowWeb"
+msgstr "在浏览器中打开 Web 界面"
+
+#: tmodulemain.actstopandexit.caption
+msgctxt "tmodulemain.actstopandexit.caption"
+msgid "actStopAndExit"
+msgstr "停止并退出"
+
+#: tmodulemain.actstopsyncthing.caption
+msgid "actStopSyncthing"
+msgstr "停止 Syncthing"
+
+#: tmodulemain.menuitem1.caption
+msgctxt "tmodulemain.menuitem1.caption"
+msgid "actStop"
+msgstr "停止"
+
+#: tmodulemain.menuitem2.caption
+msgctxt "tmodulemain.menuitem2.caption"
+msgid "actRestart"
+msgstr "重启"
+
+#: tmodulemain.menuitem3.caption
+msgctxt "tmodulemain.menuitem3.caption"
+msgid "actStartAndConnect"
+msgstr "启动并连接"
+
+#: tmodulemain.menuitem4.caption
+msgid "actPause"
+msgstr "暂停"
+
+#: tmodulemain.mnrestart.caption
+msgctxt "tmodulemain.mnrestart.caption"
+msgid "actRestart"
+msgstr "重启"
+
+#: tmodulemain.mnserver.caption
+msgid "mnServer"
+msgstr "服务器"
+
+#: tmodulemain.mnview.caption
+msgid "mnView"
+msgstr "视图"
+
+#: uformmain.caddress
+msgid "Address"
+msgstr "地址"
+
+#: uformmain.cdays
+msgid "days"
+msgstr "天"
+
+#: uformmain.coffline
+msgid "Offline"
+msgstr "离线"
+
+#: umodulemain.cprogramname
+msgctxt "umodulemain.cprogramname"
+msgid "SyncthingLazurite"
+msgstr "SyncthingLazurite"
+
+#: umodulemain.cstrlocal
+msgid " (local)"
+msgstr " (本地)"
+
+
