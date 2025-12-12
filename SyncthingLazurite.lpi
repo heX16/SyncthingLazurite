@@ -32,9 +32,9 @@
       <UseVersionInfo Value="True"/>
       <AutoIncrementBuild Value="True"/>
       <MajorVersionNr Value="1"/>
-      <MinorVersionNr Value="2"/>
-      <RevisionNr Value="2511"/>
-      <BuildNr Value="164"/>
+      <MinorVersionNr Value="3"/>
+      <RevisionNr Value="2512"/>
+      <BuildNr Value="168"/>
     </VersionInfo>
     <BuildModes Count="4">
       <Item1 Name="Debug" Default="True"/>
@@ -58,6 +58,7 @@
           <Linking>
             <Debugging>
               <GenerateDebugInfo Value="False"/>
+              <RunWithoutDebug Value="True"/>
               <DebugInfoType Value="dsDwarf2Set"/>
               <StripSymbols Value="True"/>
             </Debugging>
@@ -73,10 +74,6 @@
               <IgnoredMessages idx6058="True"/>
             </CompilerMessages>
             <CustomOptions Value="-dUseCThreads"/>
-            <OtherDefines Count="2">
-              <Define0 Value="UseCThreads"/>
-              <Define1 Value="DEBUG"/>
-            </OtherDefines>
           </Other>
         </CompilerOptions>
       </Item2>
