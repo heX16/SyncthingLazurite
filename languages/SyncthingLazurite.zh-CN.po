@@ -196,9 +196,9 @@ msgstr "..."
 msgid "frmOptions"
 msgstr "选项"
 
-#: tfrmoptions.chauto.caption
-msgid "chAuto"
-msgstr "自动"
+#: tfrmoptions.chautogetapikey.caption
+msgid "chAutoGetAPIKey"
+msgstr "自动获取 API 密钥"
 
 #: tfrmoptions.chconnectonstart.caption
 msgid "chConnectOnStart"
@@ -252,7 +252,6 @@ msgid "edPortNumber"
 msgstr "端口号"
 
 #: tfrmoptions.edportnumber.editlabel.hint
-#, object-pascal-format
 msgctxt "tfrmoptions.edportnumber.editlabel.hint"
 msgid ""
 "Goto:\n"
@@ -268,6 +267,10 @@ msgstr ""
 #: tfrmoptions.edportnumber.text
 msgid "8384"
 msgstr "8384"
+
+#: tfrmoptions.lblanguage.caption
+msgid "lbLanguage"
+msgstr "语言："
 
 #: tmodulemain.actabout.caption
 msgid "actAbout"
@@ -383,6 +386,14 @@ msgstr "天"
 msgid "Offline"
 msgstr "离线"
 
+#: umodulemain.clanguagename
+msgid "cLanguageName"
+msgstr "简体中文"
+
+#: umodulemain.clanguagenameeng
+msgid "cLanguageNameEng"
+msgstr "Chinese (Simplified)"
+
 #: umodulemain.cprogramname
 msgctxt "umodulemain.cprogramname"
 msgid "SyncthingLazurite"
@@ -391,5 +402,4 @@ msgstr "SyncthingLazurite"
 #: umodulemain.cstrlocal
 msgid " (local)"
 msgstr " (本地)"
-
 

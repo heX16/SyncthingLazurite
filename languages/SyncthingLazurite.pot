@@ -192,8 +192,8 @@ msgstr ""
 msgid "frmOptions"
 msgstr ""
 
-#: tfrmoptions.chauto.caption
-msgid "chAuto"
+#: tfrmoptions.chautogetapikey.caption
+msgid "chAutoGetAPIKey"
 msgstr ""
 
 #: tfrmoptions.chconnectonstart.caption
@@ -254,6 +254,10 @@ msgstr ""
 
 #: tfrmoptions.edportnumber.text
 msgid "8384"
+msgstr ""
+
+#: tfrmoptions.lblanguage.caption
+msgid "lbLanguage"
 msgstr ""
 
 #: tmodulemain.actabout.caption
@@ -367,6 +371,14 @@ msgstr ""
 
 #: uformmain.coffline
 msgid "Offline"
+msgstr ""
+
+#: umodulemain.clanguagename
+msgid "cLanguageName"
+msgstr ""
+
+#: umodulemain.clanguagenameeng
+msgid "cLanguageNameEng"
 msgstr ""
 
 #: umodulemain.cprogramname

@@ -1,83 +1,91 @@
 msgid ""
-msgstr ""
-"Content-Type: text/plain; charset=UTF-8\n"
-"Language: ko\n"
-"Plural-Forms: nplurals=1; plural=0;\n"
+msgstr "Content-Type: text/plain; charset=UTF-8"
 
 #: fphttpclient_fixed.serrchunklineendmissing
 msgid "Chunk line end missing"
-msgstr "청크 줄 끝이 없습니다"
+msgstr ""
 
 #: fphttpclient_fixed.serrchunktoobig
 #, object-pascal-format
 msgid "Chunk too big: Got %d, maximum allowed size: %d"
-msgstr "청크가 너무 큽니다: 받은 크기 %d, 최대 허용 크기: %d"
+msgstr ""
 
 #: fphttpclient_fixed.serrinvalidprotocol
 #, object-pascal-format
 msgid "Invalid protocol : \"%s\""
-msgstr "잘못된 프로토콜: \"%s\""
+msgstr ""
 
 #: fphttpclient_fixed.serrinvalidprotocolversion
 #, object-pascal-format
 msgid "Invalid protocol version in response: \"%s\""
-msgstr "응답의 프로토콜 버전이 잘못되었습니다: \"%s\""
+msgstr ""
 
 #: fphttpclient_fixed.serrinvalidstatuscode
 #, object-pascal-format
 msgid "Invalid response status code: %s"
-msgstr "잘못된 응답 상태 코드: %s"
+msgstr ""
 
 #: fphttpclient_fixed.serrmaxredirectsreached
 #, object-pascal-format
 msgid "Maximum allowed redirects reached : %d"
-msgstr "허용된 최대 리디렉션 수에 도달했습니다: %d"
+msgstr ""
 
 #: fphttpclient_fixed.serrreadingsocket
 msgid "Error reading data from socket"
-msgstr "소켓에서 데이터를 읽는 중 오류"
+msgstr ""
 
 #: fphttpclient_fixed.serrunexpectedresponse
 #, object-pascal-format
 msgid "Unexpected response status code: %d"
-msgstr "예상치 못한 응답 상태 코드: %d"
+msgstr ""
 
 #: tfrmabout.button1.caption
+#, fuzzy
+msgctxt "tfrmabout.button1.caption"
 msgid "btnClose"
-msgstr "닫기"
+msgstr "Close"
 
 #: tfrmabout.caption
 msgid "About"
-msgstr "정보"
+msgstr "About"
 
 #: tfrmabout.lbprogramname.caption
+#, fuzzy
 msgctxt "tfrmabout.lbprogramname.caption"
 msgid "SyncthingLazurite"
 msgstr "SyncthingLazurite"
 
 #: tfrmabout.lbprogramver.caption
+#, fuzzy
+msgctxt "tfrmabout.lbprogramver.caption"
 msgid "vX.X"
 msgstr "vX.X"
 
 #: tfrmabout.lbprogramverbuild.caption
+#, fuzzy
+msgctxt "tfrmabout.lbprogramverbuild.caption"
 msgid "Build: XXX"
-msgstr "빌드: XXX"
+msgstr "Build: XXX"
 
 #: tfrmabout.lbprogramverdate.caption
+#, fuzzy
+msgctxt "tfrmabout.lbprogramverdate.caption"
 msgid "Date: 2025 Oct"
-msgstr "날짜: 2025년 10월"
+msgstr "Date: 2025 Oct"
 
 #: tfrmabout.lbrepurl.editlabel.caption
 msgid "Source code repository:"
-msgstr "소스 코드 저장소:"
+msgstr "Source code repository:"
 
 #: tfrmabout.lbrepurl.text
+#, fuzzy
+#| msgid "https://bitbucket.org/heXor/..."
 msgid "https://github.com/heX16/SyncthingLazurite"
-msgstr "https://github.com/heX16/SyncthingLazurite"
+msgstr "https://bitbucket.org/heXor/..."
 
 #: tfrmabout.lbsyncthingversion.editlabel.caption
 msgid "lbSyncthingVersion"
-msgstr "Syncthing 버전"
+msgstr "Syncthing version"
 
 #: tfrmabout.lbsyncthingversion.text
 msgctxt "tfrmabout.lbsyncthingversion.text"
@@ -85,32 +93,38 @@ msgid "..."
 msgstr "..."
 
 #: tfrmabout.lbsyncthingwebsite.editlabel.caption
+#, fuzzy
+msgctxt "tfrmabout.lbsyncthingwebsite.editlabel.caption"
 msgid "lbSyncthingWebSite"
-msgstr "Syncthing 웹사이트"
+msgstr "Syncthing website"
 
 #: tfrmabout.lbsyncthingwebsite.text
+#, fuzzy
+msgctxt "tfrmabout.lbsyncthingwebsite.text"
 msgid "https://syncthing.net/"
 msgstr "https://syncthing.net/"
 
 #: tfrmabout.lbtranslateauthor1.caption
+#, fuzzy
+msgctxt "tfrmabout.lbtranslateauthor1.caption"
 msgid "Author of localization: Alexander Kerner"
-msgstr "현지화 작성자: Alexander Kerner"
+msgstr "Author of localization: Alexander Kerner"
 
 #: tfrmjsonview.btnhintupd.caption
 msgid "Update"
-msgstr "업데이트"
+msgstr "Update"
 
 #: tfrmjsonview.caption
 msgid "frmJSONView"
-msgstr "JSON 보기"
+msgstr "JSON View"
 
 #: tfrmjsonview.edhintfieldslist.editlabel.caption
 msgid "edHintFieldsList"
-msgstr "힌트 필드 목록"
+msgstr "Hint fields list"
 
 #: tfrmjsonview.edserverurl.editlabel.caption
 msgid "edServerURL"
-msgstr "서버 URL"
+msgstr "Server URL"
 
 #: tfrmjsonview.edserverurl.text
 msgid "http://127.0.0.1:8384"
@@ -118,52 +132,52 @@ msgstr "http://127.0.0.1:8384"
 
 #: tfrmjsonview.mncollapseall.caption
 msgid "mnCollapseAll"
-msgstr "모두 접기"
+msgstr "Collapse all"
 
 #: tfrmjsonview.mncopyexpandrecursive.caption
 msgid "mnCopyExpandRecursive"
-msgstr "복사 (재귀적으로 확장)"
+msgstr "Copy (expand recursively)"
 
 #: tfrmjsonview.mncopyjsonrecursive.caption
 msgid "mnCopyJsonRecursive"
-msgstr "JSON 재귀적으로 복사"
+msgstr "Copy JSON recursively"
 
 #: tfrmjsonview.mncopyname.caption
 msgid "mnCopyName"
-msgstr "이름 복사"
+msgstr "Copy name"
 
 #: tfrmjsonview.mncopypath.caption
 msgid "mnCopyPath"
-msgstr "경로 복사"
+msgstr "Copy path"
 
 #: tfrmjsonview.mncopyvalue.caption
 msgid "mnCopyValue"
-msgstr "값 복사"
+msgstr "Copy value"
 
 #: tfrmjsonview.mncopyvaluetext.caption
 msgid "mnCopyValueText"
-msgstr "값 텍스트 복사"
+msgstr "Copy value text"
 
 #: tfrmjsonview.mnexpandall.caption
 msgid "mnExpandAll"
-msgstr "모두 펼치기"
+msgstr "Expand all"
 
 #: tfrmjsonview.mnshowhintpanel.caption
 msgid "mnShowHintPanel"
-msgstr "힌트 패널 표시"
+msgstr "Show hint panel"
 
 #: tfrmjsonview.mntestconnect.caption
 msgctxt "tfrmjsonview.mntestconnect.caption"
 msgid "mnTestConnect"
-msgstr "연결 테스트"
+msgstr "Test connection"
 
 #: tfrmjsonview.mntestgrp.caption
 msgid "mnTestGrp"
-msgstr "테스트 그룹"
+msgstr "Test group"
 
 #: tfrmjsonview.mntestjson.caption
 msgid "mnTestJson"
-msgstr "JSON 테스트"
+msgstr "Test JSON"
 
 #: tfrmmain.caption
 msgctxt "tfrmmain.caption"
@@ -172,15 +186,15 @@ msgstr "SyncthingLazurite"
 
 #: tfrmmain.grpdevices.caption
 msgid "grpDevices"
-msgstr "장치"
+msgstr "Devices"
 
 #: tfrmmain.grpevents.caption
 msgid "grpEvents"
-msgstr "이벤트"
+msgstr "Events"
 
 #: tfrmmain.grpfolders.caption
 msgid "grpFolders"
-msgstr "폴더"
+msgstr "Folders"
 
 #: tfrmoptions.btnselectdirconfig.caption
 msgctxt "tfrmoptions.btnselectdirconfig.caption"
@@ -194,27 +208,29 @@ msgstr "..."
 
 #: tfrmoptions.caption
 msgid "frmOptions"
-msgstr "옵션"
+msgstr "Options"
 
 #: tfrmoptions.chautogetapikey.caption
 msgid "chAutoGetAPIKey"
-msgstr "API 키 자동으로 가져오기"
+msgstr "Get API key automatically"
 
 #: tfrmoptions.chconnectonstart.caption
+#, fuzzy
+msgctxt "tfrmoptions.chconnectonstart.caption"
 msgid "chConnectOnStart"
-msgstr "시작 시 연결"
+msgstr "Connect on startup"
 
 #: tfrmoptions.chrunsynconstart.caption
 msgid "chRunSyncOnStart"
-msgstr "시작 시 동기화 실행"
+msgstr "Run sync on startup"
 
 #: tfrmoptions.chuseproxyoutputforfixbug.caption
 msgid "chUseProxyOutputForFixBug"
-msgstr "버그 수정을 위해 프록시 출력 사용"
+msgstr "Use proxy output to fix bug"
 
 #: tfrmoptions.edapikey.editlabel.caption
 msgid "edAPIKey"
-msgstr "API 키"
+msgstr "API Key"
 
 #: tfrmoptions.edapikey.editlabel.hint
 msgctxt "tfrmoptions.edapikey.editlabel.hint"
@@ -224,14 +240,14 @@ msgid ""
 "\n"
 "API Key example: xzMwbz6rDUuAv9tjVSbqfVMNta4kPWss"
 msgstr ""
-"이동:\n"
+"Goto:\n"
 "Settings -> Common -> API Key\n"
 "\n"
-"API Key 예: xzMwbz6rDUuAv9tjVSbqfVMNta4kPWss"
+"API Key example: xzMwbz6rDUuAv9tjVSbqfVMNta4kPWss"
 
 #: tfrmoptions.edpathtoconfigdir.editlabel.caption
 msgid "edPathToConfigDir"
-msgstr "구성 경로"
+msgstr "Path to configuration"
 
 #: tfrmoptions.edpathtoconfigdir.text
 msgctxt "tfrmoptions.edpathtoconfigdir.text"
@@ -240,7 +256,7 @@ msgstr "./"
 
 #: tfrmoptions.edpathtoexecwithfilename.editlabel.caption
 msgid "edPathToExecWithFilename"
-msgstr "프로그램 경로"
+msgstr "Path to program"
 
 #: tfrmoptions.edpathtoexecwithfilename.text
 msgctxt "tfrmoptions.edpathtoexecwithfilename.text"
@@ -248,10 +264,13 @@ msgid "./"
 msgstr "./"
 
 #: tfrmoptions.edportnumber.editlabel.caption
+#, fuzzy
+msgctxt "tfrmoptions.edportnumber.editlabel.caption"
 msgid "edPortNumber"
-msgstr "포트 번호"
+msgstr "Port number"
 
 #: tfrmoptions.edportnumber.editlabel.hint
+#, fuzzy
 msgctxt "tfrmoptions.edportnumber.editlabel.hint"
 msgid ""
 "Goto:\n"
@@ -259,147 +278,165 @@ msgid ""
 "\n"
 "API Key example: xzMwbz6rDUuAv9tjVSbqfVMNta4kPWss"
 msgstr ""
-"이동:\n"
+"Goto:\n"
 "Settings -> Common -> API Key\n"
 "\n"
-"API Key 예: xzMwbz6rDUuAv9tjVSbqfVMNta4kPWss"
+"API Key example: xzMwbz6rDUuAv9tjVSbqfVMNta4kPWss"
 
 #: tfrmoptions.edportnumber.text
+#, fuzzy
+msgctxt "tfrmoptions.edportnumber.text"
 msgid "8384"
 msgstr "8384"
 
 #: tfrmoptions.lblanguage.caption
 msgid "lbLanguage"
-msgstr "언어:"
+msgstr ""
 
 #: tmodulemain.actabout.caption
 msgid "actAbout"
-msgstr "정보"
+msgstr "About"
 
 #: tmodulemain.actclosegui.caption
 msgid "actCloseGUI"
-msgstr "GUI 닫기"
+msgstr "Close GUI"
 
 #: tmodulemain.actconnect.caption
 msgctxt "tmodulemain.actconnect.caption"
 msgid "actConnect"
-msgstr "연결"
+msgstr "Connect"
 
 #: tmodulemain.actconnectorstart.caption
+#, fuzzy
+msgctxt "tmodulemain.actconnectorstart.caption"
 msgid "actConnectOrStart"
-msgstr "연결 또는 시작"
+msgstr "Connect or start"
 
 #: tmodulemain.actcopyselecteddevid.caption
 msgid "actCopySelectedDevID"
-msgstr "장치 ID 복사"
+msgstr "Copy Device ID"
 
 #: tmodulemain.actdisconnect.caption
 msgid "actDisconnect"
-msgstr "연결 해제"
+msgstr "Disconnect"
 
 #: tmodulemain.actdisconnectandstop.caption
+#, fuzzy
+msgctxt "tmodulemain.actdisconnectandstop.caption"
 msgid "actDisconnectAndStop"
-msgstr "연결 해제 후 중지"
+msgstr "Disconnect and stop"
 
 #: tmodulemain.actrestartapp.caption
+#, fuzzy
+msgctxt "tmodulemain.actrestartapp.caption"
 msgid "actRestartApp"
-msgstr "앱 재시작"
+msgstr "Restart app"
 
 #: tmodulemain.actsetstaterun.caption
 msgid "actSetStateRun"
-msgstr "시작"
+msgstr "Run"
 
 #: tmodulemain.actsetstatestop.caption
 msgid "actSetStateStop"
-msgstr "중지"
+msgstr "Stop"
 
 #: tmodulemain.actshowconsole.caption
 msgid "actShowConsole"
-msgstr "콘솔 표시"
+msgstr "Show console"
 
 #: tmodulemain.actshowevents.caption
 msgid "actShowEvents"
-msgstr "이벤트 표시"
+msgstr "Show events"
 
 #: tmodulemain.actshowoptions.caption
 msgid "actShowOptions"
-msgstr "옵션"
+msgstr "Options"
 
 #: tmodulemain.actshowrestview.caption
 msgid "actShowRestView"
-msgstr "REST 데이터 보기"
+msgstr "View REST data"
 
 #: tmodulemain.actshowweb.caption
 msgid "actShowWeb"
-msgstr "브라우저에서 웹 인터페이스 열기"
+msgstr "Open web interface in browser"
 
 #: tmodulemain.actstopandexit.caption
+#, fuzzy
 msgctxt "tmodulemain.actstopandexit.caption"
 msgid "actStopAndExit"
-msgstr "중지하고 종료"
+msgstr "Stop and exit"
 
 #: tmodulemain.actstopsyncthing.caption
+#, fuzzy
+msgctxt "tmodulemain.actstopsyncthing.caption"
 msgid "actStopSyncthing"
-msgstr "Syncthing 중지"
+msgstr "Stop Syncthing"
 
 #: tmodulemain.menuitem1.caption
+#, fuzzy
 msgctxt "tmodulemain.menuitem1.caption"
 msgid "actStop"
-msgstr "중지"
+msgstr "Stop"
 
 #: tmodulemain.menuitem2.caption
+#, fuzzy
 msgctxt "tmodulemain.menuitem2.caption"
 msgid "actRestart"
-msgstr "재시작"
+msgstr "Restart"
 
 #: tmodulemain.menuitem3.caption
+#, fuzzy
 msgctxt "tmodulemain.menuitem3.caption"
 msgid "actStartAndConnect"
-msgstr "시작하고 연결"
+msgstr "Start and connect"
 
 #: tmodulemain.menuitem4.caption
+msgctxt "tmodulemain.menuitem4.caption"
 msgid "actPause"
-msgstr "일시 중지"
+msgstr "Pause"
 
 #: tmodulemain.mnrestart.caption
+#, fuzzy
 msgctxt "tmodulemain.mnrestart.caption"
 msgid "actRestart"
-msgstr "재시작"
+msgstr "Restart"
 
 #: tmodulemain.mnserver.caption
 msgid "mnServer"
-msgstr "서버"
+msgstr "Server"
 
 #: tmodulemain.mnview.caption
 msgid "mnView"
-msgstr "보기"
+msgstr "View"
 
 #: uformmain.caddress
 msgid "Address"
-msgstr "주소"
+msgstr "Address"
 
 #: uformmain.cdays
 msgid "days"
-msgstr "일"
+msgstr "days"
 
 #: uformmain.coffline
 msgid "Offline"
-msgstr "오프라인"
+msgstr "Offline"
 
 #: umodulemain.clanguagename
 msgid "cLanguageName"
-msgstr "한국어"
+msgstr ""
 
 #: umodulemain.clanguagenameeng
 msgid "cLanguageNameEng"
-msgstr "Korean"
+msgstr ""
 
 #: umodulemain.cprogramname
+#, fuzzy
 msgctxt "umodulemain.cprogramname"
 msgid "SyncthingLazurite"
 msgstr "SyncthingLazurite"
 
 #: umodulemain.cstrlocal
+msgctxt "umodulemain.cstrlocal"
 msgid " (local)"
-msgstr " (로컬)"
+msgstr " (local)"
 

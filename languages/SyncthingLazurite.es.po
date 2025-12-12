@@ -196,9 +196,9 @@ msgstr "..."
 msgid "frmOptions"
 msgstr "Opciones"
 
-#: tfrmoptions.chauto.caption
-msgid "chAuto"
-msgstr "Auto"
+#: tfrmoptions.chautogetapikey.caption
+msgid "chAutoGetAPIKey"
+msgstr "Obtener la clave API automáticamente"
 
 #: tfrmoptions.chconnectonstart.caption
 msgid "chConnectOnStart"
@@ -252,7 +252,6 @@ msgid "edPortNumber"
 msgstr "Número de puerto"
 
 #: tfrmoptions.edportnumber.editlabel.hint
-#, object-pascal-format
 msgctxt "tfrmoptions.edportnumber.editlabel.hint"
 msgid ""
 "Goto:\n"
@@ -268,6 +267,10 @@ msgstr ""
 #: tfrmoptions.edportnumber.text
 msgid "8384"
 msgstr "8384"
+
+#: tfrmoptions.lblanguage.caption
+msgid "lbLanguage"
+msgstr "Idioma:"
 
 #: tmodulemain.actabout.caption
 msgid "actAbout"
@@ -383,6 +386,14 @@ msgstr "días"
 msgid "Offline"
 msgstr "Desconectado"
 
+#: umodulemain.clanguagename
+msgid "cLanguageName"
+msgstr "Español"
+
+#: umodulemain.clanguagenameeng
+msgid "cLanguageNameEng"
+msgstr "Spanish"
+
 #: umodulemain.cprogramname
 msgctxt "umodulemain.cprogramname"
 msgid "SyncthingLazurite"
@@ -391,5 +402,4 @@ msgstr "SyncthingLazurite"
 #: umodulemain.cstrlocal
 msgid " (local)"
 msgstr " (local)"
-
 

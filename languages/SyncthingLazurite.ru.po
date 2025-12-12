@@ -196,9 +196,9 @@ msgstr "..."
 msgid "frmOptions"
 msgstr "Опции"
 
-#: tfrmoptions.chauto.caption
-msgid "chAuto"
-msgstr "Авто"
+#: tfrmoptions.chautogetapikey.caption
+msgid "chAutoGetAPIKey"
+msgstr "Автоматически получить API Key"
 
 #: tfrmoptions.chconnectonstart.caption
 msgid "chConnectOnStart"
@@ -268,6 +268,10 @@ msgstr ""
 #: tfrmoptions.edportnumber.text
 msgid "8384"
 msgstr ""
+
+#: tfrmoptions.lblanguage.caption
+msgid "lbLanguage"
+msgstr "Язык:"
 
 #: tmodulemain.actabout.caption
 msgid "actAbout"
@@ -388,6 +392,14 @@ msgstr "дни"
 #: uformmain.coffline
 msgid "Offline"
 msgstr "Оффлайн"
+
+#: umodulemain.clanguagename
+msgid "cLanguageName"
+msgstr "Русский"
+
+#: umodulemain.clanguagenameeng
+msgid "cLanguageNameEng"
+msgstr "Russian"
 
 #: umodulemain.cprogramname
 #, fuzzy
