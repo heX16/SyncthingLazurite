@@ -85,6 +85,7 @@ type
     mnStopAndExit: TMenuItem;
     menuDevList: TPopupMenu;
     TimerUpdate: TTimer;
+    TimerInit: TTimer;
     TrayIcon: TTrayIcon;
     UniqueInstance1: TUniqueInstance;
     procedure actAboutExecute(Sender: TObject);
@@ -104,6 +105,7 @@ type
     procedure actStopSyncthingExecute(Sender: TObject);
     procedure DataModuleCreate(Sender: TObject);
     procedure DataModuleDestroy(Sender: TObject);
+    procedure TimerInitTimer(Sender: TObject);
     procedure TrayIconDblClick(Sender: TObject);
   private
     FSyncthingAPI: TSyncthingManager; // Core Syncthing Manager instance (created manually)
@@ -126,6 +128,8 @@ type
     procedure UpdateActionsEnabled;
     function GetPortFromOptions: Integer;
   public
+    Initialized: Boolean;
+
     // Returns display text for folder node by index using current JSON tree
     function GetFolderDisplayText(const Index: Integer): string;
     // Returns display text for device node by index using current JSON tree
@@ -165,7 +169,45 @@ uses
   LCLTranslator,
   DefaultTranslator;
 
+function GetLangDir: string;
+begin
+  Result := IncludeTrailingPathDelimiter(ExtractFilePath(Application.ExeName)) + 'languages';
+end;
+
+function GetLangCode(const LangFile: string): string;
+const
+  prefix = 'SyncthingLazurite.';
+var
+  code: string;
+begin
+  code := ChangeFileExt(LangFile, '');
+  if Copy(code, 1, Length(prefix)) = prefix then
+    Delete(code, 1, Length(prefix));
+  Result := code;
+end;
+
 { TModuleMain }
+
+procedure TModuleMain.TimerInitTimer(Sender: TObject);
+var
+  langDir: string;
+begin
+  // Initialization program
+  Self.TimerInit.Enabled:=False;
+
+  if not Self.Initialized then
+  begin
+    // Code of initialization
+
+    langDir := GetLangDir;
+    if frmOptions.cbLanguages.Text <> '' then
+      SetDefaultLang(GetLangCode(frmOptions.cbLanguages.Text), langDir)
+    else
+      SetDefaultLang('en', langDir);
+
+    Self.Initialized := True;
+  end;
+end;
 
 procedure TModuleMain.AddLineToEventsLog(const Line: string);
 var
@@ -199,20 +241,9 @@ begin
     langFile := frmOptions.cbLanguages.Text;
     if langFile <> '' then
     begin
-      langCode := ChangeFileExt(langFile, '');
-      prefix := 'SyncthingLazurite.';
-      if Copy(langCode, 1, Length(prefix)) = prefix then
-        langCode := Copy(langCode, Length(prefix) + 1, MaxInt);
-
-      langDir := IncludeTrailingPathDelimiter(ExtractFilePath(Application.ExeName)) + 'languages';
+      langCode := GetLangCode(langFile);
+      langDir := GetLangDir;
       SetDefaultLang(langCode, langDir);
-
-      // Refresh UI text immediately after language switch
-      (*
-      TranslateComponent(frmMain);
-      TranslateComponent(frmOptions);
-      TranslateComponent(frmJSONView);
-      *)
     end;
   end;
 end;

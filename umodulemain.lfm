@@ -411,4 +411,10 @@ object ModuleMain: TModuleMain
       Action = actCopySelectedDevID
     end
   end
+  object TimerInit: TTimer
+    Interval = 1
+    OnTimer = TimerInitTimer
+    Left = 32
+    Top = 152
+  end
 end
