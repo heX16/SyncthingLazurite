@@ -7,7 +7,7 @@ object frmOptions: TfrmOptions
   ClientHeight = 360
   ClientWidth = 361
   Position = poDefault
-  SessionProperties = 'chRunSyncOnStart.Checked;chUseProxyOutputForFixBug.Checked;edAPIKey.Text;edPathToConfigDir.Text;edPathToExecWithFilename.Text;edPortNumber.Text'
+  SessionProperties = 'chRunSyncOnStart.Checked;chUseProxyOutputForFixBug.Checked;edAPIKey.Text;edPathToConfigDir.Text;edPathToExecWithFilename.Text;edPortNumber.Text;cbLanguages.Text'
   OnShow = FormShow
   object BitBtn1: TBitBtn
     Left = 10
@@ -91,16 +91,16 @@ object frmOptions: TfrmOptions
     Enabled = False
     TabOrder = 6
   end
-  object chRunSyncOnStart: TCheckBox
+  object chRunSyncthingOnStartup: TCheckBox
     Left = 10
     Height = 19
     Top = 56
-    Width = 117
-    Caption = 'chRunSyncOnStart'
+    Width = 159
+    Caption = 'chRunSyncthingOnStartup'
     Checked = True
     State = cbChecked
     TabOrder = 7
-    OnChange = chRunSyncOnStartChange
+    OnChange = chRunSyncthingOnStartupChange
   end
   object chUseProxyOutputForFixBug: TCheckBox
     Left = 10
@@ -128,12 +128,12 @@ object frmOptions: TfrmOptions
     TabOrder = 9
     Text = '8384'
   end
-  object chConnectOnStart: TCheckBox
+  object chConnectOnStartup: TCheckBox
     Left = 10
     Height = 19
     Top = 80
-    Width = 116
-    Caption = 'chConnectOnStart'
+    Width = 130
+    Caption = 'chConnectOnStartup'
     Checked = True
     State = cbChecked
     TabOrder = 10
@@ -145,7 +145,6 @@ object frmOptions: TfrmOptions
     Width = 224
     Anchors = [akTop, akLeft, akRight]
     ItemHeight = 15
-    Style = csDropDownList
     TabOrder = 11
   end
   object lbLanguage: TLabel

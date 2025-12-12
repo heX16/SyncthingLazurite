@@ -214,15 +214,13 @@ msgstr "Options"
 msgid "chAutoGetAPIKey"
 msgstr "Get API key automatically"
 
-#: tfrmoptions.chconnectonstart.caption
-#, fuzzy
-msgctxt "tfrmoptions.chconnectonstart.caption"
-msgid "chConnectOnStart"
-msgstr "Connect on startup"
+#: tfrmoptions.chconnectonstartup.caption
+msgid "chConnectOnStartup"
+msgstr ""
 
-#: tfrmoptions.chrunsynconstart.caption
-msgid "chRunSyncOnStart"
-msgstr "Run sync on startup"
+#: tfrmoptions.chrunsyncthingonstartup.caption
+msgid "chRunSyncthingOnStartup"
+msgstr ""
 
 #: tfrmoptions.chuseproxyoutputforfixbug.caption
 msgid "chUseProxyOutputForFixBug"

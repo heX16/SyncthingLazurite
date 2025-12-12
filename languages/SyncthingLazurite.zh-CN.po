@@ -200,13 +200,13 @@ msgstr "选项"
 msgid "chAutoGetAPIKey"
 msgstr "自动获取 API 密钥"
 
-#: tfrmoptions.chconnectonstart.caption
-msgid "chConnectOnStart"
-msgstr "启动时连接"
+#: tfrmoptions.chconnectonstartup.caption
+msgid "chConnectOnStartup"
+msgstr ""
 
-#: tfrmoptions.chrunsynconstart.caption
-msgid "chRunSyncOnStart"
-msgstr "启动时执行同步"
+#: tfrmoptions.chrunsyncthingonstartup.caption
+msgid "chRunSyncthingOnStartup"
+msgstr ""
 
 #: tfrmoptions.chuseproxyoutputforfixbug.caption
 msgid "chUseProxyOutputForFixBug"

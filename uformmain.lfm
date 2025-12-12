@@ -9,7 +9,6 @@ object frmMain: TfrmMain
   Menu = ModuleMain.MainMenu1
   Position = poDefaultPosOnly
   SessionProperties = 'SplitterLeft.Left;SplitterBottom1.Top;SplitterBottom2.Top'
-  LCLVersion = '4.2.0.0'
   OnCreate = FormCreate
   OnDestroy = FormDestroy
   OnWindowStateChange = FormWindowStateChange
@@ -17,11 +16,11 @@ object frmMain: TfrmMain
     Left = 0
     Height = 40
     Top = 0
-    Width = 551
+    Width = 441
     Align = alTop
     BevelOuter = bvNone
     ClientHeight = 40
-    ClientWidth = 551
+    ClientWidth = 441
     TabOrder = 0
     object btnStart: TButton
       Left = 115
@@ -59,8 +58,8 @@ object frmMain: TfrmMain
   object edConsole: TMemo
     Left = 0
     Height = 112
-    Top = 466
-    Width = 551
+    Top = 350
+    Width = 441
     Align = alBottom
     Color = clBlack
     Font.CharSet = RUSSIAN_CHARSET
@@ -80,27 +79,27 @@ object frmMain: TfrmMain
     Cursor = crVSplit
     Left = 0
     Height = 4
-    Top = 434
-    Width = 551
+    Top = 346
+    Width = 441
     Align = alBottom
     ResizeAnchor = akBottom
     Visible = False
   end
   object grpDevices: TGroupBox
     Left = 0
-    Height = 265
-    Top = 50
+    Height = 211
+    Top = 40
     Width = 130
     Align = alLeft
     Caption = 'grpDevices'
-    ClientHeight = 245
+    ClientHeight = 191
     ClientWidth = 126
     TabOrder = 3
     object treeDevices: TVirtualStringTree
       Left = 0
-      Height = 240
+      Height = 191
       Top = 0
-      Width = 158
+      Width = 126
       Align = alClient
       DefaultText = 'Node'
       Header.AutoSizeIndex = -1
@@ -108,7 +107,7 @@ object frmMain: TfrmMain
         item
           MinWidth = 150
           Position = 0
-          Width = 158
+          Width = 150
         end>
       Header.Options = [hoAutoResize, hoColumnResize, hoDrag]
       HintMode = hmHint
@@ -130,20 +129,20 @@ object frmMain: TfrmMain
     end
   end
   object grpFolders: TGroupBox
-    Left = 168
-    Height = 265
-    Top = 50
-    Width = 383
+    Left = 135
+    Height = 211
+    Top = 40
+    Width = 306
     Align = alClient
     Caption = 'grpFolders'
-    ClientHeight = 245
-    ClientWidth = 379
+    ClientHeight = 191
+    ClientWidth = 302
     TabOrder = 4
     object treeFolders: TVirtualStringTree
       Left = 0
-      Height = 240
+      Height = 191
       Top = 0
-      Width = 379
+      Width = 302
       Align = alClient
       DefaultText = 'Node'
       Header.AutoSizeIndex = 0
@@ -157,27 +156,27 @@ object frmMain: TfrmMain
     end
   end
   object SplitterLeft: TSplitter
-    Left = 162
-    Height = 265
-    Top = 50
+    Left = 130
+    Height = 211
+    Top = 40
     Width = 5
   end
   object grpEvents: TGroupBox
     Left = 0
     Height = 90
-    Top = 343
-    Width = 551
+    Top = 256
+    Width = 441
     Align = alBottom
     Caption = 'grpEvents'
-    ClientHeight = 65
-    ClientWidth = 547
+    ClientHeight = 70
+    ClientWidth = 437
     TabOrder = 6
     Visible = False
     object listEvents: TListBox
       Left = 0
-      Height = 87
+      Height = 70
       Top = 0
-      Width = 547
+      Width = 437
       Align = alClient
       ItemHeight = 0
       TabOrder = 0
@@ -188,8 +187,8 @@ object frmMain: TfrmMain
     Cursor = crVSplit
     Left = 0
     Height = 5
-    Top = 316
-    Width = 551
+    Top = 251
+    Width = 441
     Align = alBottom
     ResizeAnchor = akBottom
     Visible = False
@@ -204,7 +203,7 @@ object frmMain: TfrmMain
   end
   object IniPropStoragePos: TIniPropStorage
     StoredValues = <>
-    IniFileName = 'SyncthingLazuritePos.ini'
+    IniFileName = 'SyncthingLazuriteWnd.ini'
     IniSection = 'FormMain'
     Left = 339
     Top = 58

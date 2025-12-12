@@ -200,13 +200,13 @@ msgstr "옵션"
 msgid "chAutoGetAPIKey"
 msgstr "API 키 자동으로 가져오기"
 
-#: tfrmoptions.chconnectonstart.caption
-msgid "chConnectOnStart"
-msgstr "시작 시 연결"
+#: tfrmoptions.chconnectonstartup.caption
+msgid "chConnectOnStartup"
+msgstr ""
 
-#: tfrmoptions.chrunsynconstart.caption
-msgid "chRunSyncOnStart"
-msgstr "시작 시 동기화 실행"
+#: tfrmoptions.chrunsyncthingonstartup.caption
+msgid "chRunSyncthingOnStartup"
+msgstr ""
 
 #: tfrmoptions.chuseproxyoutputforfixbug.caption
 msgid "chUseProxyOutputForFixBug"

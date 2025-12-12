@@ -200,13 +200,13 @@ msgstr "Опции"
 msgid "chAutoGetAPIKey"
 msgstr "Автоматически получить API Key"
 
-#: tfrmoptions.chconnectonstart.caption
-msgid "chConnectOnStart"
+#: tfrmoptions.chconnectonstartup.caption
+msgid "chConnectOnStartup"
 msgstr ""
 
-#: tfrmoptions.chrunsynconstart.caption
-msgid "chRunSyncOnStart"
-msgstr "Запускать синхронизацию при старте программы"
+#: tfrmoptions.chrunsyncthingonstartup.caption
+msgid "chRunSyncthingOnStartup"
+msgstr ""
 
 #: tfrmoptions.chuseproxyoutputforfixbug.caption
 msgid "chUseProxyOutputForFixBug"

@@ -81,6 +81,9 @@ Obsolete (0)
 - `grpEvents` → EN: `Events`, RU: `События`
 - `grpFolders` → EN: `Folders`, RU: `Папки`
 - `edPortNumber` → EN: `Port number`, RU: «Номер порта»
+- `cLanguageName` / `cLanguageNameEng`:
+  - `cLanguageName` — название языка на родном языке (включая собственное письмо), пример: RU → «Русский», zh-CN → «简体中文»
+  - `cLanguageNameEng` — название языка на английском, пример: RU → `Russian`, zh-CN → `Chinese (Simplified)`
 
 ### Возможные доработки (при необходимости)
 - Расширить `scripts/compare_locales.py` режимом «auto‑fix»:

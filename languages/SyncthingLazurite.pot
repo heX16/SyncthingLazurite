@@ -196,12 +196,12 @@ msgstr ""
 msgid "chAutoGetAPIKey"
 msgstr ""
 
-#: tfrmoptions.chconnectonstart.caption
-msgid "chConnectOnStart"
+#: tfrmoptions.chconnectonstartup.caption
+msgid "chConnectOnStartup"
 msgstr ""
 
-#: tfrmoptions.chrunsynconstart.caption
-msgid "chRunSyncOnStart"
+#: tfrmoptions.chrunsyncthingonstartup.caption
+msgid "chRunSyncthingOnStartup"
 msgstr ""
 
 #: tfrmoptions.chuseproxyoutputforfixbug.caption

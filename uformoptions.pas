@@ -6,7 +6,8 @@ interface
 
 uses
   Classes, SysUtils, XMLConf, FileUtil, Forms, Controls, Graphics, Dialogs,
-  Buttons, ExtCtrls, StdCtrls, XMLPropStorage, IniPropStorage;
+  Buttons, ExtCtrls, StdCtrls, XMLPropStorage, IniPropStorage,
+  DefaultTranslator, uget_os_language;
 
 type
 
@@ -17,9 +18,9 @@ type
     btnSelectDirConfig: TButton;
     btnSelectFileExec: TButton;
     chAutoGetAPIKey: TCheckBox;
-    chConnectOnStart: TCheckBox;
+    chConnectOnStartup: TCheckBox;
     chUseProxyOutputForFixBug: TCheckBox;
-    chRunSyncOnStart: TCheckBox;
+    chRunSyncthingOnStartup: TCheckBox;
     cbLanguages: TComboBox;
     edPortNumber: TLabeledEdit;
     edPathToConfigDir: TLabeledEdit;
@@ -28,7 +29,7 @@ type
     IniPropStorageConfig: TIniPropStorage;
     lbLanguage: TLabel;
     lbLanguage_Fixed: TLabel;
-    procedure chRunSyncOnStartChange(Sender: TObject);
+    procedure chRunSyncthingOnStartupChange(Sender: TObject);
     procedure FormShow(Sender: TObject);
   private
     procedure LoadLanguagesList;
@@ -46,10 +47,10 @@ implementation
 
 { TfrmOptions }
 
-procedure TfrmOptions.chRunSyncOnStartChange(Sender: TObject);
+procedure TfrmOptions.chRunSyncthingOnStartupChange(Sender: TObject);
 begin
-  if chRunSyncOnStart.Checked then
-    chConnectOnStart.Checked := True;
+  if chRunSyncthingOnStartup.Checked then
+    chConnectOnStartup.Checked := True;
 end;
 
 procedure TfrmOptions.FormShow(Sender: TObject);
@@ -62,9 +63,17 @@ var
   files: TStringList;
   langDir: string;
   i: Integer;
+  currentLangFilename: string;
+  idx: Integer;
 begin
   // Fill combo with available localization files from /languages folder
   langDir := IncludeTrailingPathDelimiter(ExtractFilePath(Application.ExeName)) + 'languages';
+
+  currentLangFilename := cbLanguages.Text;
+  // TODO: WIP - use the `GetOSLanguage`
+  if currentLangFilename = '' then
+    currentLangFilename := 'SyncthingLazurite.en.po';
+    // WIP: currentLangFilename := Format('SyncthingLazurite.%s.po', [ GetOSLanguage .... ;
 
   files := TStringList.Create;
   try
@@ -74,19 +83,26 @@ begin
     if DirectoryExists(langDir) then
     begin
       FindAllFiles(files, langDir, 'SyncthingLazurite.*.po', False);
-      FindAllFiles(files, langDir, 'SyncthingLazurite.*.pot', False);
     end;
 
     cbLanguages.Items.BeginUpdate;
     try
       cbLanguages.Items.Clear;
       for i := 0 to files.Count - 1 do
+      begin
         cbLanguages.Items.Add(ExtractFileName(files[i]));
+      end;
 
-      if (cbLanguages.Items.Count > 0) and (cbLanguages.ItemIndex < 0) then
-        cbLanguages.ItemIndex := 0;
+      idx := cbLanguages.Items.IndexOf(currentLangFilename);
+      if idx >= 0 then
+        cbLanguages.ItemIndex := idx
+      else
+        cbLanguages.ItemIndex := cbLanguages.Items.IndexOf('SyncthingLazurite.en.po');
+
     finally
       cbLanguages.Items.EndUpdate;
+
+      cbLanguages.Style:=csDropDownList;
     end;
   finally
     files.Free;
