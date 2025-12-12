@@ -203,7 +203,7 @@ object frmMain: TfrmMain
   end
   object IniPropStoragePos: TIniPropStorage
     StoredValues = <>
-    IniFileName = 'SyncthingLazuriteWnd.ini'
+    IniFileName = 'SyncthingLazurite.ini'
     IniSection = 'FormMain'
     Left = 339
     Top = 58

@@ -169,7 +169,7 @@ object frmOptions: TfrmOptions
   end
   object IniPropStorageConfig: TIniPropStorage
     StoredValues = <>
-    IniFileName = 'SyncthingLazuriteConfig.ini'
+    IniFileName = 'SyncthingLazurite.ini'
     Left = 206
     Top = 305
   end

@@ -16,7 +16,10 @@ uses
   {$ENDIF}
   ;
 
-{platform-independent method to read the language of the user interface}
+{
+Platform-independent method to read the language of the user interface.
+Ref: https://wiki.freepascal.org/Everything_else_about_translations#Cross-platform_method_to_determine_system_language
+}
 function GetOSLanguage: string;
 
 implementation
