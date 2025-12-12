@@ -34,7 +34,7 @@
       <MajorVersionNr Value="1"/>
       <MinorVersionNr Value="2"/>
       <RevisionNr Value="2511"/>
-      <BuildNr Value="161"/>
+      <BuildNr Value="164"/>
     </VersionInfo>
     <BuildModes Count="4">
       <Item1 Name="Debug" Default="True"/>
@@ -246,57 +246,61 @@
         <UnitName Value="HashMapStr"/>
       </Unit6>
       <Unit7>
-        <Filename Value="formabout.lfm"/>
-        <IsPartOfProject Value="True"/>
-      </Unit7>
-      <Unit8>
         <Filename Value="formabout.pas"/>
         <IsPartOfProject Value="True"/>
         <ComponentName Value="frmAbout"/>
         <HasResources Value="True"/>
         <ResourceBaseClass Value="Form"/>
         <UnitName Value="FormAbout"/>
-      </Unit8>
-      <Unit9>
+      </Unit7>
+      <Unit8>
         <Filename Value="usyncthingtypes.pas"/>
         <IsPartOfProject Value="True"/>
         <UnitName Value="uSyncthingTypes"/>
-      </Unit9>
-      <Unit10>
+      </Unit8>
+      <Unit9>
         <Filename Value="syncthing_api.pas"/>
         <IsPartOfProject Value="True"/>
-      </Unit10>
-      <Unit11>
+      </Unit9>
+      <Unit10>
         <Filename Value="uutils.pas"/>
         <IsPartOfProject Value="True"/>
         <UnitName Value="uUtils"/>
-      </Unit11>
-      <Unit12>
+      </Unit10>
+      <Unit11>
         <Filename Value="ulogging.pas"/>
         <IsPartOfProject Value="True"/>
         <UnitName Value="uLogging"/>
-      </Unit12>
-      <Unit13>
+      </Unit11>
+      <Unit12>
         <Filename Value="usyncthingmanager.pas"/>
         <IsPartOfProject Value="True"/>
         <UnitName Value="uSyncthingManager"/>
-      </Unit13>
-      <Unit14>
+      </Unit12>
+      <Unit13>
         <Filename Value="fphttpclient_fixed.pp"/>
         <IsPartOfProject Value="True"/>
-      </Unit14>
-      <Unit15>
+      </Unit13>
+      <Unit14>
         <Filename Value="vtutils.pas"/>
         <IsPartOfProject Value="True"/>
         <UnitName Value="VTUtils"/>
+      </Unit14>
+      <Unit15>
+        <Filename Value="syncthing_api_utils.pas"/>
+        <IsPartOfProject Value="True"/>
       </Unit15>
       <Unit16>
-        <Filename Value="syncthing_api_utils.pas"/>
+        <Filename Value="uget_os_language.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit16>
       <Unit17>
-        <Filename Value="uget_os_language.pas"/>
+        <Filename Value="umodulepreinit_i18n.pas"/>
         <IsPartOfProject Value="True"/>
+        <ComponentName Value="ModulePreInit_i18n"/>
+        <HasResources Value="True"/>
+        <ResourceBaseClass Value="DataModule"/>
+        <UnitName Value="uModulePreInit_i18n"/>
       </Unit17>
     </Units>
   </ProjectOptions>

@@ -6,7 +6,6 @@ interface
 
 uses
   Classes, FileUtil, Forms, Controls, Graphics, Dialogs, StdCtrls,
-  AsyncHTTP,
   ExtCtrls;
 
 type
@@ -47,7 +46,6 @@ uses
 {$ENDIF}
   uModuleMain,
   SysUtils,
-  uUtils,
   fpjson;
 
 {$R *.lfm}

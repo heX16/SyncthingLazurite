@@ -413,7 +413,7 @@ object ModuleMain: TModuleMain
   end
   object TimerInit: TTimer
     Interval = 1
-    OnTimer = TimerInitTimer
+    OnTimer = InitEvent
     Left = 32
     Top = 152
   end

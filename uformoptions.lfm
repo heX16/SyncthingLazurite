@@ -148,9 +148,9 @@ object frmOptions: TfrmOptions
     TabOrder = 11
   end
   object lbLanguage: TLabel
-    Left = 10
+    Left = 12
     Height = 24
-    Top = 8
+    Top = 15
     Width = 111
     Alignment = taRightJustify
     AutoSize = False
@@ -158,14 +158,16 @@ object frmOptions: TfrmOptions
     Layout = tlCenter
   end
   object lbLanguage_Fixed: TLabel
-    Left = 10
+    Left = 66
     Height = 16
     Top = 32
-    Width = 111
+    Width = 57
     Alignment = taRightJustify
     AutoSize = False
     Caption = 'Language:'
+    Font.Height = 12
     Layout = tlCenter
+    ParentFont = False
   end
   object IniPropStorageConfig: TIniPropStorage
     StoredValues = <>

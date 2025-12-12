@@ -11,7 +11,6 @@ uses
   VirtualTrees,
   fpjson,
   UniqueInstance,
-  SyncObjs,
   syncthing_api,
   uSyncthingManager,
   uLogging;
@@ -105,7 +104,7 @@ type
     procedure actStopSyncthingExecute(Sender: TObject);
     procedure DataModuleCreate(Sender: TObject);
     procedure DataModuleDestroy(Sender: TObject);
-    procedure TimerInitTimer(Sender: TObject);
+    procedure InitEvent(Sender: TObject);
     procedure TrayIconDblClick(Sender: TObject);
   private
     FSyncthingAPI: TSyncthingManager; // Core Syncthing Manager instance (created manually)
@@ -119,7 +118,7 @@ type
     procedure Syn_OnStateChanged(Sender: TObject; NewState: TSyncthingFSM_State);
 
     // Manager-specific events
-    procedure Mgr_OnProcessStateChanged(Sender: TObject; State: TProcessState);
+    procedure Mgr_OnProcessStateChanged(Sender: TObject; {%H-}State: TProcessState);
     procedure Mgr_OnConsoleOutput(Sender: TObject; const Line: UTF8String);
     procedure Mgr_OnStartFailed(Sender: TObject; const Info: TStartFailureInfo);
 
@@ -153,6 +152,7 @@ implementation
 {$R *.lfm}
 
 uses
+  uModulePreInit_i18n,
   syncthing_api_utils,
   LCLIntf, //OpenURL
   Clipbrd,
@@ -169,28 +169,10 @@ uses
   LCLTranslator,
   DefaultTranslator;
 
-function GetLangDir: string;
-begin
-  Result := IncludeTrailingPathDelimiter(ExtractFilePath(Application.ExeName)) + 'languages';
-end;
-
-function GetLangCode(const LangFile: string): string;
-const
-  prefix = 'SyncthingLazurite.';
-var
-  code: string;
-begin
-  code := ChangeFileExt(LangFile, '');
-  if Copy(code, 1, Length(prefix)) = prefix then
-    Delete(code, 1, Length(prefix));
-  Result := code;
-end;
 
 { TModuleMain }
 
-procedure TModuleMain.TimerInitTimer(Sender: TObject);
-var
-  langDir: string;
+procedure TModuleMain.InitEvent(Sender: TObject);
 begin
   // Initialization program
   Self.TimerInit.Enabled:=False;
@@ -199,11 +181,7 @@ begin
   begin
     // Code of initialization
 
-    langDir := GetLangDir;
-    if frmOptions.cbLanguages.Text <> '' then
-      SetDefaultLang(GetLangCode(frmOptions.cbLanguages.Text), langDir)
-    else
-      SetDefaultLang('en', langDir);
+    // Empty
 
     Self.Initialized := True;
   end;
@@ -233,7 +211,6 @@ var
   langFile: string;
   langCode: string;
   langDir: string;
-  prefix: string;
 begin
   modalRes := frmOptions.ShowModal();
   if modalRes = mrOK then
@@ -250,12 +227,12 @@ end;
 
 procedure TModuleMain.actCopySelectedDevIDExecute(Sender: TObject);
 var
-  i: PVirtualNode;
-  d: TDevInfo;
+  //i: PVirtualNode;
+  //d: TDevInfo;
   CpText: string;
 begin
   CpText := '';
-  // TODO: WIP.
+  // TODO: WIP - actCopySelectedDevID
   // for i in frmMain.treeDevices.SelectedNodes() do begin
   //   if Dev[i^.Index] then
   //   begin
@@ -622,9 +599,7 @@ function TModuleMain.GetDeviceDisplayText(const Index: Integer): string;
 var
   obj: TJSONObject;
   nameField: TJSONData;
-  addrField: TJSONData;
   nameStr: string;
-  addrStr: string;
 begin
   Result := '';
   if (Index >= 0) and (Index < FSyncthingAPI.config_devices.Count) then

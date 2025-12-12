@@ -14,7 +14,8 @@ uses
   Forms, uFormMain, laz_synapse, uniqueinstance_package, AsyncHttp,
   uFormOptions, uModuleMain, uformjsonview, hashmapstr, FormAbout,
   usyncthingtypes, syncthing_api, uSyncthingManager, uLogging, VTUtils,
-  fphttpclient_fixed, syncthing_api_utils, uget_os_language;
+  fphttpclient_fixed, syncthing_api_utils, uget_os_language,
+  uModulePreInit_i18n;
 
 {$R *.res}
 
@@ -22,6 +23,7 @@ begin
   Application.Scaled:=True;
   RequireDerivedFormResource:=True;
   Application.Initialize;
+  Application.CreateForm(TModulePreInit_i18n, ModulePreInit_i18n);
   Application.CreateForm(TModuleMain, ModuleMain);
   Application.CreateForm(TfrmMain, frmMain);
   Application.CreateForm(TfrmOptions, frmOptions);
