@@ -7,25 +7,24 @@ It shows all the essentials in a simple window with a tray icon.
  - Shows your Syncthing devices and folders
  - Indicates connection status (online, paused, issues)
  - Displays a compact event log for recent activity
- - Lets you quickly connect/disconnect and view details
  - Lets you start and stop the Syncthing service
 
 ## Key features
- - Native compiled app (Lazarus/FreePascal) 
- - Very low memory and CPU usage (no embedded browser, no Electron)
+ - Classic interface
+ - Native app
+ - Tray icon
  - Cross-platform support (Windows, Linux, macOS)
- - Tray icon hint with a list of online devices
+ - Very low memory and CPU usage (no embedded browser, no Electron)
  - Lightweight, fast and simple UI
  - Native UI using OS widgets
  - Localization support
- - SyncthingLazurite talks only to your Syncthing instance
- - No data is sent to any cloud services by SyncthingLazurite app
+ - Compilation to real machine code - a real compiler is used: FreePascal/Lazarus
 
 ## Getting started
 1. Install and run [Syncthing](https://syncthing.net/downloads/) on your computer. By default it listens on `http://127.0.0.1:8384` and has an API key in its settings.
 2. Start SyncthingLazurite.
 3. Open Options and **set Syncthing API key**.
-   NOTE: the app can read the key from Syncthing’s config if you point it to the config folder.
+   NOTE: the app can read the key from Syncthing’s config if you point it to the config folder (work in peogress).
 4. Click "Connect". You should see your devices and folders populate within a few seconds.
 
 ## Feedback
@@ -41,3 +40,4 @@ Report issues and suggestions on the [issue tracker](https://github.com/heX16/Sy
 6. Automatic detection of configuration and existing Syncthing installation.
 7. Improve event log UI for recent activity.
 8. Support non-default ports and addresses for remote servers.
+9. Android experemental build.

@@ -4,6 +4,14 @@ msgstr ""
 "Language: ar\n"
 "Plural-Forms: nplurals=6; plural=(n==0?0:n==1?1:n==2?2:n%100>=3 && n%100<=10?3:n%100>=11 && n%100<=99?4:5);\n"
 
+#: umodulemain.clanguagename
+msgid "cLanguageName"
+msgstr "العربية"
+
+#: umodulemain.clanguagenameeng
+msgid "cLanguageNameEng"
+msgstr "Arabic"
+
 #: fphttpclient_fixed.serrchunklineendmissing
 msgid "Chunk line end missing"
 msgstr "نهاية سطر المقطع مفقودة"
@@ -385,14 +393,6 @@ msgstr "أيام"
 #: uformmain.coffline
 msgid "Offline"
 msgstr "غير متصل"
-
-#: umodulemain.clanguagename
-msgid "cLanguageName"
-msgstr "العربية"
-
-#: umodulemain.clanguagenameeng
-msgid "cLanguageNameEng"
-msgstr "Arabic"
 
 #: umodulemain.cprogramname
 msgctxt "umodulemain.cprogramname"

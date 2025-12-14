@@ -1,43 +1,51 @@
 msgid ""
 msgstr "Content-Type: text/plain; charset=UTF-8"
 
+#: umodulemain.clanguagename
+msgid "cLanguageName"
+msgstr "English"
+
+#: umodulemain.clanguagenameeng
+msgid "cLanguageNameEng"
+msgstr "English"
+
 #: fphttpclient_fixed.serrchunklineendmissing
 msgid "Chunk line end missing"
-msgstr ""
+msgstr "Chunk line end missing"
 
 #: fphttpclient_fixed.serrchunktoobig
 #, object-pascal-format
 msgid "Chunk too big: Got %d, maximum allowed size: %d"
-msgstr ""
+msgstr "Chunk too big: Got %d, maximum allowed size: %d"
 
 #: fphttpclient_fixed.serrinvalidprotocol
 #, object-pascal-format
 msgid "Invalid protocol : \"%s\""
-msgstr ""
+msgstr "Invalid protocol : \"%s\""
 
 #: fphttpclient_fixed.serrinvalidprotocolversion
 #, object-pascal-format
 msgid "Invalid protocol version in response: \"%s\""
-msgstr ""
+msgstr "Invalid protocol version in response: \"%s\""
 
 #: fphttpclient_fixed.serrinvalidstatuscode
 #, object-pascal-format
 msgid "Invalid response status code: %s"
-msgstr ""
+msgstr "Invalid response status code: %s"
 
 #: fphttpclient_fixed.serrmaxredirectsreached
 #, object-pascal-format
 msgid "Maximum allowed redirects reached : %d"
-msgstr ""
+msgstr "Maximum allowed redirects reached : %d"
 
 #: fphttpclient_fixed.serrreadingsocket
 msgid "Error reading data from socket"
-msgstr ""
+msgstr "Error reading data from socket"
 
 #: fphttpclient_fixed.serrunexpectedresponse
 #, object-pascal-format
 msgid "Unexpected response status code: %d"
-msgstr ""
+msgstr "Unexpected response status code: %d"
 
 #: tfrmabout.button1.caption
 #, fuzzy
@@ -216,11 +224,11 @@ msgstr "Get API key automatically"
 
 #: tfrmoptions.chconnectonstartup.caption
 msgid "chConnectOnStartup"
-msgstr ""
+msgstr "Connect on startup"
 
 #: tfrmoptions.chrunsyncthingonstartup.caption
 msgid "chRunSyncthingOnStartup"
-msgstr ""
+msgstr "Run Syncthing on startup"
 
 #: tfrmoptions.chuseproxyoutputforfixbug.caption
 msgid "chUseProxyOutputForFixBug"
@@ -289,7 +297,7 @@ msgstr "8384"
 
 #: tfrmoptions.lblanguage.caption
 msgid "lbLanguage"
-msgstr ""
+msgstr "Language"
 
 #: tmodulemain.actabout.caption
 msgid "actAbout"
@@ -418,14 +426,6 @@ msgstr "days"
 #: uformmain.coffline
 msgid "Offline"
 msgstr "Offline"
-
-#: umodulemain.clanguagename
-msgid "cLanguageName"
-msgstr ""
-
-#: umodulemain.clanguagenameeng
-msgid "cLanguageNameEng"
-msgstr ""
 
 #: umodulemain.cprogramname
 #, fuzzy

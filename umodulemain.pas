@@ -215,7 +215,13 @@ begin
   modalRes := frmOptions.ShowModal();
   if modalRes = mrOK then
   begin
-    langFile := frmOptions.cbLanguages.Text;
+    if (frmOptions.cbLanguages.ItemIndex >= 0) and
+       (frmOptions.FileNameList <> nil) and
+       (frmOptions.FileNameList.Count > frmOptions.cbLanguages.ItemIndex) then
+      langFile := frmOptions.FileNameList[frmOptions.cbLanguages.ItemIndex]
+    else
+      langFile := '';
+
     if langFile <> '' then
     begin
       langCode := GetLangCode(langFile);

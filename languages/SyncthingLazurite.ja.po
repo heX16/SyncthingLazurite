@@ -4,6 +4,14 @@ msgstr ""
 "Language: ja\n"
 "Plural-Forms: nplurals=1; plural=0;\n"
 
+#: umodulemain.clanguagename
+msgid "cLanguageName"
+msgstr "日本語"
+
+#: umodulemain.clanguagenameeng
+msgid "cLanguageNameEng"
+msgstr "Japanese"
+
 #: fphttpclient_fixed.serrchunklineendmissing
 msgid "Chunk line end missing"
 msgstr "チャンクの行末がありません"
@@ -385,14 +393,6 @@ msgstr "日"
 #: uformmain.coffline
 msgid "Offline"
 msgstr "オフライン"
-
-#: umodulemain.clanguagename
-msgid "cLanguageName"
-msgstr "日本語"
-
-#: umodulemain.clanguagenameeng
-msgid "cLanguageNameEng"
-msgstr "Japanese"
 
 #: umodulemain.cprogramname
 msgctxt "umodulemain.cprogramname"

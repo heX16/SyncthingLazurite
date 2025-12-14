@@ -1,6 +1,14 @@
 msgid ""
 msgstr "Content-Type: text/plain; charset=UTF-8"
 
+#: umodulemain.clanguagename
+msgid "cLanguageName"
+msgstr ""
+
+#: umodulemain.clanguagenameeng
+msgid "cLanguageNameEng"
+msgstr ""
+
 #: fphttpclient_fixed.serrchunklineendmissing
 msgid "Chunk line end missing"
 msgstr ""
@@ -371,14 +379,6 @@ msgstr ""
 
 #: uformmain.coffline
 msgid "Offline"
-msgstr ""
-
-#: umodulemain.clanguagename
-msgid "cLanguageName"
-msgstr ""
-
-#: umodulemain.clanguagenameeng
-msgid "cLanguageNameEng"
 msgstr ""
 
 #: umodulemain.cprogramname

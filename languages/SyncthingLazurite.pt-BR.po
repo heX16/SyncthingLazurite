@@ -4,6 +4,14 @@ msgstr ""
 "Language: pt_BR\n"
 "Plural-Forms: nplurals=2; plural=(n>1);\n"
 
+#: umodulemain.clanguagename
+msgid "cLanguageName"
+msgstr "Português (Brasil)"
+
+#: umodulemain.clanguagenameeng
+msgid "cLanguageNameEng"
+msgstr "Portuguese (Brazil)"
+
 #: fphttpclient_fixed.serrchunklineendmissing
 msgid "Chunk line end missing"
 msgstr "Fim de linha do bloco ausente"
@@ -385,14 +393,6 @@ msgstr "dias"
 #: uformmain.coffline
 msgid "Offline"
 msgstr "Offline"
-
-#: umodulemain.clanguagename
-msgid "cLanguageName"
-msgstr "Português (Brasil)"
-
-#: umodulemain.clanguagenameeng
-msgid "cLanguageNameEng"
-msgstr "Portuguese (Brazil)"
 
 #: umodulemain.cprogramname
 msgctxt "umodulemain.cprogramname"

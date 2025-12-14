@@ -4,6 +4,14 @@ msgstr ""
 "Language: zh_CN\n"
 "Plural-Forms: nplurals=1; plural=0;\n"
 
+#: umodulemain.clanguagename
+msgid "cLanguageName"
+msgstr "简体中文"
+
+#: umodulemain.clanguagenameeng
+msgid "cLanguageNameEng"
+msgstr "Chinese (Simplified)"
+
 #: fphttpclient_fixed.serrchunklineendmissing
 msgid "Chunk line end missing"
 msgstr "缺少块的行结束符"
@@ -385,14 +393,6 @@ msgstr "天"
 #: uformmain.coffline
 msgid "Offline"
 msgstr "离线"
-
-#: umodulemain.clanguagename
-msgid "cLanguageName"
-msgstr "简体中文"
-
-#: umodulemain.clanguagenameeng
-msgid "cLanguageNameEng"
-msgstr "Chinese (Simplified)"
 
 #: umodulemain.cprogramname
 msgctxt "umodulemain.cprogramname"

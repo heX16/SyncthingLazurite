@@ -7,7 +7,7 @@ interface
 uses
   Classes, SysUtils, XMLConf, FileUtil, Forms, Controls, Graphics, Dialogs,
   Buttons, ExtCtrls, StdCtrls, XMLPropStorage, IniPropStorage,
-  DefaultTranslator, uget_os_language;
+  DefaultTranslator, uget_os_language, uLangUtils;
 
 type
 
@@ -31,10 +31,12 @@ type
     lbLanguage_Fixed: TLabel;
     procedure chRunSyncthingOnStartupChange(Sender: TObject);
     procedure FormShow(Sender: TObject);
+    destructor Destroy; override;
   private
     procedure LoadLanguagesList;
 
   public
+    FileNameList: TStringList;
 
   end;
 
@@ -58,6 +60,12 @@ begin
   LoadLanguagesList;
 end;
 
+destructor TfrmOptions.Destroy;
+begin
+  FreeAndNil(FileNameList);
+  inherited Destroy;
+end;
+
 procedure TfrmOptions.LoadLanguagesList;
 var
   files: TStringList;
@@ -68,6 +76,10 @@ var
 begin
   // Fill combo with available localization files from /languages folder
   langDir := IncludeTrailingPathDelimiter(ExtractFilePath(Application.ExeName)) + 'languages';
+
+  if FileNameList = nil then
+    FileNameList := TStringList.Create;
+  FileNameList.Clear;
 
   currentLangFilename := cbLanguages.Text;
   // TODO: WIP - use the `GetOSLanguage`
@@ -90,14 +102,22 @@ begin
       cbLanguages.Items.Clear;
       for i := 0 to files.Count - 1 do
       begin
-        cbLanguages.Items.Add(ExtractFileName(files[i]));
+        // Read a small head of the file and extract language names
+        var head := ReadFirstBytesUtf8Safe(files[i], 0, 10);
+        var langNative, langEng: string;
+        if ExtractLanguageNames(head, langNative, langEng) and (langNative <> '') then
+          cbLanguages.Items.Add(langNative + ' / ' + langEng)
+        else
+          cbLanguages.Items.Add(ExtractFileName(files[i])); // fallback
+
+        FileNameList.Add(ExtractFileName(files[i]));
       end;
 
-      idx := cbLanguages.Items.IndexOf(currentLangFilename);
+      idx := FileNameList.IndexOf(currentLangFilename);
       if idx >= 0 then
         cbLanguages.ItemIndex := idx
       else
-        cbLanguages.ItemIndex := cbLanguages.Items.IndexOf('SyncthingLazurite.en.po');
+        cbLanguages.ItemIndex := FileNameList.IndexOf('SyncthingLazurite.en.po');
 
     finally
       cbLanguages.Items.EndUpdate;

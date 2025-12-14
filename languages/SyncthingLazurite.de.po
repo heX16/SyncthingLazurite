@@ -4,6 +4,14 @@ msgstr ""
 "Language: de\n"
 "Plural-Forms: nplurals=2; plural=(n!=1);\n"
 
+#: umodulemain.clanguagename
+msgid "cLanguageName"
+msgstr "Deutsch"
+
+#: umodulemain.clanguagenameeng
+msgid "cLanguageNameEng"
+msgstr "German"
+
 #: fphttpclient_fixed.serrchunklineendmissing
 msgid "Chunk line end missing"
 msgstr "Zeilenende des Blocks fehlt"
@@ -385,14 +393,6 @@ msgstr "Tage"
 #: uformmain.coffline
 msgid "Offline"
 msgstr "Offline"
-
-#: umodulemain.clanguagename
-msgid "cLanguageName"
-msgstr "Deutsch"
-
-#: umodulemain.clanguagenameeng
-msgid "cLanguageNameEng"
-msgstr "German"
 
 #: umodulemain.cprogramname
 msgctxt "umodulemain.cprogramname"
