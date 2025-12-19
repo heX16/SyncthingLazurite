@@ -48,7 +48,6 @@ msgid "About"
 msgstr "О программе"
 
 #: tfrmabout.lbprogramname.caption
-#, fuzzy
 msgctxt "tfrmabout.lbprogramname.caption"
 msgid "SyncthingLazurite"
 msgstr "SyncthingLazurite"
@@ -66,7 +65,6 @@ msgid "Source code repository:"
 msgstr "Репозиторий исходного кода:"
 
 #: tfrmabout.lbrepurl.text
-#, fuzzy
 #| msgid "https://bitbucket.org/heXor/..."
 msgid "https://github.com/heX16/SyncthingLazurite"
 msgstr "https://bitbucket.org/heXor/..."
@@ -223,7 +221,6 @@ msgid "edPortNumber"
 msgstr ""
 
 #: tfrmoptions.edportnumber.editlabel.hint
-#, fuzzy
 msgctxt "tfrmoptions.edportnumber.editlabel.hint"
 msgid ""
 "Goto:\n"
@@ -302,7 +299,6 @@ msgid "actShowWeb"
 msgstr "Открыть веб-интерфейс в браузере"
 
 #: tmodulemain.actstopandexit.caption
-#, fuzzy
 msgctxt "tmodulemain.actstopandexit.caption"
 msgid "actStopAndExit"
 msgstr "Остановить и выйти"
@@ -312,19 +308,16 @@ msgid "actStopSyncthing"
 msgstr ""
 
 #: tmodulemain.menuitem1.caption
-#, fuzzy
 msgctxt "tmodulemain.menuitem1.caption"
 msgid "actStop"
 msgstr "Стоп"
 
 #: tmodulemain.menuitem2.caption
-#, fuzzy
 msgctxt "tmodulemain.menuitem2.caption"
 msgid "actRestart"
 msgstr "Рестарт"
 
 #: tmodulemain.menuitem3.caption
-#, fuzzy
 msgctxt "tmodulemain.menuitem3.caption"
 msgid "actStartAndConnect"
 msgstr "Запустить и подключиться"
@@ -335,7 +328,6 @@ msgid "actPause"
 msgstr "Пауза"
 
 #: tmodulemain.mnrestart.caption
-#, fuzzy
 msgctxt "tmodulemain.mnrestart.caption"
 msgid "actRestart"
 msgstr "Рестарт"
@@ -369,7 +361,6 @@ msgid "cLanguageNameEng"
 msgstr "Russian"
 
 #: umodulemain.cprogramname
-#, fuzzy
 msgctxt "umodulemain.cprogramname"
 msgid "SyncthingLazurite"
 msgstr "SyncthingLazurite"

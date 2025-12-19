@@ -40,7 +40,6 @@ msgid "Unexpected response status code: %d"
 msgstr "Unexpected response status code: %d"
 
 #: tfrmabout.button1.caption
-#, fuzzy
 msgctxt "tfrmabout.button1.caption"
 msgid "btnClose"
 msgstr "Close"
@@ -50,19 +49,16 @@ msgid "About"
 msgstr "About"
 
 #: tfrmabout.lbprogramname.caption
-#, fuzzy
 msgctxt "tfrmabout.lbprogramname.caption"
 msgid "SyncthingLazurite"
 msgstr "SyncthingLazurite"
 
 #: tfrmabout.lbprogramverbuild.caption
-#, fuzzy
 msgctxt "tfrmabout.lbprogramverbuild.caption"
 msgid "Build: XXX"
 msgstr "Build: XXX"
 
 #: tfrmabout.lbprogramverdate.caption
-#, fuzzy
 msgctxt "tfrmabout.lbprogramverdate.caption"
 msgid "Date: 2025 Oct"
 msgstr "Date: 2025 Oct"
@@ -72,7 +68,6 @@ msgid "Source code repository:"
 msgstr "Source code repository:"
 
 #: tfrmabout.lbrepurl.text
-#, fuzzy
 #| msgid "https://bitbucket.org/heXor/..."
 msgid "https://github.com/heX16/SyncthingLazurite"
 msgstr "https://bitbucket.org/heXor/..."
@@ -82,19 +77,16 @@ msgid "lbSyncthingVersion"
 msgstr "Syncthing version"
 
 #: tfrmabout.lbsyncthingwebsite.editlabel.caption
-#, fuzzy
 msgctxt "tfrmabout.lbsyncthingwebsite.editlabel.caption"
 msgid "lbSyncthingWebSite"
 msgstr "Syncthing website"
 
 #: tfrmabout.lbsyncthingwebsite.text
-#, fuzzy
 msgctxt "tfrmabout.lbsyncthingwebsite.text"
 msgid "https://syncthing.net/"
 msgstr "https://syncthing.net/"
 
 #: tfrmabout.lbtranslateauthor1.caption
-#, fuzzy
 msgctxt "tfrmabout.lbtranslateauthor1.caption"
 msgid "Author of localization: Alexander Kerner"
 msgstr "Author of localization: Alexander Kerner"
@@ -231,13 +223,11 @@ msgid "edPathToExecWithFilename"
 msgstr "Path to program"
 
 #: tfrmoptions.edportnumber.editlabel.caption
-#, fuzzy
 msgctxt "tfrmoptions.edportnumber.editlabel.caption"
 msgid "edPortNumber"
 msgstr "Port number"
 
 #: tfrmoptions.edportnumber.editlabel.hint
-#, fuzzy
 msgctxt "tfrmoptions.edportnumber.editlabel.hint"
 msgid ""
 "Goto:\n"
@@ -268,7 +258,6 @@ msgid "actConnect"
 msgstr "Connect"
 
 #: tmodulemain.actconnectorstart.caption
-#, fuzzy
 msgctxt "tmodulemain.actconnectorstart.caption"
 msgid "actConnectOrStart"
 msgstr "Connect or start"
@@ -282,13 +271,11 @@ msgid "actDisconnect"
 msgstr "Disconnect"
 
 #: tmodulemain.actdisconnectandstop.caption
-#, fuzzy
 msgctxt "tmodulemain.actdisconnectandstop.caption"
 msgid "actDisconnectAndStop"
 msgstr "Disconnect and stop"
 
 #: tmodulemain.actrestartapp.caption
-#, fuzzy
 msgctxt "tmodulemain.actrestartapp.caption"
 msgid "actRestartApp"
 msgstr "Restart app"
@@ -322,31 +309,26 @@ msgid "actShowWeb"
 msgstr "Open web interface in browser"
 
 #: tmodulemain.actstopandexit.caption
-#, fuzzy
 msgctxt "tmodulemain.actstopandexit.caption"
 msgid "actStopAndExit"
 msgstr "Stop and exit"
 
 #: tmodulemain.actstopsyncthing.caption
-#, fuzzy
 msgctxt "tmodulemain.actstopsyncthing.caption"
 msgid "actStopSyncthing"
 msgstr "Stop Syncthing"
 
 #: tmodulemain.menuitem1.caption
-#, fuzzy
 msgctxt "tmodulemain.menuitem1.caption"
 msgid "actStop"
 msgstr "Stop"
 
 #: tmodulemain.menuitem2.caption
-#, fuzzy
 msgctxt "tmodulemain.menuitem2.caption"
 msgid "actRestart"
 msgstr "Restart"
 
 #: tmodulemain.menuitem3.caption
-#, fuzzy
 msgctxt "tmodulemain.menuitem3.caption"
 msgid "actStartAndConnect"
 msgstr "Start and connect"
@@ -357,7 +339,6 @@ msgid "actPause"
 msgstr "Pause"
 
 #: tmodulemain.mnrestart.caption
-#, fuzzy
 msgctxt "tmodulemain.mnrestart.caption"
 msgid "actRestart"
 msgstr "Restart"
@@ -391,7 +372,6 @@ msgid "cLanguageNameEng"
 msgstr "English"
 
 #: umodulemain.cprogramname
-#, fuzzy
 msgctxt "umodulemain.cprogramname"
 msgid "SyncthingLazurite"
 msgstr "SyncthingLazurite"
