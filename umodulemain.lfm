@@ -308,12 +308,6 @@ object ModuleMain: TModuleMain
       object MenuItem9: TMenuItem
         Caption = '-'
       end
-      object MenuItem8: TMenuItem
-        Action = actShowRestView
-      end
-      object MenuItem6: TMenuItem
-        Caption = '-'
-      end
       object MenuItem5: TMenuItem
         Action = actStopAndExit
       end
@@ -323,6 +317,12 @@ object ModuleMain: TModuleMain
     end
     object mnView: TMenuItem
       Caption = 'mnView'
+      object MenuItem10: TMenuItem
+        Action = actShowWeb
+      end
+      object Separator1: TMenuItem
+        Caption = '-'
+      end
       object MenuItem14: TMenuItem
         Action = actShowConsole
       end
@@ -332,21 +332,12 @@ object ModuleMain: TModuleMain
       object MenuItem17: TMenuItem
         Action = actShowRestView
       end
-      object Separator1: TMenuItem
-        Caption = '-'
-      end
-      object MenuItem10: TMenuItem
-        Action = actShowWeb
-      end
       object Separator2: TMenuItem
         Caption = '-'
       end
       object MenuItem18: TMenuItem
         Action = actShowOptions
       end
-    end
-    object MenuItem7: TMenuItem
-      Action = actShowOptions
     end
     object MenuItem12: TMenuItem
       Action = actAbout

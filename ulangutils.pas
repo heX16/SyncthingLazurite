@@ -34,6 +34,9 @@ function ReadFirstBytesUtf8Safe(const AFileName: string; const AMaxBytes: Intege
 
 implementation
 
+uses
+  streamex;
+
 function ExtractLanguageNames(const AContent: string; out LangName, LangNameEng: string): Boolean;
 var
   Lines: TStringList;
@@ -143,11 +146,11 @@ begin
     // Branch 1: read by lines (priority)
     FS := TFileStream.Create(AFileName, fmOpenRead or fmShareDenyNone);
     try
-      Reader := TStreamReader.Create(FS, TEncoding.UTF8, True);
+      Reader := TStreamReader.Create(FS);
       try
         LinesRead := 0;
         Result := '';
-        while (LinesRead < ALinesCount) and (not Reader.EndOfStream) do
+        while (LinesRead < ALinesCount) and (not Reader.Eof) do
         begin
           Line := Reader.ReadLine;
           if Result <> '' then

@@ -70,15 +70,12 @@ type
     mnStateStop: TMenuItem;
     mnStateRun: TMenuItem;
     MenuItem15: TMenuItem;
-    MenuItem8: TMenuItem;
     MenuItem9: TMenuItem;
     mnRestart: TMenuItem;
     MenuItem2: TMenuItem;
     MenuItem3: TMenuItem;
     MenuItem4: TMenuItem;
     MenuItem5: TMenuItem;
-    MenuItem6: TMenuItem;
-    MenuItem7: TMenuItem;
     mnServer: TMenuItem;
     menuTrayIcon: TPopupMenu;
     mnStopAndExit: TMenuItem;

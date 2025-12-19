@@ -4,14 +4,6 @@ msgstr ""
 "Language: pt_BR\n"
 "Plural-Forms: nplurals=2; plural=(n>1);\n"
 
-#: umodulemain.clanguagename
-msgid "cLanguageName"
-msgstr "Português (Brasil)"
-
-#: umodulemain.clanguagenameeng
-msgid "cLanguageNameEng"
-msgstr "Portuguese (Brazil)"
-
 #: fphttpclient_fixed.serrchunklineendmissing
 msgid "Chunk line end missing"
 msgstr "Fim de linha do bloco ausente"
@@ -63,10 +55,6 @@ msgctxt "tfrmabout.lbprogramname.caption"
 msgid "SyncthingLazurite"
 msgstr "SyncthingLazurite"
 
-#: tfrmabout.lbprogramver.caption
-msgid "vX.X"
-msgstr "vX.X"
-
 #: tfrmabout.lbprogramverbuild.caption
 msgid "Build: XXX"
 msgstr "Compilação: XXX"
@@ -86,11 +74,6 @@ msgstr "https://github.com/heX16/SyncthingLazurite"
 #: tfrmabout.lbsyncthingversion.editlabel.caption
 msgid "lbSyncthingVersion"
 msgstr "Versão do Syncthing"
-
-#: tfrmabout.lbsyncthingversion.text
-msgctxt "tfrmabout.lbsyncthingversion.text"
-msgid "..."
-msgstr "..."
 
 #: tfrmabout.lbsyncthingwebsite.editlabel.caption
 msgid "lbSyncthingWebSite"
@@ -190,16 +173,6 @@ msgstr "Eventos"
 msgid "grpFolders"
 msgstr "Pastas"
 
-#: tfrmoptions.btnselectdirconfig.caption
-msgctxt "tfrmoptions.btnselectdirconfig.caption"
-msgid "..."
-msgstr "..."
-
-#: tfrmoptions.btnselectfileexec.caption
-msgctxt "tfrmoptions.btnselectfileexec.caption"
-msgid "..."
-msgstr "..."
-
 #: tfrmoptions.caption
 msgid "frmOptions"
 msgstr "Opções"
@@ -241,19 +214,9 @@ msgstr ""
 msgid "edPathToConfigDir"
 msgstr "Caminho para configuração"
 
-#: tfrmoptions.edpathtoconfigdir.text
-msgctxt "tfrmoptions.edpathtoconfigdir.text"
-msgid "./"
-msgstr "./"
-
 #: tfrmoptions.edpathtoexecwithfilename.editlabel.caption
 msgid "edPathToExecWithFilename"
 msgstr "Caminho do programa"
-
-#: tfrmoptions.edpathtoexecwithfilename.text
-msgctxt "tfrmoptions.edpathtoexecwithfilename.text"
-msgid "./"
-msgstr "./"
 
 #: tfrmoptions.edportnumber.editlabel.caption
 msgid "edPortNumber"
@@ -271,10 +234,6 @@ msgstr ""
 "Settings -> Common -> API Key\n"
 "\n"
 "Exemplo de API Key: xzMwbz6rDUuAv9tjVSbqfVMNta4kPWss"
-
-#: tfrmoptions.edportnumber.text
-msgid "8384"
-msgstr "8384"
 
 #: tfrmoptions.lblanguage.caption
 msgid "lbLanguage"
@@ -393,6 +352,14 @@ msgstr "dias"
 #: uformmain.coffline
 msgid "Offline"
 msgstr "Offline"
+
+#: umodulemain.clanguagename
+msgid "cLanguageName"
+msgstr "Português (Brasil)"
+
+#: umodulemain.clanguagenameeng
+msgid "cLanguageNameEng"
+msgstr "Portuguese (Brazil)"
 
 #: umodulemain.cprogramname
 msgctxt "umodulemain.cprogramname"

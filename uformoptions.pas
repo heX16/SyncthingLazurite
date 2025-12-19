@@ -58,6 +58,15 @@ end;
 procedure TfrmOptions.FormShow(Sender: TObject);
 begin
   LoadLanguagesList;
+
+  if self.edPathToExecWithFilename.Text = '---' then
+  begin
+    {$IFDEF Windows}
+    self.edPathToExecWithFilename.Text := '.\syncthing.exe'
+    {$ELSE}
+    self.edPathToExecWithFilename.Text := './syncthing'
+    {$ENDIF}
+  end;
 end;
 
 destructor TfrmOptions.Destroy;
@@ -73,6 +82,8 @@ var
   i: Integer;
   currentLangFilename: string;
   idx: Integer;
+  head: string;
+  langNative, langEng: string;
 begin
   // Fill combo with available localization files from /languages folder
   langDir := IncludeTrailingPathDelimiter(ExtractFilePath(Application.ExeName)) + 'languages';
@@ -103,8 +114,7 @@ begin
       for i := 0 to files.Count - 1 do
       begin
         // Read a small head of the file and extract language names
-        var head := ReadFirstBytesUtf8Safe(files[i], 0, 10);
-        var langNative, langEng: string;
+        head := ReadFirstBytesUtf8Safe(files[i], 0, 10);
         if ExtractLanguageNames(head, langNative, langEng) and (langNative <> '') then
           cbLanguages.Items.Add(langNative + ' / ' + langEng)
         else

@@ -1,14 +1,6 @@
 msgid ""
 msgstr "Content-Type: text/plain; charset=UTF-8"
 
-#: umodulemain.clanguagename
-msgid "cLanguageName"
-msgstr "English"
-
-#: umodulemain.clanguagenameeng
-msgid "cLanguageNameEng"
-msgstr "English"
-
 #: fphttpclient_fixed.serrchunklineendmissing
 msgid "Chunk line end missing"
 msgstr "Chunk line end missing"
@@ -63,12 +55,6 @@ msgctxt "tfrmabout.lbprogramname.caption"
 msgid "SyncthingLazurite"
 msgstr "SyncthingLazurite"
 
-#: tfrmabout.lbprogramver.caption
-#, fuzzy
-msgctxt "tfrmabout.lbprogramver.caption"
-msgid "vX.X"
-msgstr "vX.X"
-
 #: tfrmabout.lbprogramverbuild.caption
 #, fuzzy
 msgctxt "tfrmabout.lbprogramverbuild.caption"
@@ -94,11 +80,6 @@ msgstr "https://bitbucket.org/heXor/..."
 #: tfrmabout.lbsyncthingversion.editlabel.caption
 msgid "lbSyncthingVersion"
 msgstr "Syncthing version"
-
-#: tfrmabout.lbsyncthingversion.text
-msgctxt "tfrmabout.lbsyncthingversion.text"
-msgid "..."
-msgstr "..."
 
 #: tfrmabout.lbsyncthingwebsite.editlabel.caption
 #, fuzzy
@@ -204,16 +185,6 @@ msgstr "Events"
 msgid "grpFolders"
 msgstr "Folders"
 
-#: tfrmoptions.btnselectdirconfig.caption
-msgctxt "tfrmoptions.btnselectdirconfig.caption"
-msgid "..."
-msgstr "..."
-
-#: tfrmoptions.btnselectfileexec.caption
-msgctxt "tfrmoptions.btnselectfileexec.caption"
-msgid "..."
-msgstr "..."
-
 #: tfrmoptions.caption
 msgid "frmOptions"
 msgstr "Options"
@@ -255,19 +226,9 @@ msgstr ""
 msgid "edPathToConfigDir"
 msgstr "Path to configuration"
 
-#: tfrmoptions.edpathtoconfigdir.text
-msgctxt "tfrmoptions.edpathtoconfigdir.text"
-msgid "./"
-msgstr "./"
-
 #: tfrmoptions.edpathtoexecwithfilename.editlabel.caption
 msgid "edPathToExecWithFilename"
 msgstr "Path to program"
-
-#: tfrmoptions.edpathtoexecwithfilename.text
-msgctxt "tfrmoptions.edpathtoexecwithfilename.text"
-msgid "./"
-msgstr "./"
 
 #: tfrmoptions.edportnumber.editlabel.caption
 #, fuzzy
@@ -288,12 +249,6 @@ msgstr ""
 "Settings -> Common -> API Key\n"
 "\n"
 "API Key example: xzMwbz6rDUuAv9tjVSbqfVMNta4kPWss"
-
-#: tfrmoptions.edportnumber.text
-#, fuzzy
-msgctxt "tfrmoptions.edportnumber.text"
-msgid "8384"
-msgstr "8384"
 
 #: tfrmoptions.lblanguage.caption
 msgid "lbLanguage"
@@ -426,6 +381,14 @@ msgstr "days"
 #: uformmain.coffline
 msgid "Offline"
 msgstr "Offline"
+
+#: umodulemain.clanguagename
+msgid "cLanguageName"
+msgstr "English"
+
+#: umodulemain.clanguagenameeng
+msgid "cLanguageNameEng"
+msgstr "English"
 
 #: umodulemain.cprogramname
 #, fuzzy

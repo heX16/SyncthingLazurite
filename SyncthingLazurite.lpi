@@ -20,12 +20,20 @@
     <i18n>
       <EnableI18N Value="True"/>
       <OutDir Value="languages"/>
-      <ExcludedIdentifiers Count="5">
+      <ExcludedIdentifiers Count="13">
         <Item1 Value="tfrmoptions.edpathtoconfig.text"/>
         <Item2 Value="tfrmoptions.edpathtoexec.text"/>
         <Item3 Value="tfrmoptions.edapikey.text"/>
         <Item4 Value="tfrmoptions.edinterval.text"/>
         <Item5 Value="tfrmoptions.lblanguage_fixed.caption"/>
+        <Item6 Value="tfrmoptions.edpathtoexecwithfilename.text"/>
+        <Item7 Value="tfrmoptions.edpathtoexecwithfilename.text"/>
+        <Item8 Value="tfrmoptions.btnselectdirconfig.caption"/>
+        <Item9 Value="tfrmoptions.btnselectfileexec.caption"/>
+        <Item10 Value="tfrmoptions.edpathtoconfigdir.text"/>
+        <Item11 Value="tfrmoptions.edportnumber.text"/>
+        <Item12 Value="tfrmabout.lbsyncthingversion.text"/>
+        <Item13 Value="tfrmabout.lbprogramver.caption"/>
       </ExcludedIdentifiers>
     </i18n>
     <VersionInfo>
@@ -34,7 +42,7 @@
       <MajorVersionNr Value="1"/>
       <MinorVersionNr Value="3"/>
       <RevisionNr Value="2512"/>
-      <BuildNr Value="168"/>
+      <BuildNr Value="171"/>
     </VersionInfo>
     <BuildModes Count="4">
       <Item1 Name="Debug" Default="True"/>

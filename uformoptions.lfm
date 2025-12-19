@@ -7,7 +7,7 @@ object frmOptions: TfrmOptions
   ClientHeight = 360
   ClientWidth = 361
   Position = poDefault
-  SessionProperties = 'chRunSyncOnStart.Checked;chUseProxyOutputForFixBug.Checked;edAPIKey.Text;edPathToConfigDir.Text;edPathToExecWithFilename.Text;edPortNumber.Text;cbLanguages.Text'
+  SessionProperties = 'cbLanguages.Text;chRunSyncOnStart.Checked;chUseProxyOutputForFixBug.Checked;edAPIKey.Text;edPathToExecWithFilename.Text;edPortNumber.Text;edPathToConfigDir.Text'
   OnShow = FormShow
   object BitBtn1: TBitBtn
     Left = 10
@@ -55,7 +55,7 @@ object frmOptions: TfrmOptions
     EditLabel.Caption = 'edPathToExecWithFilename'
     EditLabel.ParentColor = False
     TabOrder = 3
-    Text = './'
+    Text = '---'
   end
   object btnSelectFileExec: TButton
     Left = 331
@@ -172,7 +172,7 @@ object frmOptions: TfrmOptions
   object IniPropStorageConfig: TIniPropStorage
     StoredValues = <>
     IniFileName = 'SyncthingLazurite.ini'
-    Left = 206
+    Left = 208
     Top = 305
   end
 end

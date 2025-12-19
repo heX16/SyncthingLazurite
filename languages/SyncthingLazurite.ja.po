@@ -4,14 +4,6 @@ msgstr ""
 "Language: ja\n"
 "Plural-Forms: nplurals=1; plural=0;\n"
 
-#: umodulemain.clanguagename
-msgid "cLanguageName"
-msgstr "日本語"
-
-#: umodulemain.clanguagenameeng
-msgid "cLanguageNameEng"
-msgstr "Japanese"
-
 #: fphttpclient_fixed.serrchunklineendmissing
 msgid "Chunk line end missing"
 msgstr "チャンクの行末がありません"
@@ -63,10 +55,6 @@ msgctxt "tfrmabout.lbprogramname.caption"
 msgid "SyncthingLazurite"
 msgstr "SyncthingLazurite"
 
-#: tfrmabout.lbprogramver.caption
-msgid "vX.X"
-msgstr "vX.X"
-
 #: tfrmabout.lbprogramverbuild.caption
 msgid "Build: XXX"
 msgstr "ビルド: XXX"
@@ -86,11 +74,6 @@ msgstr "https://github.com/heX16/SyncthingLazurite"
 #: tfrmabout.lbsyncthingversion.editlabel.caption
 msgid "lbSyncthingVersion"
 msgstr "Syncthing バージョン"
-
-#: tfrmabout.lbsyncthingversion.text
-msgctxt "tfrmabout.lbsyncthingversion.text"
-msgid "..."
-msgstr "..."
 
 #: tfrmabout.lbsyncthingwebsite.editlabel.caption
 msgid "lbSyncthingWebSite"
@@ -190,16 +173,6 @@ msgstr "イベント"
 msgid "grpFolders"
 msgstr "フォルダー"
 
-#: tfrmoptions.btnselectdirconfig.caption
-msgctxt "tfrmoptions.btnselectdirconfig.caption"
-msgid "..."
-msgstr "..."
-
-#: tfrmoptions.btnselectfileexec.caption
-msgctxt "tfrmoptions.btnselectfileexec.caption"
-msgid "..."
-msgstr "..."
-
 #: tfrmoptions.caption
 msgid "frmOptions"
 msgstr "設定"
@@ -241,19 +214,9 @@ msgstr ""
 msgid "edPathToConfigDir"
 msgstr "設定へのパス"
 
-#: tfrmoptions.edpathtoconfigdir.text
-msgctxt "tfrmoptions.edpathtoconfigdir.text"
-msgid "./"
-msgstr "./"
-
 #: tfrmoptions.edpathtoexecwithfilename.editlabel.caption
 msgid "edPathToExecWithFilename"
 msgstr "プログラムへのパス"
-
-#: tfrmoptions.edpathtoexecwithfilename.text
-msgctxt "tfrmoptions.edpathtoexecwithfilename.text"
-msgid "./"
-msgstr "./"
 
 #: tfrmoptions.edportnumber.editlabel.caption
 msgid "edPortNumber"
@@ -271,10 +234,6 @@ msgstr ""
 "Settings -> Common -> API Key\n"
 "\n"
 "APIキー例: xzMwbz6rDUuAv9tjVSbqfVMNta4kPWss"
-
-#: tfrmoptions.edportnumber.text
-msgid "8384"
-msgstr "8384"
 
 #: tfrmoptions.lblanguage.caption
 msgid "lbLanguage"
@@ -393,6 +352,14 @@ msgstr "日"
 #: uformmain.coffline
 msgid "Offline"
 msgstr "オフライン"
+
+#: umodulemain.clanguagename
+msgid "cLanguageName"
+msgstr "日本語"
+
+#: umodulemain.clanguagenameeng
+msgid "cLanguageNameEng"
+msgstr "Japanese"
 
 #: umodulemain.cprogramname
 msgctxt "umodulemain.cprogramname"

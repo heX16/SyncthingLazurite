@@ -1,14 +1,6 @@
 ﻿msgid ""
 msgstr "Content-Type: text/plain; charset=UTF-8"
 
-#: umodulemain.clanguagename
-msgid "cLanguageName"
-msgstr "Русский"
-
-#: umodulemain.clanguagenameeng
-msgid "cLanguageNameEng"
-msgstr "Russian"
-
 #: fphttpclient_fixed.serrchunklineendmissing
 msgid "Chunk line end missing"
 msgstr ""
@@ -61,10 +53,6 @@ msgctxt "tfrmabout.lbprogramname.caption"
 msgid "SyncthingLazurite"
 msgstr "SyncthingLazurite"
 
-#: tfrmabout.lbprogramver.caption
-msgid "vX.X"
-msgstr ""
-
 #: tfrmabout.lbprogramverbuild.caption
 msgid "Build: XXX"
 msgstr ""
@@ -86,11 +74,6 @@ msgstr "https://bitbucket.org/heXor/..."
 #: tfrmabout.lbsyncthingversion.editlabel.caption
 msgid "lbSyncthingVersion"
 msgstr "Версия Syncthing"
-
-#: tfrmabout.lbsyncthingversion.text
-msgctxt "tfrmabout.lbsyncthingversion.text"
-msgid "..."
-msgstr "..."
 
 #: tfrmabout.lbsyncthingwebsite.editlabel.caption
 msgid "lbSyncthingWebSite"
@@ -190,16 +173,6 @@ msgstr "События"
 msgid "grpFolders"
 msgstr "Папки"
 
-#: tfrmoptions.btnselectdirconfig.caption
-msgctxt "tfrmoptions.btnselectdirconfig.caption"
-msgid "..."
-msgstr "..."
-
-#: tfrmoptions.btnselectfileexec.caption
-msgctxt "tfrmoptions.btnselectfileexec.caption"
-msgid "..."
-msgstr "..."
-
 #: tfrmoptions.caption
 msgid "frmOptions"
 msgstr "Опции"
@@ -241,19 +214,9 @@ msgstr ""
 msgid "edPathToConfigDir"
 msgstr "Путь к конфигурации"
 
-#: tfrmoptions.edpathtoconfigdir.text
-msgctxt "tfrmoptions.edpathtoconfigdir.text"
-msgid "./"
-msgstr "./"
-
 #: tfrmoptions.edpathtoexecwithfilename.editlabel.caption
 msgid "edPathToExecWithFilename"
 msgstr "Путь к программе"
-
-#: tfrmoptions.edpathtoexecwithfilename.text
-msgctxt "tfrmoptions.edpathtoexecwithfilename.text"
-msgid "./"
-msgstr "./"
 
 #: tfrmoptions.edportnumber.editlabel.caption
 msgid "edPortNumber"
@@ -272,10 +235,6 @@ msgstr ""
 "Настройки -> Общие -> API Key\n"
 "\n"
 "Пример API Key: xzMwbz6rDUuAv9tjVSbqfVMNta4kPWss"
-
-#: tfrmoptions.edportnumber.text
-msgid "8384"
-msgstr ""
 
 #: tfrmoptions.lblanguage.caption
 msgid "lbLanguage"
@@ -400,6 +359,14 @@ msgstr "дни"
 #: uformmain.coffline
 msgid "Offline"
 msgstr "Оффлайн"
+
+#: umodulemain.clanguagename
+msgid "cLanguageName"
+msgstr "Русский"
+
+#: umodulemain.clanguagenameeng
+msgid "cLanguageNameEng"
+msgstr "Russian"
 
 #: umodulemain.cprogramname
 #, fuzzy

@@ -23,7 +23,7 @@ object frmMain: TfrmMain
     ClientWidth = 441
     TabOrder = 0
     object btnStart: TButton
-      Left = 115
+      Left = 48
       Height = 32
       Top = 4
       Width = 128
@@ -31,7 +31,7 @@ object frmMain: TfrmMain
       TabOrder = 0
     end
     object btnStop: TButton
-      Left = 250
+      Left = 184
       Height = 32
       Top = 4
       Width = 130
@@ -47,10 +47,10 @@ object frmMain: TfrmMain
       Shape = stCircle
     end
     object btnOptions: TButton
-      Left = 384
+      Left = 320
       Height = 32
       Top = 4
-      Width = 50
+      Width = 114
       Action = ModuleMain.actShowOptions
       TabOrder = 2
     end
@@ -193,17 +193,9 @@ object frmMain: TfrmMain
     ResizeAnchor = akBottom
     Visible = False
   end
-  object btnShowWeb: TButton
-    Left = 58
-    Height = 32
-    Top = 4
-    Width = 50
-    Action = ModuleMain.actShowWeb
-    TabOrder = 8
-  end
   object IniPropStoragePos: TIniPropStorage
     StoredValues = <>
-    IniFileName = 'SyncthingLazurite.ini'
+    IniFileName = 'SyncthingLazuritePos.ini'
     IniSection = 'FormMain'
     Left = 339
     Top = 58
