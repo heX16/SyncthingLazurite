@@ -7,7 +7,7 @@ object frmOptions: TfrmOptions
   ClientHeight = 360
   ClientWidth = 361
   Position = poDefault
-  SessionProperties = 'cbLanguages.Text;chRunSyncOnStart.Checked;chUseProxyOutputForFixBug.Checked;edAPIKey.Text;edPathToExecWithFilename.Text;edPortNumber.Text;edPathToConfigDir.Text'
+  SessionProperties = 'cbLanguages.Text;chUseProxyOutputForFixBug.Checked;edAPIKey.Text;edPathToConfigDir.Text;edPathToExecWithFilename.Text;edPortNumber.Text;chConnectOnStartup.Checked;chRunSyncthingOnStartup.Checked'
   OnShow = FormShow
   object BitBtn1: TBitBtn
     Left = 10
@@ -97,8 +97,6 @@ object frmOptions: TfrmOptions
     Top = 56
     Width = 159
     Caption = 'chRunSyncthingOnStartup'
-    Checked = True
-    State = cbChecked
     TabOrder = 7
     OnChange = chRunSyncthingOnStartupChange
   end
@@ -134,8 +132,6 @@ object frmOptions: TfrmOptions
     Top = 80
     Width = 130
     Caption = 'chConnectOnStartup'
-    Checked = True
-    State = cbChecked
     TabOrder = 10
   end
   object cbLanguages: TComboBox
