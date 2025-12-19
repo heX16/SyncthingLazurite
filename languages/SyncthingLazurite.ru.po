@@ -60,14 +60,10 @@ msgstr ""
 msgid "Date: 2025 Oct"
 msgstr ""
 
-#: tfrmabout.lbrepurl.editlabel.caption
+#: tfrmabout.lbrepourl.editlabel.caption
+msgctxt "tfrmabout.lbrepourl.editlabel.caption"
 msgid "Source code repository:"
 msgstr "Репозиторий исходного кода:"
-
-#: tfrmabout.lbrepurl.text
-#| msgid "https://bitbucket.org/heXor/..."
-msgid "https://github.com/heX16/SyncthingLazurite"
-msgstr "https://bitbucket.org/heXor/..."
 
 #: tfrmabout.lbsyncthingversion.editlabel.caption
 msgid "lbSyncthingVersion"

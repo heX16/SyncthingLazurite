@@ -20,7 +20,7 @@
     <i18n>
       <EnableI18N Value="True"/>
       <OutDir Value="languages"/>
-      <ExcludedIdentifiers Count="13">
+      <ExcludedIdentifiers Count="14">
         <Item1 Value="tfrmoptions.edpathtoconfig.text"/>
         <Item2 Value="tfrmoptions.edpathtoexec.text"/>
         <Item3 Value="tfrmoptions.edapikey.text"/>
@@ -34,6 +34,7 @@
         <Item11 Value="tfrmoptions.edportnumber.text"/>
         <Item12 Value="tfrmabout.lbsyncthingversion.text"/>
         <Item13 Value="tfrmabout.lbprogramver.caption"/>
+        <Item14 Value="tfrmabout.lbrepourl.text"/>
       </ExcludedIdentifiers>
     </i18n>
     <VersionInfo>
@@ -42,7 +43,7 @@
       <MajorVersionNr Value="1"/>
       <MinorVersionNr Value="3"/>
       <RevisionNr Value="2512"/>
-      <BuildNr Value="175"/>
+      <BuildNr Value="178"/>
     </VersionInfo>
     <BuildModes Count="4">
       <Item1 Name="Debug" Default="True"/>

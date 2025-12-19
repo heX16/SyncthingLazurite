@@ -8,7 +8,6 @@ object frmAbout: TfrmAbout
   ClientWidth = 486
   Font.Height = -12
   Position = poMainFormCenter
-  LCLVersion = '4.2.0.0'
   OnCreate = FormCreate
   OnShow = FormShow
   object Shape1: TShape
@@ -33,13 +32,13 @@ object frmAbout: TfrmAbout
     ParentColor = False
     ParentFont = False
   end
-  object lbRepURL: TLabeledEdit
+  object lbRepoURL: TLabeledEdit
     Left = 7
-    Height = 28
+    Height = 23
     Top = 346
     Width = 242
-    EditLabel.Height = 20
-    EditLabel.Width = 303
+    EditLabel.Height = 15
+    EditLabel.Width = 242
     EditLabel.Caption = 'Source code repository:'
     EditLabel.ParentColor = False
     EditLabel.ParentFont = False
@@ -85,11 +84,11 @@ object frmAbout: TfrmAbout
   end
   object lbSyncthingVersion: TLabeledEdit
     Left = 307
-    Height = 28
+    Height = 23
     Top = 148
     Width = 70
-    EditLabel.Height = 28
-    EditLabel.Width = 125
+    EditLabel.Height = 23
+    EditLabel.Width = 101
     EditLabel.Caption = 'lbSyncthingVersion'
     EditLabel.ParentColor = False
     EditLabel.ParentFont = False
@@ -103,6 +102,7 @@ object frmAbout: TfrmAbout
     Height = 154
     Top = 6
     Width = 154
+    AntialiasingMode = amOn
     Picture.Data = {
       0A544A706567496D616765E0350000FFD8FFDB00C5000506060B080B0B0B0B0B
       0D0B0B0B0D0E0E0D0D0E0E0F0D0E0E0E0D0F1010101111101010100F1312130F
@@ -537,6 +537,8 @@ object frmAbout: TfrmAbout
       465E8FD0FDA63826A3CAF703E7284C1B000B5821ACF38F74222029B021798B79
       070AA34D850918959BDA80F09FFFD9
     }
+    Proportional = True
+    Stretch = True
   end
   object lbTranslateAuthor2: TLabel
     Left = 173
@@ -570,11 +572,11 @@ object frmAbout: TfrmAbout
   end
   object lbSyncthingWebSite: TLabeledEdit
     Left = 307
-    Height = 28
+    Height = 23
     Top = 170
     Width = 147
-    EditLabel.Height = 28
-    EditLabel.Width = 132
+    EditLabel.Height = 23
+    EditLabel.Width = 106
     EditLabel.Caption = 'lbSyncthingWebSite'
     EditLabel.ParentColor = False
     EditLabel.ParentFont = False

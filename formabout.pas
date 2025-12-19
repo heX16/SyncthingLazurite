@@ -24,7 +24,7 @@ type
     lbSyncthingWebSite: TLabeledEdit;
     lbTranslateAuthor1: TLabel;
     lbProgramName: TLabel;
-    lbRepURL: TLabeledEdit;
+    lbRepoURL: TLabeledEdit;
     lbAboutText: TMemo;
     lbTranslateAuthor2: TLabel;
     Shape1: TShape;
