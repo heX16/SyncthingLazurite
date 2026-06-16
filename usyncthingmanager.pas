@@ -71,20 +71,15 @@ type
     // Startup helper: number of timer ticks left before we treat start as failed
     FStartChecksRemaining: Integer;
 
-    FOutputBuffer: RawByteString;
-
     FOnProcessStateChanged: TProcessEvent;
     FOnConsoleOutput: TConsoleOutputEvent;
     FOnStartFailed: TStartFailedEvent;
     procedure InitializeProcesses;
     procedure InitializeTimers;
 
-    procedure ProcessReadData(Sender: TObject);
     procedure TimerCheckProcessTimer(Sender: TObject);
 
-    procedure ProcessTerminated(Sender: TObject);
-    procedure ReadProcessOutput;
-    procedure ProcessOutputLine(const Line: UTF8String); virtual;
+    // TODO: WIP!!! ProcessStateChanged нужно полностью переделать.
     procedure ProcessStateChanged(NewState: TProcessState;
       AErrorKind: TProcessErrorKind = pekNone;
       const AErrorMessage: UTF8String = ''); virtual;
@@ -187,9 +182,6 @@ begin
   FProcessSyncthing := TAsyncProcess.Create(nil);
   FProcessSyncthing.Options := [poUsePipes, poStderrToOutPut];
   FProcessSyncthing.ShowWindow := swoHIDE;
-  // Subscribe to events: data ready and process terminated
-  FProcessSyncthing.OnReadData := @ProcessReadData; // use read handler
-  FProcessSyncthing.OnTerminate := @ProcessTerminated;
 end;
 
 procedure TSyncthingManager.InitializeTimers;
@@ -200,11 +192,6 @@ begin
   FTimerCheckProcess.OnTimer := @TimerCheckProcessTimer;
 end;
 
-
-procedure TSyncthingManager.ProcessReadData(Sender: TObject);
-begin
-  ReadProcessOutput;
-end;
 
 procedure TSyncthingManager.TimerCheckProcessTimer(Sender: TObject);
 var
@@ -250,67 +237,6 @@ begin
 end;
 
 
-procedure TSyncthingManager.ProcessTerminated(Sender: TObject);
-begin
-  if Sender = FProcessSyncthing then
-  begin
-    if FProcessState = psRunning then
-      ProcessStateChanged(psStopped);
-  end;
-end;
-
-procedure TSyncthingManager.ReadProcessOutput;
-var
-  Chunk: RawByteString;
-  BytesRead: LongInt;
-  p: Integer;
-  RawLine: RawByteString;
-  UtfLine: UTF8String;
-  conv_ok: boolean;
-const
-  LE = LineEnding;
-begin
-  if not Assigned(FProcessSyncthing) or not FProcessSyncthing.Running then
-    Exit;
-
-  if Assigned(FProcessSyncthing.Output) then
-  begin
-    BytesRead := FProcessSyncthing.Output.NumBytesAvailable;
-    if BytesRead > 0 then
-    begin
-      SetLength(Chunk, BytesRead);
-      FProcessSyncthing.Output.ReadBuffer(Chunk[1], BytesRead);
-
-      FOutputBuffer := FOutputBuffer + Chunk;
-
-      // Split buffer into lines using the system line separator
-      p := Pos(LE, FOutputBuffer);
-      while p <> 0 do
-      begin
-        RawLine := Copy(FOutputBuffer, 1, p - 1);
-        FOutputBuffer := Copy(FOutputBuffer, p + Length(LE), Length(FOutputBuffer) - p);
-
-        UtfLine := ConvertEncodingToUTF8(RawLine, GetConsoleTextEncoding(), conv_ok);
-        if not conv_ok then
-        begin
-          DebugLog('Failed to convert console output line to UTF-8; passing raw bytes as UTF-8');
-          UtfLine := UTF8String(RawLine);
-        end;
-
-        ProcessOutputLine(UtfLine);
-
-        p := Pos(LE, FOutputBuffer);
-      end;
-    end;
-  end;
-end;
-
-procedure TSyncthingManager.ProcessOutputLine(const Line: UTF8String);
-begin
-  if Assigned(FOnConsoleOutput) then
-    FOnConsoleOutput(Self, Line);
-end;
-
 procedure TSyncthingManager.ProcessStateChanged(NewState: TProcessState;
   AErrorKind: TProcessErrorKind; const AErrorMessage: UTF8String);
 var
@@ -350,20 +276,6 @@ begin
     psStopped, psError:
       begin
         FTimerCheckProcess.Enabled := False;
-        // Flush remaining buffer as the final line if any data is left
-        if Length(FOutputBuffer) > 0 then
-        begin
-          // Try to convert and emit the tail as a line
-          // Important: avoid losing data when there is no trailing line break
-          TailUtf := ConvertEncodingToUTF8(FOutputBuffer, GetConsoleTextEncoding(), conv_ok);
-          if not conv_ok then
-          begin
-            DebugLog('Failed to convert trailing console output to UTF-8; passing raw bytes as UTF-8');
-            TailUtf := UTF8String(FOutputBuffer);
-          end;
-          ProcessOutputLine(TailUtf);
-          FOutputBuffer := '';
-        end;
 
         // Log additional diagnostics for error states based on error kind
         if (FProcessState = psError) then
