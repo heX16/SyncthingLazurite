@@ -227,6 +227,8 @@ function TModuleMain.AddLineToConsoleLog(const WhenKey: string; const Line: stri
 var
   i: Integer;
   consoleLine: string;
+  displayTime: string;
+  p: SizeInt;
 begin
   Result := False;
 
@@ -239,7 +241,15 @@ begin
   end;
 
   if WhenKey <> '' then
-    consoleLine := '[' + WhenKey + '] ' + Line
+  begin
+    // RFC3339 from Syncthing looks like "2026-06-16T14:47:02.8484074+03:00".
+    // For GUI readability, show only time in HH:NN:SS.
+    displayTime := WhenKey;
+    p := Pos('T', WhenKey);
+    if (p > 0) and (Length(WhenKey) >= p + 8) then
+      displayTime := Copy(WhenKey, p + 1, 8);
+    consoleLine := '[' + displayTime + '] ' + Line;
+  end
   else
     consoleLine := Line;
 
