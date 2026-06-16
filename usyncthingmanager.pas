@@ -2,10 +2,10 @@ unit uSyncthingManager;
 
 {$mode objfpc}{$H+}
 
-// Директива компилятора для отключения исправления бага Windows с выводом процессов
-// Определите в проекте для отключения cmd.exe перенаправления stdout/stderr:
+// Compiler directive to disable the Windows process output bugfix.
+// Define in the project to disable cmd.exe stdout/stderr redirection:
 {$DEFINE DISABLE_WINDOWS_OUTPUT_FIX}
-// По умолчанию исправление ВКЛЮЧЕНО для совместимости с Windows
+// By default the fix is ENABLED for Windows compatibility.
 
 interface
 
@@ -13,21 +13,21 @@ uses
   Classes, SysUtils, UTF8Process, AsyncProcess, ExtCtrls,
   syncthing_api, XMLRead, DOM, LazUTF8, LazFileUtils;
 
-// Вспомогательная функция для поиска XML узлов
+// Helper function for finding XML nodes
 function GetXmlNode(var Node: TDOMNode; Name: WideString): boolean;
 
 type
-  // Состояния процессов Syncthing
+  // Syncthing process states
   TProcessState = (
-    psUnknown,           // Неизвестное состояние
-    psStopped,          // Процессы остановлены
-    psStarting,         // Запуск процессов
-    psRunning,          // Процессы запущены и работают
-    psStopping,         // Остановка процессов
-    psError            // Ошибка процесса
+    psUnknown,           // Unknown state
+    psStopped,          // Processes stopped
+    psStarting,         // Starting processes
+    psRunning,          // Processes running
+    psStopping,         // Stopping processes
+    psError            // Process error
   );
 
-  // События процесса
+  // Process events
   TProcessEvent = procedure(Sender: TObject; State: TProcessState) of object;
   TConsoleOutputEvent = procedure(Sender: TObject; const Line: UTF8String) of object;
 
@@ -41,16 +41,16 @@ type
     pekStopException         // Exception while stopping process
   );
 
-  // Информация о неудачном запуске процесса
+  // Information about a failed process start
   TStartFailureInfo = record
-    ErrorMessage: UTF8String;  // Текст исключения или пусто
-    ExecPath: UTF8String;      // Путь к исполняемому файлу (намеренный)
-    IsException: Boolean;      // Признак, что ошибка пришла из исключения Execute
-    OSLastError: LongInt;      // Код последней ошибки ОС (если есть)
-    Process: TAsyncProcess;    // Экземпляр процесса
+    ErrorMessage: UTF8String;  // Exception text or empty
+    ExecPath: UTF8String;      // Intended executable path
+    IsException: Boolean;      // True if the error came from an Execute exception
+    OSLastError: LongInt;      // Last OS error code (if any)
+    Process: TAsyncProcess;    // Process instance
   end;
 
-  // Событие о неудаче запуска
+  // Start failure event
   TStartFailedEvent = procedure(Sender: TObject; const Info: TStartFailureInfo) of object;
 
   { TSyncthingManager }
@@ -106,12 +106,12 @@ type
 
     function IsProcessRunning: Boolean; virtual;
 
-    // Свойства
+    // Properties
     property HomePath: UTF8String read FHomePath write SetHomePath;
     property ExecPath: UTF8String read FExecPath write SetExecPath;
     property ProcessState: TProcessState read FProcessState;
 
-    // События
+    // Events
     property OnProcessStateChanged: TProcessEvent read FOnProcessStateChanged write FOnProcessStateChanged;
     property OnConsoleOutput: TConsoleOutputEvent read FOnConsoleOutput write FOnConsoleOutput;
     property OnStartFailed: TStartFailedEvent read FOnStartFailed write FOnStartFailed;
@@ -150,12 +150,12 @@ const
   PROCESS_CHECK_INTERVAL_MS = 100;
   PROCESS_CHECK_ITERATIONS = PROCESS_START_TIMEOUT_MS div PROCESS_CHECK_INTERVAL_MS;
 
-  // Интервалы таймеров в миллисекундах
-  PROCESS_STATE_CHECK_INTERVAL_MS = 1000;   // Интервал проверки состояния процесса
+  // Timer intervals in milliseconds
+  PROCESS_STATE_CHECK_INTERVAL_MS = 1000;   // Process state check interval
 
-  // Времена ожидания в миллисекундах
-  API_SHUTDOWN_WAIT_MS = 2000;              // Ожидание после вызова API shutdown
-  PROCESS_TERMINATE_WAIT_MS = 1000;         // Ожидание после Terminate
+  // Wait times in milliseconds
+  API_SHUTDOWN_WAIT_MS = 2000;              // Wait after API shutdown call
+  PROCESS_TERMINATE_WAIT_MS = 1000;         // Wait after Terminate
 
 { TSyncthingManager }
 
@@ -187,8 +187,8 @@ begin
   FProcessSyncthing := TAsyncProcess.Create(nil);
   FProcessSyncthing.Options := [poUsePipes, poStderrToOutPut];
   FProcessSyncthing.ShowWindow := swoHIDE;
-  // Подписываемся на события: данные готовы и процесс завершён
-  FProcessSyncthing.OnReadData := @ProcessReadData; // используем обработчик чтения
+  // Subscribe to events: data ready and process terminated
+  FProcessSyncthing.OnReadData := @ProcessReadData; // use read handler
   FProcessSyncthing.OnTerminate := @ProcessTerminated;
 end;
 
@@ -283,7 +283,7 @@ begin
 
       FOutputBuffer := FOutputBuffer + Chunk;
 
-      // Разбиваем на строки по системному разделителю
+      // Split buffer into lines using the system line separator
       p := Pos(LE, FOutputBuffer);
       while p <> 0 do
       begin
@@ -350,11 +350,11 @@ begin
     psStopped, psError:
       begin
         FTimerCheckProcess.Enabled := False;
-        // Дочитываем хвост буфера как последнюю строку, если остался
+        // Flush remaining buffer as the final line if any data is left
         if Length(FOutputBuffer) > 0 then
         begin
-          // Пытаемся сконвертировать и вывести хвост как строку
-          // Здесь важно избежать потери данных при отсутствии завершающего перевода строки
+          // Try to convert and emit the tail as a line
+          // Important: avoid losing data when there is no trailing line break
           TailUtf := ConvertEncodingToUTF8(FOutputBuffer, GetConsoleTextEncoding(), conv_ok);
           if not conv_ok then
           begin
@@ -494,7 +494,7 @@ begin
   try
     {$IFDEF WINDOWS}
     {$IFNDEF DISABLE_WINDOWS_OUTPUT_FIX}
-    // Windows + output fix: запускаем через cmd.exe и передаём всю команду одной строкой вторым параметром
+    // Windows + output fix: launch via cmd.exe and pass the full command as a single second parameter
     FProcessSyncthing.Executable := GetEnvironmentVariableUTF8('WINDIR') + '\system32\cmd.exe';
     FProcessSyncthing.Parameters.Clear;
     FProcessSyncthing.Parameters.Add('/C');
@@ -503,7 +503,7 @@ begin
       '" | find /v " empty_find_just_for_redirect_stdio_00686558 "';
     FProcessSyncthing.Parameters.Add(InnerCmd);
     {$ELSE}
-    // Windows без фикса: запускаем напрямую с раздельными параметрами
+    // Windows without fix: launch directly with separate parameters
     FProcessSyncthing.Executable := FExecPath;
     FProcessSyncthing.Parameters.Clear;
     FProcessSyncthing.Parameters.Add('--no-browser');
@@ -569,7 +569,7 @@ begin
     begin
       DebugLog('Syncthing process stopped successfully');
       ProcessStateChanged(psStopped);
-      Disconnect; // Отключаемся от API
+      Disconnect; // Disconnect from API
       Result := True;
     end
     else
@@ -607,7 +607,7 @@ end;
 
 
 
-// Вспомогательная функция для поиска XML узлов
+// Helper function for finding XML nodes
 function GetXmlNode(var Node: TDOMNode; Name: WideString): boolean;
 var
   N: TDOMNode;
