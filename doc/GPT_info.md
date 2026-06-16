@@ -43,12 +43,12 @@
 
 - `uSyncthingManager.pas` — управление процессом "Syncthing":
   - Класс `TSyncthingManager` наследуется от `TSyncthingAPI` и добавляет функционал запуска программы "syncthing".
-  - Запуск/остановка процесса "syncthing" через `TAsyncProcess`.
+  - Запуск/остановка процесса "syncthing" через `TProcessUTF8` (без pipes; консоль в GUI — через REST `system/log`).
   - Машина состояний процесса (FMS): `psUnknown` → `psStarting` → `psRunning` → `psStopping` → `psStopped` → `psError`.
   - Извлечение настроек (включая API‑ключ) из `config.xml` файла через `ExtractConfigSettings` / `LoadConfigFromDisk`.
   - События процесса:
     - `OnProcessStateChanged` — изменение состояния процесса (для обновления UI).
-    - `OnConsoleOutput` — вывод консоли процесса (строки UTF‑8, буферизация по строкам).
+    - `OnConsoleOutput` — зарезервировано для диагностики (pipes не используются; GUI-консоль — REST `system/log`).
     - `OnStartFailed` — ошибка запуска процесса (с деталями: путь, код ошибки ОС, исключение).
   - При успешном запуске процесса автоматически вызывает `Connect()` для подключения к API.
   - При остановке вызывает REST `system/shutdown`, затем `Terminate(0)` и `Disconnect()`.

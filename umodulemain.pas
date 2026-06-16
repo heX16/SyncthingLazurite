@@ -955,17 +955,15 @@ end;
 
 procedure TModuleMain.Mgr_OnConsoleOutput(Sender: TObject; const Line: UTF8String);
 begin
+  // TODO: WIP... - remove this handler?
+
   // NOTE:
-  // TSyncthingManager still reads Syncthing process stdout/stderr (pipes) and emits OnConsoleOutput.
-  // We keep this handler only for diagnostics, because process output can be useful when:
-  // - Syncthing fails to start / exits early (before REST API is reachable)
-  // - REST API is misconfigured (wrong port / API key) and we need raw process hints
+  // TSyncthingManager launches Syncthing via TProcessUTF8 without stdout/stderr pipes.
+  // OnConsoleOutput is kept for future diagnostics but is not expected to fire in normal use.
   //
-  // The visible "Console" panel in the GUI is NOT fed from stdout anymore.
-  // Main console logs are loaded via REST API: GET /rest/system/log (polled by TimerUpdateConsole),
-  // with deduplication by the RFC3339 'when' field to avoid duplicates.
-  //
-  // This prevents mixing two different log sources (pipes + REST) and eliminates UI duplicates.
+  // The visible "Console" panel in the GUI is fed from REST API: "GET /rest/system/log",
+  // polled by TimerUpdateConsole.
+
   DebugLog('Process stdout: ' + string(Line));
 end;
 

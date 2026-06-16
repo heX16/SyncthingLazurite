@@ -2,15 +2,10 @@ unit uSyncthingManager;
 
 {$mode objfpc}{$H+}
 
-// Compiler directive to disable the Windows process output bugfix.
-// Define in the project to disable cmd.exe stdout/stderr redirection:
-{$DEFINE DISABLE_WINDOWS_OUTPUT_FIX}
-// By default the fix is ENABLED for Windows compatibility.
-
 interface
 
 uses
-  Classes, SysUtils, UTF8Process, AsyncProcess, ExtCtrls,
+  Classes, SysUtils, Process, UTF8Process, ExtCtrls,
   syncthing_api, XMLRead, DOM, LazUTF8, LazFileUtils;
 
 // Helper function for finding XML nodes
@@ -47,7 +42,7 @@ type
     ExecPath: UTF8String;      // Intended executable path
     IsException: Boolean;      // True if the error came from an Execute exception
     OSLastError: LongInt;      // Last OS error code (if any)
-    Process: TAsyncProcess;    // Process instance
+    Process: TProcess;         // Process instance
   end;
 
   // Start failure event
@@ -57,7 +52,7 @@ type
 
   TSyncthingManager = class(TSyncthingAPI)
   private
-    FProcessSyncthing: TAsyncProcess;
+    FProcessSyncthing: TProcessUTF8;
 
     FHomePath: UTF8String;
     FExecPath: UTF8String;
@@ -136,7 +131,6 @@ uses
   Forms,
   ulogging,
   DateUtils,
-  process,
   TypInfo,
   LCLTranslator, LConvEncoding;
 
@@ -179,8 +173,8 @@ end;
 
 procedure TSyncthingManager.InitializeProcesses;
 begin
-  FProcessSyncthing := TAsyncProcess.Create(nil);
-  FProcessSyncthing.Options := [poUsePipes, poStderrToOutPut];
+  FProcessSyncthing := TProcessUTF8.Create(nil);
+  FProcessSyncthing.Options := [poNoConsole];
   FProcessSyncthing.ShowWindow := swoHIDE;
 end;
 
@@ -380,11 +374,6 @@ end;
 procedure TSyncthingManager.StartSyncthingProcess;
 var
   Info: TStartFailureInfo;
-  {$IFDEF WINDOWS}
-  {$IFNDEF DISABLE_WINDOWS_OUTPUT_FIX}
-  InnerCmd: UTF8String;
-  {$ENDIF}
-  {$ENDIF}
 begin
 
   if FExecPath = '' then
@@ -404,29 +393,10 @@ begin
   ProcessStateChanged(psStarting);
 
   try
-    {$IFDEF WINDOWS}
-    {$IFNDEF DISABLE_WINDOWS_OUTPUT_FIX}
-    // Windows + output fix: launch via cmd.exe and pass the full command as a single second parameter
-    FProcessSyncthing.Executable := GetEnvironmentVariableUTF8('WINDIR') + '\system32\cmd.exe';
-    FProcessSyncthing.Parameters.Clear;
-    FProcessSyncthing.Parameters.Add('/C');
-    InnerCmd := '"' + FExecPath + '" --no-browser --home="' +
-      FHomePath +
-      '" | find /v " empty_find_just_for_redirect_stdio_00686558 "';
-    FProcessSyncthing.Parameters.Add(InnerCmd);
-    {$ELSE}
-    // Windows without fix: launch directly with separate parameters
     FProcessSyncthing.Executable := FExecPath;
     FProcessSyncthing.Parameters.Clear;
     FProcessSyncthing.Parameters.Add('--no-browser');
     FProcessSyncthing.Parameters.Add('--home=' + FHomePath);
-    {$ENDIF}
-    {$ELSE}
-    FProcessSyncthing.Executable := FExecPath;
-    FProcessSyncthing.Parameters.Clear;
-    FProcessSyncthing.Parameters.Add('--no-browser');
-    FProcessSyncthing.Parameters.Add('--home=' + FHomePath);
-    {$ENDIF}
 
     FProcessSyncthing.Execute;
 
