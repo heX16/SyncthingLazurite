@@ -410,7 +410,6 @@ object ModuleMain: TModuleMain
   end
   object TimerUpdateConsole: TTimer
     Enabled = False
-    Interval = 1000
     OnTimer = TimerUpdateConsoleTimer
     Left = 320
     Top = 144
