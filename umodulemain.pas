@@ -82,6 +82,7 @@ type
     menuDevList: TPopupMenu;
     TimerUpdate: TTimer;
     TimerInit: TTimer;
+    TimerUpdateConsole: TTimer;
     TrayIcon: TTrayIcon;
     UniqueInstance1: TUniqueInstance;
     procedure actAboutExecute(Sender: TObject);
@@ -102,11 +103,17 @@ type
     procedure DataModuleCreate(Sender: TObject);
     procedure DataModuleDestroy(Sender: TObject);
     procedure InitEvent(Sender: TObject);
+    procedure TimerUpdateConsoleTimer(Sender: TObject);
     procedure TrayIconDblClick(Sender: TObject);
   private
     FSyncthingAPI: TSyncthingManager; // Core Syncthing Manager instance (created manually)
+    listConsoleTimes: TStringList;
+    FConsoleSince: string;
+    FConsoleLogRequestInFlight: Boolean;
 
     procedure AddLineToEventsLog(const Line: string);
+    function AddLineToConsoleLog(const WhenKey: string; const Line: string): Boolean;
+    procedure HTTP_SystemLog(Request: THttpRequest);
     function MapHttpErrorCodeToText(const Code: Integer): string;
     procedure Syn_OnConnected(Sender: TObject);
     procedure Syn_OnConnectError(Sender: TObject; StatusCode: Integer);
@@ -151,6 +158,8 @@ implementation
 uses
   uModulePreInit_i18n,
   syncthing_api_utils,
+  uUtils,
+  fphttpclient_fixed,
   LCLIntf, //OpenURL
   Clipbrd,
   DateUtils,
@@ -184,6 +193,25 @@ begin
   end;
 end;
 
+procedure TModuleMain.TimerUpdateConsoleTimer(Sender: TObject);
+var
+  api: UTF8String;
+begin
+  if not frmMain.edConsole.Visible then
+    Exit;
+  if not Assigned(FSyncthingAPI) or not FSyncthingAPI.IsOnline then
+    Exit;
+  if FConsoleLogRequestInFlight then
+    Exit;
+
+  api := 'system/log';
+  if FConsoleSince <> '' then
+    api := api + '?since=' + UTF8String(EncodeURLElement(FConsoleSince));
+
+  FConsoleLogRequestInFlight := True;
+  FSyncthingAPI.API_Get(api, @HTTP_SystemLog, '');
+end;
+
 procedure TModuleMain.AddLineToEventsLog(const Line: string);
 var
   timeStr: string;
@@ -193,6 +221,88 @@ begin
   frmMain.listEvents.Items.Insert(0, '[' + timeStr + '] ' + Line);
   while frmMain.listEvents.Items.Count > 100 do
     frmMain.listEvents.Items.Delete(frmMain.listEvents.Items.Count - 1);
+end;
+
+function TModuleMain.AddLineToConsoleLog(const WhenKey: string; const Line: string): Boolean;
+var
+  i: Integer;
+  consoleLine: string;
+begin
+  Result := False;
+
+  if WhenKey <> '' then
+  begin
+    // Full scan as requested (reliability > speed)
+    for i := 0 to listConsoleTimes.Count - 1 do
+      if listConsoleTimes[i] = WhenKey then
+        Exit;
+  end;
+
+  if WhenKey <> '' then
+    consoleLine := '[' + WhenKey + '] ' + Line
+  else
+    consoleLine := Line;
+
+  // Keep console and time keys in sync (same count)
+  if frmMain.edConsole.Lines.Count >= 500 then
+  begin
+    frmMain.edConsole.Lines.Delete(0);
+    if listConsoleTimes.Count > 0 then
+      listConsoleTimes.Delete(0);
+  end;
+
+  frmMain.edConsole.Lines.Add(consoleLine);
+  listConsoleTimes.Add(WhenKey);
+  Result := True;
+end;
+
+procedure TModuleMain.HTTP_SystemLog(Request: THttpRequest);
+var
+  j, messages, item: TJSONData;
+  obj: TJSONObject;
+  arr: TJSONArray;
+  i: Integer;
+  whenStr, msgStr, lastWhen: string;
+begin
+  FConsoleLogRequestInFlight := False;
+
+  if not frmMain.edConsole.Visible then
+    Exit;
+  if not Assigned(FSyncthingAPI) or not FSyncthingAPI.IsOnline then
+    Exit;
+  if (Request = nil) or not Request.Succeeded then
+    Exit;
+
+  if not HttpRequestToJson(Request, j) then
+    Exit;
+  try
+    messages := j.FindPath('messages');
+    if (messages = nil) or not (messages is TJSONArray) then
+      Exit;
+
+    arr := TJSONArray(messages);
+    lastWhen := '';
+    for i := 0 to arr.Count - 1 do
+    begin
+      item := arr.Items[i];
+      if not (item is TJSONObject) then
+        Continue;
+      obj := TJSONObject(item);
+      whenStr := obj.Get('when', '');
+      msgStr := obj.Get('message', '');
+      if whenStr = '' then
+        Continue;
+
+      AddLineToConsoleLog(whenStr, msgStr);
+
+      lastWhen := whenStr;
+    end;
+
+    if lastWhen <> '' then
+      FConsoleSince := lastWhen;
+  finally
+    j.Free;
+  end;
 end;
 
 procedure TModuleMain.TrayIconDblClick(Sender: TObject);
@@ -283,10 +393,13 @@ begin
   begin
     frmMain.edConsole.Visible := false;
     frmMain.SplitterBottom1.Visible := false;
+    FConsoleSince := '';
+    TimerUpdateConsole.Enabled := False;
   end else
   begin
     frmMain.SplitterBottom1.Visible := true;
     frmMain.edConsole.Visible := true;
+    TimerUpdateConsole.Enabled := True;
   end;
 end;
 
@@ -344,6 +457,9 @@ begin
   //SetDefaultLang(GetOSLanguage()); // - just use DefaultTranslator module
   //frmMain.LanguageChanged();
 
+  listConsoleTimes := TStringList.Create;
+  FConsoleSince := '';
+  FConsoleLogRequestInFlight := False;
 
   // Create Syncthing Manager instance manually (do not place on form)
   FSyncthingAPI := TSyncthingManager.Create(Self);
@@ -370,6 +486,7 @@ begin
     // FSyncthingAPI.StopAllProcesses;
     FreeAndNil(FSyncthingAPI);
   end;
+  FreeAndNil(listConsoleTimes);
 end;
 
 procedure TModuleMain.Syn_OnConnected(Sender: TObject);
@@ -828,16 +945,18 @@ end;
 
 procedure TModuleMain.Mgr_OnConsoleOutput(Sender: TObject; const Line: UTF8String);
 begin
-  // TODO: над этой функцией нужно поработать. кжется тут дублирование кода и лишний функционал.
-  //       `Length(Line) > 255` - вот это я думаю можно перенести? или оставить... подумать
-  if frmMain.edConsole.Lines.Count > 500 then
-    frmMain.edConsole.Lines.Delete(0);
-  frmMain.edConsole.Lines.Add(string(Line));
-  // Also duplicate a compact line into events log
-  if Length(Line) > 255 then
-    AddLineToEventsLog(Copy(string(Line), 1, 255) + '...')
-  else
-    AddLineToEventsLog(string(Line));
+  // NOTE:
+  // TSyncthingManager still reads Syncthing process stdout/stderr (pipes) and emits OnConsoleOutput.
+  // We keep this handler only for diagnostics, because process output can be useful when:
+  // - Syncthing fails to start / exits early (before REST API is reachable)
+  // - REST API is misconfigured (wrong port / API key) and we need raw process hints
+  //
+  // The visible "Console" panel in the GUI is NOT fed from stdout anymore.
+  // Main console logs are loaded via REST API: GET /rest/system/log (polled by TimerUpdateConsole),
+  // with deduplication by the RFC3339 'when' field to avoid duplicates.
+  //
+  // This prevents mixing two different log sources (pipes + REST) and eliminates UI duplicates.
+  DebugLog('Process stdout: ' + string(Line));
 end;
 
 procedure TModuleMain.Mgr_OnStartFailed(Sender: TObject; const Info: TStartFailureInfo);

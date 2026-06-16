@@ -2,10 +2,10 @@ object ModuleMain: TModuleMain
   OnCreate = DataModuleCreate
   OnDestroy = DataModuleDestroy
   OldCreateOrder = False
-  Height = 279
+  Height = 290
   HorizontalOffset = 327
   VerticalOffset = 138
-  Width = 284
+  Width = 492
   object UniqueInstance1: TUniqueInstance
     Left = 32
     Top = 16
@@ -263,8 +263,8 @@ object ModuleMain: TModuleMain
   end
   object TimerUpdate: TTimer
     Interval = 5000
-    Left = 32
-    Top = 205
+    Left = 320
+    Top = 77
   end
   object MainMenu1: TMainMenu
     Left = 128
@@ -405,7 +405,14 @@ object ModuleMain: TModuleMain
   object TimerInit: TTimer
     Interval = 1
     OnTimer = InitEvent
-    Left = 32
-    Top = 152
+    Left = 320
+    Top = 24
+  end
+  object TimerUpdateConsole: TTimer
+    Enabled = False
+    Interval = 1000
+    OnTimer = TimerUpdateConsoleTimer
+    Left = 320
+    Top = 144
   end
 end
