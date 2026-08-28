@@ -19,7 +19,6 @@ type
     btnSelectFileExec: TButton;
     chAutoGetAPIKey: TCheckBox;
     chConnectOnStartup: TCheckBox;
-    chUseProxyOutputForFixBug: TCheckBox;
     chRunSyncthingOnStartup: TCheckBox;
     cbLanguages: TComboBox;
     edPortNumber: TLabeledEdit;

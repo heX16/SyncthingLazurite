@@ -375,10 +375,16 @@ var
   apiKey: UTF8String;
 begin
   // Configure endpoint and API key from Options (no Core dependency)
+
+  //TODO: add support remote host
   host := '127.0.0.1';
-  port := GetPortFromOptions;
+
+  port := self.GetPortFromOptions();
+
   //TODO: add support TLS
   useTLS := false;
+
+  //TODO: add read API key from config (API key auto detect)
   if Assigned(frmOptions) then
     apiKey := UTF8String(frmOptions.edAPIKey.Text)
   else

@@ -186,10 +186,6 @@ msgstr ""
 msgid "chRunSyncthingOnStartup"
 msgstr ""
 
-#: tfrmoptions.chuseproxyoutputforfixbug.caption
-msgid "chUseProxyOutputForFixBug"
-msgstr "バグ修正のためプロキシ出力を使用"
-
 #: tfrmoptions.edapikey.editlabel.caption
 msgid "edAPIKey"
 msgstr "APIキー"

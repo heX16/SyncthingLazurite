@@ -189,10 +189,6 @@ msgstr "Connect on startup"
 msgid "chRunSyncthingOnStartup"
 msgstr "Run Syncthing on startup"
 
-#: tfrmoptions.chuseproxyoutputforfixbug.caption
-msgid "chUseProxyOutputForFixBug"
-msgstr "Use proxy output to fix bug"
-
 #: tfrmoptions.edapikey.editlabel.caption
 msgid "edAPIKey"
 msgstr "API Key"

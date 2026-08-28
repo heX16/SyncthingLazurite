@@ -186,10 +186,6 @@ msgstr ""
 msgid "chRunSyncthingOnStartup"
 msgstr ""
 
-#: tfrmoptions.chuseproxyoutputforfixbug.caption
-msgid "chUseProxyOutputForFixBug"
-msgstr "Usar salida proxy para corregir el error"
-
 #: tfrmoptions.edapikey.editlabel.caption
 msgid "edAPIKey"
 msgstr "Clave API"
