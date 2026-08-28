@@ -43,7 +43,7 @@
       <MajorVersionNr Value="1"/>
       <MinorVersionNr Value="5"/>
       <RevisionNr Value="2606"/>
-      <BuildNr Value="182"/>
+      <BuildNr Value="184"/>
     </VersionInfo>
     <BuildModes Count="4">
       <Item1 Name="Debug" Default="True"/>
