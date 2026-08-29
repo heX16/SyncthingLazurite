@@ -671,16 +671,13 @@ begin
     ssConnectingInitAndPing, ssConnectingPingWait, ssConnectingWaitData:
       c := clYellow; // connecting states
 
-    ssOnline, ssOnlineLongPollingWait: begin
+    ssOnline: begin
       c := TColor($00B000);  // online
       self.actConnect.Enabled:=false;
     end;
 
     ssOnlinePaused:
       c := clSilver; // paused
-
-    ssOnlineUnstable, ssOnlineUnstableLongPollingWait:
-      c := clRed;    // unstable/error
 
     ssDisconnecting:
       c := clYellow;   // disconnecting

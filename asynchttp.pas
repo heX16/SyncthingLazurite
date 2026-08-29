@@ -740,7 +740,7 @@ begin
     end; // while
 
     // Queue is empty - notify
-    if Self.FOwner.QueueCount() > 0 then
+    if Self.FOwner.QueueCount() = 0 then
     begin
       Self.FInvokeKind := iekQueueEmpty;
       Self.FInvokeRequest := nil;
